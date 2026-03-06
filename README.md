@@ -56,7 +56,7 @@ eval "$(direnv hook zsh)"  # bash の場合は bash
 ### 2. clone & ディレクトリ移動
 
 ```zsh
-git clone https://github.com/thirdlf03/microservice-app
+git clone https://github.com/hackz-megalo-cup/microservices-infra
 cd microservice-app
 direnv allow
 ```
@@ -82,7 +82,7 @@ cp frontend/.env.example frontend/.env
 
 ```zsh
 # インフラリポジトリを clone して bootstrap
-git clone https://github.com/thirdlf03/microservice-infra
+git clone https://github.com/hackz-megalo-cup/microservices-infra
 cd microservice-infra
 direnv allow
 full-bootstrap   # Docker が起動している状態で実行
@@ -407,4 +407,4 @@ PR と main への push で以下が自動実行される:
 
 ## 関連リポジトリ
 
-- [microservice-infra](https://github.com/thirdlf03/microservice-infra) -- 監視スタック、ArgoCD、Traefik 設定、Kind クラスタ設定
+- [microservice-infra](https://github.com/hackz-megalo-cup/microservices-infra) -- 監視スタック、ArgoCD、Traefik 設定、Kind クラスタ設定
