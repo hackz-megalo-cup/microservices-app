@@ -1,0 +1,7 @@
+FROM node:24-alpine
+WORKDIR /app
+COPY node-services/__SERVICE_NAME__/package.json node-services/__SERVICE_NAME__/package-lock.json* ./
+RUN npm ci --omit=dev
+COPY node-services/__SERVICE_NAME__/ ./
+EXPOSE __PORT__
+CMD ["node", "server.js"]

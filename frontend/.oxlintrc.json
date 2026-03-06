@@ -1,0 +1,32 @@
+{
+  "plugins": ["typescript", "react"],
+  "categories": {
+    "correctness": "error",
+    "suspicious": "warn",
+    "style": "warn"
+  },
+  "rules": {
+    "typescript/no-explicit-any": "error",
+    "typescript/consistent-type-definitions": ["error", "interface"],
+    "typescript/no-non-null-assertion": "warn",
+    "typescript/no-namespace": "error",
+    "no-var": "error",
+    "prefer-const": "error",
+    "react/jsx-key": "error",
+    "react/react-in-jsx-scope": "off",
+    "no-console": "warn",
+    "no-debugger": "error",
+    "eqeqeq": "error",
+    "no-eval": "error",
+    "sort-keys": "off",
+    "sort-imports": "off",
+    "no-ternary": "off",
+    "no-magic-numbers": "off",
+    "func-style": "off",
+    "id-length": "off",
+    "max-statements": "off",
+    "arrow-body-style": "off",
+    "react/jsx-max-depth": "off"
+  },
+  "ignorePatterns": ["dist/", "node_modules/", "gen/", "*.config.ts"]
+}

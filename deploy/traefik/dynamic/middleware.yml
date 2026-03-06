@@ -1,0 +1,40 @@
+http:
+  middlewares:
+    cors:
+      headers:
+        accessControlAllowMethods:
+          - "GET"
+          - "POST"
+          - "OPTIONS"
+        accessControlAllowHeaders:
+          - "Content-Type"
+          - "Authorization"
+          - "Connect-Protocol-Version"
+          - "Connect-Timeout-Ms"
+          - "Grpc-Timeout"
+          - "X-Grpc-Web"
+          - "X-User-Agent"
+        accessControlAllowOriginList:
+          - "http://localhost:30081"
+        accessControlExposeHeaders:
+          - "Grpc-Status"
+          - "Grpc-Message"
+          - "Grpc-Status-Details-Bin"
+        accessControlMaxAge: 7200
+        addVaryHeader: true
+
+    auth:
+      forwardAuth:
+        address: "http://auth-service:8090/verify"
+        authResponseHeaders:
+          - "X-User-Id"
+
+    rate-limit:
+      rateLimit:
+        average: 100
+        burst: 50
+
+    retry:
+      retry:
+        attempts: 3
+        initialInterval: "100ms"

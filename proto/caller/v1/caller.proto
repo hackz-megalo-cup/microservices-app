@@ -1,0 +1,18 @@
+syntax = "proto3";
+
+package caller.v1;
+
+option go_package = "github.com/thirdlf03/microservice-app/services/gen/go/caller/v1;callerv1";
+
+service CallerService {
+  rpc CallExternal(CallExternalRequest) returns (CallExternalResponse) {}
+}
+
+message CallExternalRequest {
+  string url = 1;
+}
+
+message CallExternalResponse {
+  int32 status_code = 1;
+  int32 body_length = 2;
+}

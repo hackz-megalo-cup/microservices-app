@@ -1,0 +1,3 @@
+FROM alpine:3.20
+COPY build/gateway /gateway
+ENTRYPOINT ["/gateway"]

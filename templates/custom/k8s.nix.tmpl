@@ -1,0 +1,72 @@
+_:
+let
+  labels = {
+    "app.kubernetes.io/name" = "__SERVICE_NAME__";
+    "app.kubernetes.io/version" = "0.1.0";
+  };
+in
+{
+  applications.__SERVICE_NAME__ = {
+    namespace = "microservices";
+    createNamespace = false;
+
+    resources = {
+      deployments.__SERVICE_NAME__.spec = {
+        replicas = 1;
+        selector.matchLabels = labels;
+        template = {
+          metadata.labels = labels;
+          spec.containers.__SERVICE_NAME__ = {
+            image = "__SERVICE_NAME__:latest";
+            imagePullPolicy = "Never";
+            ports.http.containerPort = __PORT__;
+
+            env = {
+              OTEL_EXPORTER_OTLP_ENDPOINT.value = "http://otel-collector.observability:4317";
+              OTEL_SERVICE_NAME.value = "__SERVICE_NAME__";
+              PORT.value = "__PORT__";
+            };
+
+            livenessProbe = {
+              httpGet = {
+                path = "/healthz";
+                port = __PORT__;
+              };
+              initialDelaySeconds = 5;
+              periodSeconds = 10;
+            };
+
+            readinessProbe = {
+              httpGet = {
+                path = "/healthz";
+                port = __PORT__;
+              };
+              initialDelaySeconds = 3;
+              periodSeconds = 5;
+            };
+
+            resources = {
+              requests = {
+                cpu = "25m";
+                memory = "64Mi";
+              };
+              limits = {
+                cpu = "100m";
+                memory = "128Mi";
+              };
+            };
+          };
+        };
+      };
+
+      services.__SERVICE_NAME__.spec = {
+        selector = labels;
+        ports.http = {
+          port = __PORT__;
+          targetPort = __PORT__;
+          protocol = "TCP";
+        };
+      };
+    };
+  };
+}

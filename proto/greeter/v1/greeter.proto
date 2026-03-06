@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package greeter.v1;
+
+option go_package = "github.com/thirdlf03/microservice-app/services/gen/go/greeter/v1;greeterv1";
+
+service GreeterService {
+  rpc Greet(GreetRequest) returns (GreetResponse) {}
+}
+
+message GreetRequest {
+  string name = 1;
+}
+
+message GreetResponse {
+  string message = 1;
+  int32 external_status = 2;
+  int32 external_body_length = 3;
+}

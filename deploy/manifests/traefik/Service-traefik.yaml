@@ -1,0 +1,27 @@
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app.kubernetes.io/instance: traefik-edge
+    app.kubernetes.io/managed-by: Helm
+    app.kubernetes.io/name: traefik
+    helm.sh/chart: traefik-39.0.2
+  name: traefik
+  namespace: edge
+spec:
+  externalTrafficPolicy: Cluster
+  ports:
+    - name: web
+      nodePort: 30081
+      port: 80
+      protocol: TCP
+      targetPort: web
+    - name: websecure
+      nodePort: 30444
+      port: 443
+      protocol: TCP
+      targetPort: websecure
+  selector:
+    app.kubernetes.io/instance: traefik-edge
+    app.kubernetes.io/name: traefik
+  type: NodePort

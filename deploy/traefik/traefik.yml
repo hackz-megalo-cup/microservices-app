@@ -1,0 +1,19 @@
+entryPoints:
+  web:
+    address: ":80"
+
+ping:
+  entryPoint: web
+
+providers:
+  docker:
+    exposedByDefault: false
+    network: microservice-app_app
+  file:
+    directory: /etc/traefik/dynamic
+    watch: true
+
+log:
+  level: INFO
+
+accessLog: {}

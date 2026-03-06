@@ -1,0 +1,28 @@
+apiVersion: traefik.io/v1alpha1
+kind: Middleware
+metadata:
+  name: cors-middleware
+  namespace: microservices
+spec:
+  headers:
+    accessControlAllowHeaders:
+      - Content-Type
+      - Authorization
+      - Connect-Protocol-Version
+      - Connect-Timeout-Ms
+      - Grpc-Timeout
+      - X-Grpc-Web
+      - X-User-Agent
+      - Idempotency-Key
+    accessControlAllowMethods:
+      - GET
+      - POST
+      - OPTIONS
+    accessControlAllowOriginList:
+      - http://localhost:5173
+    accessControlExposeHeaders:
+      - Grpc-Status
+      - Grpc-Message
+      - Grpc-Status-Details-Bin
+    accessControlMaxAge: 7200
+    addVaryHeader: true

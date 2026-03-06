@@ -1,0 +1,165 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: bufbuild/buf-action@v1
+      - name: Buf lint
+        run: buf lint
+      - name: Buf breaking
+        run: |
+          if git cat-file -e main:proto 2>/dev/null; then
+            buf breaking --against '.git#branch=main'
+          else
+            echo "Skipping buf breaking: proto baseline does not exist on main yet"
+          fi
+
+  go-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/go.mod
+      - uses: golangci/golangci-lint-action@v8
+        with:
+          version: v2.10
+          working-directory: services
+
+  frontend-lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - name: Biome check
+        run: npx biome check src/
+        working-directory: frontend
+
+  go-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: services/go.mod
+      - name: Go test
+        run: go test ./...
+        working-directory: services
+
+  node-lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [auth-service, custom-lang-service]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: node-services/${{ matrix.service }}/package-lock.json
+      - run: npm ci
+        working-directory: node-services/${{ matrix.service }}
+      - name: Biome check
+        run: npx biome check .
+        working-directory: node-services/${{ matrix.service }}
+
+  node-test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service: [auth-service, custom-lang-service]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: node-services/${{ matrix.service }}/package-lock.json
+      - run: npm ci
+        working-directory: node-services/${{ matrix.service }}
+      - name: Vitest
+        run: npm test
+        working-directory: node-services/${{ matrix.service }}
+
+  frontend-build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - name: Frontend build
+        run: |
+          npm ci
+          npm run build
+        working-directory: frontend
+
+  nix-build:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: |
+            accept-flake-config = true
+      - name: Build service binaries
+        run: nix build .#caller .#greeter .#gateway
+      - name: Build service images
+        run: nix build .#caller-image .#greeter-image .#gateway-image
+      - name: Push images to ghcr.io
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin
+          for svc in caller greeter gateway; do
+            nix build .#${svc}-image
+            ./result | skopeo copy docker-archive:/dev/stdin \
+              docker://ghcr.io/thirdlf03/${svc}:${{ github.sha }}
+            skopeo copy \
+              docker://ghcr.io/thirdlf03/${svc}:${{ github.sha }} \
+              docker://ghcr.io/thirdlf03/${svc}:latest
+          done
+
+  render-manifests:
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+    needs: [nix-build]
+    permissions:
+      contents: write
+      packages: read
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v27
+        with:
+          extra_nix_config: |
+            accept-flake-config = true
+      - name: Render nixidy manifests
+        run: bash scripts/gen-manifests.sh
+      - uses: stefanzweifel/git-auto-commit-action@v5
+        with:
+          commit_message: "chore: render nixidy manifests [skip ci]"
+          file_pattern: "deploy/manifests/**"

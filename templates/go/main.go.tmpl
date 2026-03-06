@@ -1,0 +1,101 @@
+package main
+
+import (
+	"context"
+	"errors"
+	"log/slog"
+	"net"
+	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
+	"time"
+
+	"connectrpc.com/connect"
+	"connectrpc.com/otelconnect"
+	"golang.org/x/net/http2"
+	"golang.org/x/net/http2/h2c"
+
+	"github.com/thirdlf03/microservice-app/services/gen/go/__SERVICE_NAME__/v1/__SERVICE_NAME_SNAKE__v1connect"
+	"github.com/thirdlf03/microservice-app/services/internal/__SERVICE_NAME_SNAKE__"
+	"github.com/thirdlf03/microservice-app/services/internal/platform"
+)
+
+const (
+	serviceName    = "__SERVICE_NAME__-service"
+	serviceVersion = "0.1.0"
+)
+
+func main() {
+	if err := run(); err != nil {
+		slog.Error("application error", "error", err)
+		os.Exit(1)
+	}
+}
+
+func run() error {
+	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+	defer stop()
+
+	logger := platform.NewLogger()
+	shutdownOTel, err := platform.SetupOTelSDK(ctx, serviceName, serviceVersion)
+	if err != nil {
+		return err
+	}
+	defer func() {
+		err = errors.Join(err, shutdownOTel(context.Background()))
+	}()
+
+	otelInterceptor, err := otelconnect.NewInterceptor()
+	if err != nil {
+		return err
+	}
+
+	svc := __SERVICE_NAME_SNAKE__.NewService()
+	path, handler := __SERVICE_NAME_SNAKE__v1connect.New__SERVICE_NAME_PASCAL__ServiceHandler(
+		svc,
+		connect.WithInterceptors(
+			otelInterceptor,
+			platform.NewLoggingInterceptor(logger),
+		),
+	)
+
+	mux := http.NewServeMux()
+	mux.Handle(path, handler)
+	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok\n"))
+	})
+
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "__PORT__"
+	}
+
+	srv := &http.Server{
+		Addr:         ":" + port,
+		BaseContext:  func(net.Listener) context.Context { return ctx },
+		ReadTimeout:  5 * time.Second,
+		WriteTimeout: 30 * time.Second,
+		Handler:      h2c.NewHandler(mux, &http2.Server{}),
+	}
+
+	srvErr := make(chan error, 1)
+	go func() {
+		logger.InfoContext(ctx, "starting "+serviceName, "port", port)
+		srvErr <- srv.ListenAndServe()
+	}()
+
+	select {
+	case err = <-srvErr:
+		if errors.Is(err, http.ErrServerClosed) {
+			return nil
+		}
+		return err
+	case <-ctx.Done():
+	}
+
+	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+	return srv.Shutdown(shutdownCtx)
+}

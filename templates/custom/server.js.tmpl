@@ -1,0 +1,18 @@
+const http = require("http");
+
+const PORT = process.env.PORT || "__PORT__";
+
+const server = http.createServer((req, res) => {
+  if (req.url === "/healthz") {
+    res.writeHead(200);
+    res.end("ok");
+    return;
+  }
+
+  res.writeHead(200, { "Content-Type": "application/json" });
+  res.end(JSON.stringify({ service: "__SERVICE_NAME__", status: "running" }));
+});
+
+server.listen(PORT, () => {
+  console.log(`__SERVICE_NAME__ listening on :${PORT}`);
+});

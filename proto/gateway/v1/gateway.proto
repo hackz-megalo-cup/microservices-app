@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package gateway.v1;
+
+option go_package = "github.com/thirdlf03/microservice-app/services/gen/go/gateway/v1;gatewayv1";
+
+service GatewayService {
+  rpc InvokeCustom(InvokeCustomRequest) returns (InvokeCustomResponse) {}
+}
+
+message InvokeCustomRequest {
+  string name = 1;
+}
+
+message InvokeCustomResponse {
+  string message = 1;
+}
