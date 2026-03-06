@@ -18,7 +18,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sony/gobreaker/v2"
 
-	gatewayv1 "github.com/thirdlf03/microservice-app/services/gen/go/gateway/v1"
+	gatewayv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/gateway/v1"
 )
 
 type Service struct {

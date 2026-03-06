@@ -11,7 +11,7 @@ import (
 	strings "strings"
 
 	connect "connectrpc.com/connect"
-	v1 "github.com/thirdlf03/microservice-app/services/gen/go/gateway/v1"
+	v1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/gateway/v1"
 )
 
 // This is a compile-time assertion to ensure that this generated file and the connect package are

@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package caller.v1;
 
-option go_package = "github.com/thirdlf03/microservice-app/services/gen/go/caller/v1;callerv1";
+option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/caller/v1;callerv1";
 
 service CallerService {
   rpc CallExternal(CallExternalRequest) returns (CallExternalResponse) {}

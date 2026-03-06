@@ -14,8 +14,8 @@ import (
 	"github.com/testcontainers/testcontainers-go/modules/postgres"
 	"github.com/testcontainers/testcontainers-go/wait"
 
-	callerv1 "github.com/thirdlf03/microservice-app/services/gen/go/caller/v1"
-	greeterv1 "github.com/thirdlf03/microservice-app/services/gen/go/greeter/v1"
+	callerv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/caller/v1"
+	greeterv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/greeter/v1"
 )
 
 const createTableSQL = `

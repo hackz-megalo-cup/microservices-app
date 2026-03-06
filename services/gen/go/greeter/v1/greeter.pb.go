@@ -139,7 +139,7 @@ const file_greeter_v1_greeter_proto_rawDesc = "" +
 	"\x0fexternal_status\x18\x02 \x01(\x05R\x0eexternalStatus\x120\n" +
 	"\x14external_body_length\x18\x03 \x01(\x05R\x12externalBodyLength2P\n" +
 	"\x0eGreeterService\x12>\n" +
-	"\x05Greet\x12\x18.greeter.v1.GreetRequest\x1a\x19.greeter.v1.GreetResponse\"\x00BLZJgithub.com/thirdlf03/microservice-app/services/gen/go/greeter/v1;greeterv1b\x06proto3"
+	"\x05Greet\x12\x18.greeter.v1.GreetRequest\x1a\x19.greeter.v1.GreetResponse\"\x00BTZRgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/greeter/v1;greeterv1b\x06proto3"
 
 var (
 	file_greeter_v1_greeter_proto_rawDescOnce sync.Once

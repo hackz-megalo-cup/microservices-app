@@ -102,7 +102,7 @@ import (
     "go.opentelemetry.io/otel"
 
     // プロジェクト内パッケージ
-    "github.com/thirdlf03/microservice-app/services/internal/platform"
+    "github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 ```
 

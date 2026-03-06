@@ -10,7 +10,7 @@ spec:
   project: default
   source:
     path: ./deploy/manifests/caller-service
-    repoURL: https://github.com/thirdlf03/microservice-app
+    repoURL: https://github.com/hackz-megalo-cup/microservices-app
     targetRevision: main
   syncPolicy:
     automated:

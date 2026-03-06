@@ -1,4 +1,4 @@
-module github.com/thirdlf03/microservice-app/services
+module github.com/hackz-megalo-cup/microservices-app/services
 
 go 1.26
 

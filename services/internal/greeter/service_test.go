@@ -8,8 +8,8 @@ import (
 
 	"connectrpc.com/connect"
 
-	callerv1 "github.com/thirdlf03/microservice-app/services/gen/go/caller/v1"
-	greeterv1 "github.com/thirdlf03/microservice-app/services/gen/go/greeter/v1"
+	callerv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/caller/v1"
+	greeterv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/greeter/v1"
 )
 
 // mockCallerClient is a hand-written mock of callerv1connect.CallerServiceClient.

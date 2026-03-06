@@ -19,9 +19,9 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
-	"github.com/thirdlf03/microservice-app/services/gen/go/caller/v1/callerv1connect"
-	"github.com/thirdlf03/microservice-app/services/internal/caller"
-	"github.com/thirdlf03/microservice-app/services/internal/platform"
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/caller/v1/callerv1connect"
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/caller"
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
 const (

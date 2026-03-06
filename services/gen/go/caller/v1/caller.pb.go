@@ -131,7 +131,7 @@ const file_caller_v1_caller_proto_rawDesc = "" +
 	"\vbody_length\x18\x02 \x01(\x05R\n" +
 	"bodyLength2b\n" +
 	"\rCallerService\x12Q\n" +
-	"\fCallExternal\x12\x1e.caller.v1.CallExternalRequest\x1a\x1f.caller.v1.CallExternalResponse\"\x00BJZHgithub.com/thirdlf03/microservice-app/services/gen/go/caller/v1;callerv1b\x06proto3"
+	"\fCallExternal\x12\x1e.caller.v1.CallExternalRequest\x1a\x1f.caller.v1.CallExternalResponse\"\x00BRZPgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/caller/v1;callerv1b\x06proto3"
 
 var (
 	file_caller_v1_caller_proto_rawDescOnce sync.Once

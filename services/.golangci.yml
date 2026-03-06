@@ -61,4 +61,4 @@ formatters:
   settings:
     goimports:
       local-prefixes:
-        - github.com/thirdlf03/microservice-app
+        - github.com/hackz-megalo-cup/microservices-app

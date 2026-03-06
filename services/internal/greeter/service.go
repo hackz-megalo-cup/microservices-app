@@ -11,9 +11,9 @@ import (
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
-	callerv1 "github.com/thirdlf03/microservice-app/services/gen/go/caller/v1"
-	"github.com/thirdlf03/microservice-app/services/gen/go/caller/v1/callerv1connect"
-	greeterv1 "github.com/thirdlf03/microservice-app/services/gen/go/greeter/v1"
+	callerv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/caller/v1"
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/caller/v1/callerv1connect"
+	greeterv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/greeter/v1"
 )
 
 type Service struct {

@@ -121,7 +121,7 @@ const file_gateway_v1_gateway_proto_rawDesc = "" +
 	"\x14InvokeCustomResponse\x12\x18\n" +
 	"\amessage\x18\x01 \x01(\tR\amessage2e\n" +
 	"\x0eGatewayService\x12S\n" +
-	"\fInvokeCustom\x12\x1f.gateway.v1.InvokeCustomRequest\x1a .gateway.v1.InvokeCustomResponse\"\x00BLZJgithub.com/thirdlf03/microservice-app/services/gen/go/gateway/v1;gatewayv1b\x06proto3"
+	"\fInvokeCustom\x12\x1f.gateway.v1.InvokeCustomRequest\x1a .gateway.v1.InvokeCustomResponse\"\x00BTZRgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/gateway/v1;gatewayv1b\x06proto3"
 
 var (
 	file_gateway_v1_gateway_proto_rawDescOnce sync.Once

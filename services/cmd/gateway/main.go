@@ -20,9 +20,9 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
-	"github.com/thirdlf03/microservice-app/services/gen/go/gateway/v1/gatewayv1connect"
-	"github.com/thirdlf03/microservice-app/services/internal/gateway"
-	"github.com/thirdlf03/microservice-app/services/internal/platform"
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/gateway/v1/gatewayv1connect"
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/gateway"
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
 const (
