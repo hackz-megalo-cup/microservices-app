@@ -11,6 +11,9 @@
     pkgs.nh
     pkgs.nix-output-monitor
 
+    # Git
+    pkgs.git
+
     # Kubernetes
     pkgs.kind
     pkgs.kubectl
