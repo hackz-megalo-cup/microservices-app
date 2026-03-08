@@ -1,5 +1,6 @@
 # Nix / devenv
 .devenv/
+.devenv-root
 .direnv/
 .pre-commit-config.yaml
 result
@@ -38,6 +39,9 @@ coverage/
 .DS_Store
 **/.DS_Store
 Thumbs.db
+
+# Plans (local only)
+docs/plans/
 
 # Misc caches
 .cache/
