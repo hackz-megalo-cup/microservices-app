@@ -135,6 +135,7 @@ docker_build(
     'frontend',
     context='.',
     dockerfile='deploy/docker/frontend/Dockerfile',
+    build_args={'VITE_API_BASE_URL': 'http://localhost:30081'},
 )
 
 if manifests:
