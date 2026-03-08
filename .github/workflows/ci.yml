@@ -233,20 +233,41 @@ jobs:
           done
 
   render-manifests:
-    runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [nix-build]
+    runs-on: blacksmith-4vcpu-ubuntu-2404
     permissions:
       contents: write
       packages: read
     steps:
       - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v27
+
+      - name: Create Nix directories
+        run: |
+          sudo mkdir -p /nix/store
+          sudo chmod -R 777 /nix
+
+      - name: Mount Nix store (sticky disk)
+        uses: useblacksmith/stickydisk@v1
         with:
+          key: ${{ github.repository }}-nix-store
+          path: /nix
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
           extra_nix_config: |
             accept-flake-config = true
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: hackz-megalo-cup
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          skipPush: true
+
       - name: Render nixidy manifests
         run: bash scripts/gen-manifests.sh
+
       - uses: stefanzweifel/git-auto-commit-action@v5
         with:
           commit_message: "chore: render nixidy manifests [skip ci]"
