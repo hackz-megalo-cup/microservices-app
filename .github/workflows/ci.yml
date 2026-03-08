@@ -214,7 +214,7 @@ jobs:
           echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin
           for svc in caller greeter gateway; do
             nix build .#${svc}-image
-            ./result | skopeo copy docker-archive:/dev/stdin \
+            bash ./result | skopeo copy docker-archive:/dev/stdin \
               docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }}
             skopeo copy \
               docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }} \
@@ -225,9 +225,10 @@ jobs:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [nix-build]
     runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 15
     permissions:
       contents: write
-      packages: read
+      pull-requests: write
     steps:
       - uses: actions/checkout@v4
 
@@ -246,7 +247,16 @@ jobs:
       - name: Render nixidy manifests
         run: bash scripts/gen-manifests.sh
 
-      - uses: stefanzweifel/git-auto-commit-action@v5
+      - uses: peter-evans/create-pull-request@v7
+        id: cpr
         with:
-          commit_message: "chore: render nixidy manifests [skip ci]"
-          file_pattern: "deploy/manifests/**"
+          commit-message: "chore: render nixidy manifests"
+          title: "chore: render nixidy manifests"
+          branch: chore/render-manifests
+          delete-branch: true
+
+      - name: Enable auto-merge
+        if: steps.cpr.outputs.pull-request-operation == 'created' || steps.cpr.outputs.pull-request-operation == 'updated'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: gh pr merge ${{ steps.cpr.outputs.pull-request-number }} --auto --squash
