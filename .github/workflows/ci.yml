@@ -48,7 +48,7 @@ jobs:
     if: >-
       needs.changes.outputs.proto == 'true'
       && github.event_name != 'push'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
       - uses: actions/checkout@v4
         with:
@@ -69,7 +69,7 @@ jobs:
     if: >-
       needs.changes.outputs.go == 'true'
       && github.event_name != 'push'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -85,7 +85,7 @@ jobs:
     if: >-
       needs.changes.outputs.frontend == 'true'
       && github.event_name != 'push'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -104,7 +104,7 @@ jobs:
     if: >-
       needs.changes.outputs.go == 'true'
       && github.event_name != 'push'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-go@v5
@@ -119,7 +119,7 @@ jobs:
     if: >-
       needs.changes.outputs.node == 'true'
       && github.event_name != 'push'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     strategy:
       matrix:
         service: [auth-service, custom-lang-service]
@@ -141,7 +141,7 @@ jobs:
     if: >-
       needs.changes.outputs.node == 'true'
       && github.event_name != 'push'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     strategy:
       matrix:
         service: [auth-service, custom-lang-service]
@@ -163,7 +163,7 @@ jobs:
     if: >-
       needs.changes.outputs.frontend == 'true'
       && github.event_name != 'push'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -182,23 +182,12 @@ jobs:
     if: >-
       needs.changes.outputs.go == 'true'
       || needs.changes.outputs.nix == 'true'
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     permissions:
       contents: read
       packages: write
     steps:
       - uses: actions/checkout@v4
-
-      - name: Create Nix directories
-        run: |
-          sudo mkdir -p /nix/store
-          sudo chmod -R 777 /nix
-
-      - name: Mount Nix store (sticky disk)
-        uses: useblacksmith/stickydisk@v1
-        with:
-          key: ${{ github.repository }}-nix-store
-          path: /nix
 
       - uses: cachix/install-nix-action@v31
         with:
@@ -235,23 +224,12 @@ jobs:
   render-manifests:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [nix-build]
-    runs-on: blacksmith-4vcpu-ubuntu-2404
+    runs-on: blacksmith-2vcpu-ubuntu-2404
     permissions:
       contents: write
       packages: read
     steps:
       - uses: actions/checkout@v4
-
-      - name: Create Nix directories
-        run: |
-          sudo mkdir -p /nix/store
-          sudo chmod -R 777 /nix
-
-      - name: Mount Nix store (sticky disk)
-        uses: useblacksmith/stickydisk@v1
-        with:
-          key: ${{ github.repository }}-nix-store
-          path: /nix
 
       - uses: cachix/install-nix-action@v31
         with:
