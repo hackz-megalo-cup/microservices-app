@@ -55,6 +55,7 @@
       name = "golangci-lint";
       entry = "bash -c 'export PATH=\"$DEVENV_ROOT/.devenv/go-bin:$PATH\" && cd services && golangci-lint run'";
       files = "\\.go$";
+      excludes = [ "^services/gen/go/" ];
       language = "system";
       pass_filenames = false;
     };
@@ -64,6 +65,7 @@
       name = "goimports";
       entry = "bash -c 'export PATH=\"$DEVENV_ROOT/.devenv/go-bin:$PATH\" && cd services && goimports -l -w .'";
       files = "\\.go$";
+      excludes = [ "^services/gen/go/" ];
       language = "system";
       pass_filenames = false;
     };
@@ -82,6 +84,7 @@
       name = "go test";
       entry = "bash -c 'cd services && go test ./...'";
       files = "\\.go$";
+      excludes = [ "^services/gen/go/" ];
       language = "system";
       pass_filenames = false;
     };
