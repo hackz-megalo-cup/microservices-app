@@ -211,12 +211,13 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin
+          AUTH_FILE="$(mktemp)"
+          echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin --authfile "$AUTH_FILE"
           for svc in caller greeter gateway; do
             nix build .#${svc}-image
-            bash ./result | skopeo copy docker-archive:/dev/stdin \
+            bash ./result | skopeo copy --authfile "$AUTH_FILE" docker-archive:/dev/stdin \
               docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }}
-            skopeo copy \
+            skopeo copy --authfile "$AUTH_FILE" \
               docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }} \
               docker://ghcr.io/hackz-megalo-cup/${svc}:latest
           done
