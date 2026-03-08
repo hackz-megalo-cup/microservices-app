@@ -7,7 +7,42 @@ on:
     branches:
       - main
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
+  changes:
+    runs-on: blacksmith-2vcpu-ubuntu-2404
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      proto: ${{ steps.filter.outputs.proto }}
+      go: ${{ steps.filter.outputs.go }}
+      frontend: ${{ steps.filter.outputs.frontend }}
+      node: ${{ steps.filter.outputs.node }}
+      nix: ${{ steps.filter.outputs.nix }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            proto:
+              - 'proto/**'
+            go:
+              - 'services/**'
+              - 'proto/**'
+            frontend:
+              - 'frontend/**'
+            node:
+              - 'node-services/**'
+            nix:
+              - 'flake.nix'
+              - 'flake.lock'
+              - '**/*.nix'
+
   contract:
     runs-on: ubuntu-latest
     steps:
