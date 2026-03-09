@@ -99,28 +99,33 @@ add_to_topics() {
        { print }' "$topics_file" > "$tmp_file"
   mv "$tmp_file" "$topics_file"
 
-  # Add DLQ constant before the closing paren
+  # Add DLQ constant before the const block closing paren (skip import block's paren)
   tmp_file=$(mktemp)
   awk -v dlq="\t${dlq_const}   = \"${dlq_value}\"" \
-      '/^)/ && !done { print dlq; done=1 }
+      'BEGIN { in_dlq=0 }
+       /\/\/ Dead Letter Queue topics\./ { in_dlq=1 }
+       /^\)/ && in_dlq { print dlq; in_dlq=0 }
        { print }' "$topics_file" > "$tmp_file"
   mv "$tmp_file" "$topics_file"
 
-  # Add to DLQTopic mapping
+  # Add to DLQTopic mapping (before the map literal's closing brace)
   tmp_file=$(mktemp)
   awk -v mapping="\t\t${created_const}:   ${dlq_const}," \
-      '/return m\[source\]/ { print mapping; }
+      'BEGIN { in_dlq_func=0 }
+       /func DLQTopic/ { in_dlq_func=1 }
+       /^\t\}/ && in_dlq_func { print mapping; in_dlq_func=0 }
        { print }' "$topics_file" > "$tmp_file"
   mv "$tmp_file" "$topics_file"
 
-  # Add to DefaultTopics
+  # Add to DefaultTopics (before the map literal's closing brace)
   tmp_file=$(mktemp)
   awk -v main="\t\t${created_const}:      3," \
       -v failed="\t\t${failed_const}:         1," \
       -v comp="\t\t${compensated_const}:   1," \
       -v dlq="\t\t${dlq_const}:   1," \
-      '/TopicUserRegisteredDLQ:/ { print; print dlq; next }
-       /TopicUserRegistered:.*3,/ && !/DLQ/ { print; print main; print failed; print comp; next }
+      'BEGIN { in_defaults=0 }
+       /func DefaultTopics/ { in_defaults=1 }
+       /^\t\}/ && in_defaults { print main; print failed; print comp; print dlq; in_defaults=0 }
        { print }' "$topics_file" > "$tmp_file"
   mv "$tmp_file" "$topics_file"
 
