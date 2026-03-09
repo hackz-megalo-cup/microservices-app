@@ -14,16 +14,18 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	callerv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/caller/v1"
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
 type Service struct {
 	httpClient *http.Client
 	timeout    time.Duration
 	pool       *pgxpool.Pool
+	publisher  *platform.EventPublisher
 }
 
-func NewService(httpClient *http.Client, timeout time.Duration, pool *pgxpool.Pool) *Service {
-	return &Service{httpClient: httpClient, timeout: timeout, pool: pool}
+func NewService(httpClient *http.Client, timeout time.Duration, pool *pgxpool.Pool, publisher *platform.EventPublisher) *Service {
+	return &Service{httpClient: httpClient, timeout: timeout, pool: pool, publisher: publisher}
 }
 
 func (s *Service) CallExternal(ctx context.Context, req *connect.Request[callerv1.CallExternalRequest]) (*connect.Response[callerv1.CallExternalResponse], error) {
@@ -66,6 +68,19 @@ func (s *Service) CallExternal(ctx context.Context, req *connect.Request[callerv
 				slog.Error("failed to insert call log", "error", err)
 			}
 		}()
+	}
+
+	// Fire-and-forget: エラーはログに記録するがメイン処理は失敗させない
+	if err := s.publisher.Publish(ctx, platform.TopicCallCompleted, platform.NewEvent(
+		"call.completed",
+		"caller-service",
+		map[string]any{
+			"url":         targetURL,
+			"status_code": statusCode,
+			"body_length": bodyLength,
+		},
+	)); err != nil {
+		slog.Error("failed to publish call.completed event", "error", err)
 	}
 
 	resp := connect.NewResponse(&callerv1.CallExternalResponse{

@@ -76,10 +76,14 @@ func run() error {
 		}
 	}
 
+	brokers := platform.ParseKafkaBrokers(os.Getenv("KAFKA_BROKERS"))
+	publisher, _ := platform.NewEventPublisher(brokers)
+	defer publisher.Close()
+
 	svc := gateway.NewService(&http.Client{
 		Timeout:   2 * time.Second,
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
-	}, customBaseURL, time.Second, dbPool)
+	}, customBaseURL, time.Second, dbPool, publisher)
 	otelInterceptor, err := otelconnect.NewInterceptor()
 	if err != nil {
 		return err

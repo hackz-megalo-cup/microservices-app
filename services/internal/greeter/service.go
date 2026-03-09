@@ -25,9 +25,10 @@ type Service struct {
 	externalURL    string
 	timeout        time.Duration
 	pool           *pgxpool.Pool
+	publisher      *platform.EventPublisher
 }
 
-func NewService(callerClient callerv1connect.CallerServiceClient, externalURL string, timeout time.Duration, pool *pgxpool.Pool) *Service {
+func NewService(callerClient callerv1connect.CallerServiceClient, externalURL string, timeout time.Duration, pool *pgxpool.Pool, publisher *platform.EventPublisher) *Service {
 	return &Service{
 		callerClient:   callerClient,
 		callerCB:       platform.NewCircuitBreaker[*callerv1.CallExternalResponse](platform.DefaultCBConfig("greeter-to-caller")),
@@ -35,6 +36,7 @@ func NewService(callerClient callerv1connect.CallerServiceClient, externalURL st
 		externalURL:    externalURL,
 		timeout:        timeout,
 		pool:           pool,
+		publisher:      publisher,
 	}
 }
 
@@ -89,6 +91,19 @@ func (s *Service) Greet(ctx context.Context, req *connect.Request[greeterv1.Gree
 		if dbErr != nil {
 			slog.Error("failed to insert greeting", "error", dbErr)
 		}
+	}
+
+	// Fire-and-forget: エラーはログに記録するがメイン処理は失敗させない
+	if err := s.publisher.Publish(ctx, platform.TopicGreetingCreated, platform.NewEvent(
+		"greeting.created",
+		"greeter-service",
+		map[string]any{
+			"name":            name,
+			"message":         msg,
+			"external_status": callerResult.GetStatusCode(),
+		},
+	)); err != nil {
+		slog.Error("failed to publish greeting.created event", "error", err)
 	}
 
 	return resp, nil

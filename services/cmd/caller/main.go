@@ -70,7 +70,11 @@ func run() error {
 		}
 	}
 
-	svc := caller.NewService(&http.Client{Timeout: 2 * time.Second}, 2*time.Second, dbPool)
+	brokers := platform.ParseKafkaBrokers(os.Getenv("KAFKA_BROKERS"))
+	publisher, _ := platform.NewEventPublisher(brokers)
+	defer publisher.Close()
+
+	svc := caller.NewService(&http.Client{Timeout: 2 * time.Second}, 2*time.Second, dbPool, publisher)
 	otelInterceptor, err := otelconnect.NewInterceptor()
 	if err != nil {
 		return err

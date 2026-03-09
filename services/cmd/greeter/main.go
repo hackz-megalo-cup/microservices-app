@@ -89,7 +89,11 @@ func run() error {
 		}
 	}
 
-	greeterSvc := greeter.NewService(callerClient, externalURL, 2*time.Second, dbPool)
+	brokers := platform.ParseKafkaBrokers(os.Getenv("KAFKA_BROKERS"))
+	publisher, _ := platform.NewEventPublisher(brokers)
+	defer publisher.Close()
+
+	greeterSvc := greeter.NewService(callerClient, externalURL, 2*time.Second, dbPool, publisher)
 	path, handler := greeterv1connect.NewGreeterServiceHandler(
 		greeterSvc,
 		connect.WithInterceptors(

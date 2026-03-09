@@ -30,6 +30,7 @@ type Service struct {
 	retryBudget        *RetryBudget
 	customLangBulkhead *platform.Bulkhead
 	pool               *pgxpool.Pool
+	publisher          *platform.EventPublisher
 }
 
 type invokeResult struct {
@@ -78,7 +79,7 @@ func (b *RetryBudget) Allow() bool {
 	}
 }
 
-func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, pool *pgxpool.Pool) *Service {
+func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, pool *pgxpool.Pool, publisher *platform.EventPublisher) *Service {
 	return &Service{
 		httpClient:         httpClient,
 		baseURL:            strings.TrimRight(baseURL, "/"),
@@ -87,6 +88,7 @@ func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, 
 		retryBudget:        NewRetryBudget(20, 10),
 		customLangBulkhead: platform.NewBulkhead(10),
 		pool:               pool,
+		publisher:          publisher,
 	}
 }
 
@@ -126,6 +128,18 @@ func (s *Service) InvokeCustom(ctx context.Context, req *connect.Request[gateway
 		if dbErr != nil {
 			slog.Error("failed to insert invocation", "error", dbErr)
 		}
+	}
+
+	// Fire-and-forget: エラーはログに記録するがメイン処理は失敗させない
+	if err := s.publisher.Publish(ctx, platform.TopicInvocationCreated, platform.NewEvent(
+		"invocation.created",
+		"gateway-service",
+		map[string]any{
+			"name":    name,
+			"message": result.message,
+		},
+	)); err != nil {
+		slog.Error("failed to publish invocation.created event", "error", err)
 	}
 
 	return connect.NewResponse(&gatewayv1.InvokeCustomResponse{Message: result.message}), nil
