@@ -7,6 +7,10 @@ const (
 	TopicInvocationCreated = "invocation.created"
 	TopicUserRegistered    = "user.registered"
 
+	// Saga compensation topics.
+	TopicGreetingFailed   = "greeting.failed"
+	TopicInvocationFailed = "invocation.failed"
+
 	// Dead Letter Queue topics.
 	TopicGreetingCreatedDLQ   = "greeting.created.dlq"
 	TopicCallCompletedDLQ     = "call.completed.dlq"
@@ -21,6 +25,8 @@ func DefaultTopics() map[string]int32 {
 		TopicCallCompleted:        3,
 		TopicInvocationCreated:    3,
 		TopicUserRegistered:       3,
+		TopicGreetingFailed:       1,
+		TopicInvocationFailed:     1,
 		TopicGreetingCreatedDLQ:   1,
 		TopicCallCompletedDLQ:     1,
 		TopicInvocationCreatedDLQ: 1,

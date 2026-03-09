@@ -119,6 +119,17 @@ func (s *Service) InvokeCustom(ctx context.Context, req *connect.Request[gateway
 				slog.Error("failed to insert invocation", "error", dbErr)
 			}
 		}
+
+		// Saga compensation: publish invocation.failed event
+		_ = s.publisher.Publish(ctx, platform.TopicInvocationFailed, platform.NewEvent(
+			"invocation.failed",
+			"gateway-service",
+			map[string]any{
+				"name":  name,
+				"error": err.Error(),
+			},
+		))
+
 		return nil, mapError(err)
 	}
 
