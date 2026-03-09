@@ -79,40 +79,48 @@ add_to_init_db() {
 
 add_to_topics() {
   local topics_file="${REPO_ROOT}/services/internal/platform/topics.go"
-  local topic_const="Topic${SERVICE_NAME_PASCAL}Created"
-  local topic_value="${SERVICE_NAME_SNAKE}.created"
-  local topic_dlq_const="Topic${SERVICE_NAME_PASCAL}CreatedDLQ"
-  local topic_dlq_value="${SERVICE_NAME_SNAKE}.created.dlq"
 
-  # Add topic constants before the DLQ section
+  local created_const="Topic${SERVICE_NAME_PASCAL}Created"
+  local created_value="${SERVICE_NAME_SNAKE}.created"
+  local failed_const="Topic${SERVICE_NAME_PASCAL}Failed"
+  local failed_value="${SERVICE_NAME_SNAKE}.failed"
+  local compensated_const="Topic${SERVICE_NAME_PASCAL}Compensated"
+  local compensated_value="${SERVICE_NAME_SNAKE}.compensated"
+  local dlq_const="Topic${SERVICE_NAME_PASCAL}CreatedDLQ"
+  local dlq_value="${SERVICE_NAME_SNAKE}.created.dlq"
+
+  # Add topic constants before the "Dead Letter Queue" comment
   local tmp_file
   tmp_file=$(mktemp)
-  awk -v tc="\t${topic_const}   = \"${topic_value}\"" \
-      '/\/\/ Dead Letter Queue topics\./ { print tc; print ""; }
+  awk -v t1="\t${created_const}   = \"${created_value}\"" \
+      -v t2="\t${failed_const}   = \"${failed_value}\"" \
+      -v t3="\t${compensated_const}   = \"${compensated_value}\"" \
+      '/\/\/ Dead Letter Queue topics\./ { print t1; print t2; print t3; print ""; }
        { print }' "$topics_file" > "$tmp_file"
   mv "$tmp_file" "$topics_file"
 
   # Add DLQ constant before the closing paren
   tmp_file=$(mktemp)
-  awk -v dlq="\t${topic_dlq_const}   = \"${topic_dlq_value}\"" \
+  awk -v dlq="\t${dlq_const}   = \"${dlq_value}\"" \
       '/^)/ && !done { print dlq; done=1 }
        { print }' "$topics_file" > "$tmp_file"
   mv "$tmp_file" "$topics_file"
 
   # Add to DLQTopic mapping
   tmp_file=$(mktemp)
-  awk -v mapping="\t\t${topic_const}:   ${topic_dlq_const}," \
+  awk -v mapping="\t\t${created_const}:   ${dlq_const}," \
       '/return m\[source\]/ { print mapping; }
        { print }' "$topics_file" > "$tmp_file"
   mv "$tmp_file" "$topics_file"
 
   # Add to DefaultTopics
   tmp_file=$(mktemp)
-  awk -v main="\t\t${topic_const}:      3," \
-      -v dlq="\t\t${topic_dlq_const}:   1," \
-      '/}$/ && /return map/ { next }
-       /TopicUserRegisteredDLQ:/ { print; print dlq; next }
-       /TopicUserRegistered:.*3,/ && !/DLQ/ { print; print main; next }
+  awk -v main="\t\t${created_const}:      3," \
+      -v failed="\t\t${failed_const}:         1," \
+      -v comp="\t\t${compensated_const}:   1," \
+      -v dlq="\t\t${dlq_const}:   1," \
+      '/TopicUserRegisteredDLQ:/ { print; print dlq; next }
+       /TopicUserRegistered:.*3,/ && !/DLQ/ { print; print main; print failed; print comp; next }
        { print }' "$topics_file" > "$tmp_file"
   mv "$tmp_file" "$topics_file"
 
@@ -123,12 +131,16 @@ case "$LANG" in
   go)
     echo "==> Creating Go service: ${SERVICE_NAME}"
     mkdir -p "${REPO_ROOT}/services/cmd/${SERVICE_NAME}"
-    mkdir -p "${REPO_ROOT}/services/internal/${SERVICE_NAME}"
-    mkdir -p "${REPO_ROOT}/services/internal/${SERVICE_NAME}/migrations"
+    mkdir -p "${REPO_ROOT}/services/internal/${SERVICE_NAME_SNAKE}"
+    mkdir -p "${REPO_ROOT}/services/internal/${SERVICE_NAME_SNAKE}/migrations"
     mkdir -p "${REPO_ROOT}/deploy/docker/${SERVICE_NAME}"
     mkdir -p "${REPO_ROOT}/deploy/k8s"
 
     apply_template "${TEMPLATES_DIR}/go/main.go.tmpl" "${REPO_ROOT}/services/cmd/${SERVICE_NAME}/main.go"
+    apply_template "${TEMPLATES_DIR}/go/embed.go.tmpl" "${REPO_ROOT}/services/internal/${SERVICE_NAME_SNAKE}/embed.go"
+    apply_template "${TEMPLATES_DIR}/go/events.go.tmpl" "${REPO_ROOT}/services/internal/${SERVICE_NAME_SNAKE}/events.go"
+    apply_template "${TEMPLATES_DIR}/go/aggregate.go.tmpl" "${REPO_ROOT}/services/internal/${SERVICE_NAME_SNAKE}/aggregate.go"
+    apply_template "${TEMPLATES_DIR}/go/service.go.tmpl" "${REPO_ROOT}/services/internal/${SERVICE_NAME_SNAKE}/service.go"
     apply_template "${TEMPLATES_DIR}/go/Dockerfile.dev.tmpl" "${REPO_ROOT}/deploy/docker/${SERVICE_NAME}/Dockerfile.dev"
     apply_template "${TEMPLATES_DIR}/go/k8s.nix.tmpl" "${REPO_ROOT}/deploy/k8s/${SERVICE_NAME}.nix"
 
@@ -136,7 +148,7 @@ case "$LANG" in
     if [[ -d "${TEMPLATES_DIR}/go/migrations" ]]; then
       for tmpl in "${TEMPLATES_DIR}/go/migrations/"*.tmpl; do
         local_name="$(basename "$tmpl" .tmpl)"
-        apply_template "$tmpl" "${REPO_ROOT}/services/internal/${SERVICE_NAME}/migrations/${local_name}"
+        apply_template "$tmpl" "${REPO_ROOT}/services/internal/${SERVICE_NAME_SNAKE}/migrations/${local_name}"
       done
       echo "  Generated migrations"
     fi
@@ -156,9 +168,12 @@ case "$LANG" in
     echo ""
     echo "Created Go service '${SERVICE_NAME}' (port ${PORT})."
     echo "Files:"
-    echo "  services/cmd/${SERVICE_NAME}/main.go"
-    echo "  services/internal/${SERVICE_NAME}/  (add your service implementation)"
-    echo "  services/internal/${SERVICE_NAME}/migrations/  (idempotency + outbox)"
+    echo "  services/cmd/${SERVICE_NAME}/main.go          (DON'T TOUCH - infrastructure wiring)"
+    echo "  services/internal/${SERVICE_NAME_SNAKE}/embed.go      (DON'T TOUCH)"
+    echo "  services/internal/${SERVICE_NAME_SNAKE}/events.go     (EDIT - define your events)"
+    echo "  services/internal/${SERVICE_NAME_SNAKE}/aggregate.go  (EDIT - define state + Apply)"
+    echo "  services/internal/${SERVICE_NAME_SNAKE}/service.go    (EDIT - implement business logic)"
+    echo "  services/internal/${SERVICE_NAME_SNAKE}/migrations/"
     echo "  deploy/docker/${SERVICE_NAME}/Dockerfile.dev"
     echo "  deploy/k8s/${SERVICE_NAME}.nix"
     echo "  proto/${SERVICE_NAME}/v1/${SERVICE_NAME}.proto"
@@ -166,11 +181,15 @@ case "$LANG" in
     echo "Auto-wired:"
     echo "  docker-compose.yml  (service entry added)"
     echo "  scripts/init-db.sh  (database added)"
-    echo "  services/internal/platform/topics.go  (topic added)"
+    echo "  services/internal/platform/topics.go  (topics added)"
     echo ""
     echo "Next steps:"
-    echo "  1. Implement services/internal/${SERVICE_NAME}/service.go"
-    echo "  2. Add the nixidy import to deploy/nixidy/env/local.nix"
+    echo "  1. Edit proto/${SERVICE_NAME}/v1/${SERVICE_NAME}.proto (define your API)"
+    echo "  2. Run: buf generate"
+    echo "  3. Edit services/internal/${SERVICE_NAME_SNAKE}/events.go (define your events)"
+    echo "  4. Edit services/internal/${SERVICE_NAME_SNAKE}/aggregate.go (define state + Apply)"
+    echo "  5. Edit services/internal/${SERVICE_NAME_SNAKE}/service.go (implement business logic)"
+    echo "  6. Run: docker compose up ${SERVICE_NAME}"
     ;;
 
   custom)
