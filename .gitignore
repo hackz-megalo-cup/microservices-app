@@ -15,6 +15,10 @@ frontend/*.tsbuildinfo
 
 # Go services
 services/**/build/
+services/greeter
+services/caller
+services/gateway
+services/projector
 
 # Node services
 node-services/**/node_modules/
