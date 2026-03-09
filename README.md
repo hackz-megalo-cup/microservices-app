@@ -1,5 +1,8 @@
 # microservice-app
 
+[![Ask DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/hackz-megalo-cup/microservices-app)
+[![Mintlify Docs](https://img.shields.io/badge/docs-Mintlify-0ea5e9?logo=mintlify&logoColor=white)](https://mintlify.com/hackz-megalo-cup/microservices-app)
+
 マイクロサービスアーキテクチャで構成されたアプリケーションリポジトリ。
 
 ## 技術スタック
