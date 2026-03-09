@@ -16,6 +16,7 @@ type Event struct {
 	ID        string    `json:"id"`
 	Type      string    `json:"type"`
 	Source    string    `json:"source"`
+	Version   int       `json:"version"`
 	Timestamp time.Time `json:"timestamp"`
 	Data      any       `json:"data"`
 }
@@ -25,6 +26,7 @@ func NewEvent(eventType, source string, data any) Event {
 		ID:        uuid.NewString(),
 		Type:      eventType,
 		Source:    source,
+		Version:   1,
 		Timestamp: time.Now().UTC(),
 		Data:      data,
 	}
@@ -125,5 +127,8 @@ func (s *EventSubscriber) Close() error {
 func ParseEvent(msg *message.Message) (Event, error) {
 	var event Event
 	err := json.Unmarshal(msg.Payload, &event)
+	if err == nil && event.Version == 0 {
+		event.Version = 1
+	}
 	return event, err
 }

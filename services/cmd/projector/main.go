@@ -4,6 +4,7 @@ import (
 	"context"
 	"io/fs"
 	"log/slog"
+	"net/http"
 	"os"
 	"os/signal"
 	"syscall"
@@ -53,11 +54,71 @@ func run() error {
 	publisher, _ := platform.NewEventPublisher(brokers)
 	defer publisher.Close()
 
-	p, err := projector.New(brokers, pool, publisher)
+	projection := projector.NewProjectionHandler(pool)
+
+	// Event store connection for rebuilds (connects to greeter DB).
+	greeterDBURL := os.Getenv("GREETER_DATABASE_URL")
+	var eventStore *platform.EventStore
+	if greeterDBURL != "" {
+		greeterPool, _ := platform.NewDBPool(ctx, greeterDBURL)
+		if greeterPool != nil {
+			eventStore = platform.NewEventStore(greeterPool)
+			defer greeterPool.Close()
+		}
+	}
+
+	rebuilder := projector.NewRebuilder(pool, eventStore, projection)
+
+	p, err := projector.New(brokers, pool, publisher, projection)
 	if err != nil {
 		return err
 	}
 	defer p.Close()
+
+	// Health check HTTP server
+	healthPort := os.Getenv("HEALTH_PORT")
+	if healthPort == "" {
+		healthPort = "8083"
+	}
+	healthMux := http.NewServeMux()
+	healthMux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
+		if pool != nil {
+			if err := pool.Ping(r.Context()); err != nil {
+				w.WriteHeader(http.StatusServiceUnavailable)
+				_, _ = w.Write([]byte("db unhealthy\n"))
+				return
+			}
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("ok\n"))
+	})
+	healthMux.HandleFunc("/rebuild", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodPost {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+		name := r.URL.Query().Get("projection")
+		if name == "" {
+			name = projector.ProjectionGreetingsView
+		}
+		if rebuilder == nil {
+			http.Error(w, "rebuilder not configured", http.StatusServiceUnavailable)
+			return
+		}
+		if err := rebuilder.Rebuild(r.Context(), name); err != nil {
+			slog.Error("rebuild failed", "error", err)
+			http.Error(w, err.Error(), http.StatusInternalServerError)
+			return
+		}
+		w.WriteHeader(http.StatusOK)
+		_, _ = w.Write([]byte("rebuild complete\n"))
+	})
+	go func() {
+		slog.Info("projector health check listening", "port", healthPort)
+		if err := http.ListenAndServe(":"+healthPort, healthMux); err != nil {
+			slog.Error("health check server error", "error", err)
+		}
+	}()
 
 	slog.Info("projector started")
 	return p.Run(ctx)

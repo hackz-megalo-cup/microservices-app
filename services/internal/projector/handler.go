@@ -15,25 +15,19 @@ type Projector struct {
 	subscriber *platform.EventSubscriber
 	pool       *pgxpool.Pool
 	dlq        *platform.EventPublisher
+	projection *ProjectionHandler
 }
 
-func New(brokers []string, pool *pgxpool.Pool, dlq *platform.EventPublisher) (*Projector, error) {
+func New(brokers []string, pool *pgxpool.Pool, dlq *platform.EventPublisher, projection *ProjectionHandler) (*Projector, error) {
 	sub, err := platform.NewEventSubscriber(brokers, "projector-group")
 	if err != nil {
 		return nil, err
 	}
-	return &Projector{subscriber: sub, pool: pool, dlq: dlq}, nil
+	return &Projector{subscriber: sub, pool: pool, dlq: dlq, projection: projection}, nil
 }
 
 func (p *Projector) Run(ctx context.Context) error {
-	topics := []string{
-		platform.TopicGreetingCreated,
-		platform.TopicCallCompleted,
-		platform.TopicInvocationCreated,
-		platform.TopicUserRegistered,
-		platform.TopicGreetingFailed,
-		platform.TopicInvocationFailed,
-	}
+	topics := platform.SubscribableTopics()
 
 	for _, topic := range topics {
 		ch, err := p.subscriber.Subscribe(ctx, topic)
@@ -91,12 +85,24 @@ func (p *Projector) handleEvent(ctx context.Context, event platform.Event) error
 	}
 	data, _ := json.Marshal(event.Data)
 	_, err := p.pool.Exec(ctx,
-		`INSERT INTO event_log (event_id, event_type, source, data, created_at)
-		 VALUES ($1, $2, $3, $4, $5)
+		`INSERT INTO event_log (event_id, event_type, source, data, version, created_at)
+		 VALUES ($1, $2, $3, $4, $5, $6)
 		 ON CONFLICT (event_id) DO NOTHING`,
-		event.ID, event.Type, event.Source, data, event.Timestamp,
+		event.ID, event.Type, event.Source, data, event.Version, event.Timestamp,
 	)
-	return err
+	if err != nil {
+		return err
+	}
+
+	// Update read model projections
+	if p.projection != nil {
+		if projErr := p.projection.HandleEvent(ctx, event); projErr != nil {
+			slog.Error("projection error", "type", event.Type, "error", projErr)
+			// Don't fail the whole event handling for projection errors
+		}
+	}
+
+	return nil
 }
 
 func (p *Projector) Close() error {
