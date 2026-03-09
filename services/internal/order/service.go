@@ -1,4 +1,4 @@
-package __SERVICE_NAME_SNAKE__
+package order
 
 import (
 	"context"
@@ -8,7 +8,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
 
-	pb "github.com/hackz-megalo-cup/microservices-app/services/gen/go/__SERVICE_NAME__/v1"
+	pb "github.com/hackz-megalo-cup/microservices-app/services/gen/go/order/v1"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
@@ -29,24 +29,24 @@ func NewService(eventStore *platform.EventStore, outbox *platform.OutboxStore) *
 // The infrastructure (ES, Outbox, Kafka) is handled for you.
 // ==========================================================.
 
-func (s *Service) Invoke(ctx context.Context, req *connect.Request[pb.__SERVICE_NAME_PASCAL__Request]) (*connect.Response[pb.__SERVICE_NAME_PASCAL__Response], error) {
+func (s *Service) Invoke(ctx context.Context, req *connect.Request[pb.OrderRequest]) (*connect.Response[pb.OrderResponse], error) {
 	input := req.Msg.GetInput()
 	if input == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("input is required"))
 	}
 
 	// TODO: Implement your business logic here.
-	output := fmt.Sprintf("Hello %s from __SERVICE_NAME__!", input)
+	output := fmt.Sprintf("Hello %s from order!", input)
 
 	// Save via Event Sourcing (EventStore + Outbox + Kafka — all automatic)
-	agg := New__SERVICE_NAME_PASCAL__Aggregate(uuid.NewString())
+	agg := NewOrderAggregate(uuid.NewString())
 	agg.Create(input, output)
-	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, __SERVICE_NAME_PASCAL__TopicMapper); err != nil {
+	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, OrderTopicMapper); err != nil {
 		slog.Error("failed to save aggregate", "error", err)
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save"))
 	}
 
-	return connect.NewResponse(&pb.__SERVICE_NAME_PASCAL__Response{
+	return connect.NewResponse(&pb.OrderResponse{
 		Output: output,
 	}), nil
 }

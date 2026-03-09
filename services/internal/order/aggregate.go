@@ -1,4 +1,4 @@
-package __SERVICE_NAME_SNAKE__
+package order
 
 import (
 	"encoding/json"
@@ -12,41 +12,41 @@ import (
 // Add fields that represent the current state.
 // ==========================================================.
 
-type __SERVICE_NAME_PASCAL__Aggregate struct {
+type OrderAggregate struct {
 	platform.AggregateBase
 	Input  string
 	Output string
 	Status string // "created", "failed", "compensated"
 }
 
-func New__SERVICE_NAME_PASCAL__Aggregate(id string) *__SERVICE_NAME_PASCAL__Aggregate {
-	return &__SERVICE_NAME_PASCAL__Aggregate{
+func NewOrderAggregate(id string) *OrderAggregate {
+	return &OrderAggregate{
 		AggregateBase: platform.NewAggregateBase(id),
 	}
 }
 
-func (a *__SERVICE_NAME_PASCAL__Aggregate) StreamType() string { return "__SERVICE_NAME_SNAKE__" }
+func (a *OrderAggregate) StreamType() string { return "order" }
 
 // ApplyEvent replays a stored event to reconstruct state.
 // This is called when loading an aggregate from the event store.
-func (a *__SERVICE_NAME_PASCAL__Aggregate) ApplyEvent(eventType string, data json.RawMessage) {
+func (a *OrderAggregate) ApplyEvent(eventType string, data json.RawMessage) {
 	switch eventType {
-	case Event__SERVICE_NAME_PASCAL__Created:
-		var d __SERVICE_NAME_PASCAL__CreatedData
+	case EventOrderCreated:
+		var d OrderCreatedData
 		if err := json.Unmarshal(data, &d); err != nil {
 			slog.Warn("failed to unmarshal created data", "error", err)
 		}
 		a.Input = d.Input
 		a.Output = d.Output
 		a.Status = "created"
-	case Event__SERVICE_NAME_PASCAL__Failed:
-		var d __SERVICE_NAME_PASCAL__FailedData
+	case EventOrderFailed:
+		var d OrderFailedData
 		if err := json.Unmarshal(data, &d); err != nil {
 			slog.Warn("failed to unmarshal failed data", "error", err)
 		}
 		a.Input = d.Input
 		a.Status = "failed"
-	case Event__SERVICE_NAME_PASCAL__Compensated:
+	case EventOrderCompensated:
 		a.Status = "compensated"
 	}
 }
@@ -56,8 +56,8 @@ func (a *__SERVICE_NAME_PASCAL__Aggregate) ApplyEvent(eventType string, data jso
 // ==========================================================.
 
 // Create records a successful operation.
-func (a *__SERVICE_NAME_PASCAL__Aggregate) Create(input, output string) {
-	a.Raise(Event__SERVICE_NAME_PASCAL__Created, __SERVICE_NAME_PASCAL__CreatedData{
+func (a *OrderAggregate) Create(input, output string) {
+	a.Raise(EventOrderCreated, OrderCreatedData{
 		Input:  input,
 		Output: output,
 	})
@@ -67,8 +67,8 @@ func (a *__SERVICE_NAME_PASCAL__Aggregate) Create(input, output string) {
 }
 
 // Fail records a failed operation.
-func (a *__SERVICE_NAME_PASCAL__Aggregate) Fail(input string, reason string) {
-	a.Raise(Event__SERVICE_NAME_PASCAL__Failed, __SERVICE_NAME_PASCAL__FailedData{
+func (a *OrderAggregate) Fail(input string, reason string) {
+	a.Raise(EventOrderFailed, OrderFailedData{
 		Input: input,
 		Error: reason,
 	})
@@ -77,23 +77,23 @@ func (a *__SERVICE_NAME_PASCAL__Aggregate) Fail(input string, reason string) {
 }
 
 // Compensate marks this aggregate as compensated.
-func (a *__SERVICE_NAME_PASCAL__Aggregate) Compensate(reason string) {
+func (a *OrderAggregate) Compensate(reason string) {
 	if a.Status == "compensated" {
 		return
 	}
-	a.Raise(Event__SERVICE_NAME_PASCAL__Compensated, __SERVICE_NAME_PASCAL__CompensatedData{
+	a.Raise(EventOrderCompensated, OrderCompensatedData{
 		Reason: reason,
 	})
 	a.Status = "compensated"
 }
 
-// __SERVICE_NAME_PASCAL__TopicMapper maps event types to Kafka topics.
-func __SERVICE_NAME_PASCAL__TopicMapper(eventType string) string {
+// OrderTopicMapper maps event types to Kafka topics.
+func OrderTopicMapper(eventType string) string {
 	switch eventType {
-	case Event__SERVICE_NAME_PASCAL__Created:
-		return platform.Topic__SERVICE_NAME_PASCAL__Created
-	case Event__SERVICE_NAME_PASCAL__Failed:
-		return platform.Topic__SERVICE_NAME_PASCAL__Failed
+	case EventOrderCreated:
+		return platform.TopicOrderCreated
+	case EventOrderFailed:
+		return platform.TopicOrderFailed
 	default:
 		return ""
 	}
