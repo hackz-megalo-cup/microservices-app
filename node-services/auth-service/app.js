@@ -4,6 +4,7 @@ import cors from 'cors';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import pool, { healthCheck } from './db.js';
+import { publishEvent } from './kafka.js';
 
 const app = express();
 app.use(cors());
@@ -64,7 +65,19 @@ app.post('/auth/register', async (req, res) => {
       'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, role',
       [email, passwordHash],
     );
-    return res.status(201).json(result.rows[0]);
+    const user = result.rows[0];
+
+    // Fire-and-forget: publish user.registered event
+    try {
+      await publishEvent('user.registered', {
+        key: String(user.id),
+        payload: { userId: user.id, email: user.email, role: user.role, timestamp: new Date().toISOString() },
+      });
+    } catch (err) {
+      console.error('failed to publish user.registered event:', err);
+    }
+
+    return res.status(201).json(user);
   } catch (err) {
     if (err.code === '23505') {
       return res.status(409).json({ error: 'email already exists' });

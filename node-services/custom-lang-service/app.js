@@ -1,5 +1,6 @@
 import express from 'express';
 import pool, { healthCheck } from './db.js';
+import { publishEvent } from './kafka.js';
 
 const app = express();
 app.use(express.json());
@@ -54,6 +55,16 @@ app.post('/invoke', async (req, res) => {
   }
 
   if (statusCode === 200) {
+    // Fire-and-forget: publish invocation.created event
+    try {
+      await publishEvent('invocation.created', {
+        key: name,
+        payload: { name, message, statusCode, timestamp: new Date().toISOString() },
+      });
+    } catch (err) {
+      console.error('failed to publish invocation.created event:', err);
+    }
+
     return res.status(200).json({ message });
   }
 
