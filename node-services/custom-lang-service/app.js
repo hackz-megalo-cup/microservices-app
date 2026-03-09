@@ -2,7 +2,8 @@ import express from 'express';
 import { jwtAuthMiddleware } from './auth-middleware.js';
 import pool, { healthCheck } from './db.js';
 import { idempotencyMiddleware } from './idempotency.js';
-import { publishEvent } from './kafka.js';
+import { insertEvent } from './outbox.js';
+import { retryWithBackoff } from './retry.js';
 
 const app = express();
 app.use(express.json());
@@ -46,27 +47,30 @@ app.post('/invoke', jwtAuthMiddleware(), idempotencyMiddleware(), async (req, re
   }
 
   if (pool) {
+    const client = await pool.connect();
     try {
-      await pool.query(
-        'INSERT INTO executions (name, result_message, status_code) VALUES ($1, $2, $3)',
-        [name, message, statusCode],
+      await client.query('BEGIN');
+      await retryWithBackoff(() =>
+        client.query(
+          'INSERT INTO executions (name, result_message, status_code) VALUES ($1, $2, $3)',
+          [name, message, statusCode],
+        ),
       );
+      if (statusCode === 200) {
+        await insertEvent(client, 'invocation.created', {
+          payload: { name, message, statusCode, timestamp: new Date().toISOString() },
+        });
+      }
+      await client.query('COMMIT');
     } catch (err) {
+      await client.query('ROLLBACK');
       console.error('failed to record execution:', err);
+    } finally {
+      client.release();
     }
   }
 
   if (statusCode === 200) {
-    // Fire-and-forget: publish invocation.created event
-    try {
-      await publishEvent('invocation.created', {
-        key: name,
-        payload: { name, message, statusCode, timestamp: new Date().toISOString() },
-      });
-    } catch (err) {
-      console.error('failed to publish invocation.created event:', err);
-    }
-
     return res.status(200).json({ message });
   }
 

@@ -21,11 +21,11 @@ type Service struct {
 	httpClient *http.Client
 	timeout    time.Duration
 	pool       *pgxpool.Pool
-	publisher  *platform.EventPublisher
+	outbox     *platform.OutboxStore
 }
 
-func NewService(httpClient *http.Client, timeout time.Duration, pool *pgxpool.Pool, publisher *platform.EventPublisher) *Service {
-	return &Service{httpClient: httpClient, timeout: timeout, pool: pool, publisher: publisher}
+func NewService(httpClient *http.Client, timeout time.Duration, pool *pgxpool.Pool, outbox *platform.OutboxStore) *Service {
+	return &Service{httpClient: httpClient, timeout: timeout, pool: pool, outbox: outbox}
 }
 
 func (s *Service) CallExternal(ctx context.Context, req *connect.Request[callerv1.CallExternalRequest]) (*connect.Response[callerv1.CallExternalResponse], error) {
@@ -59,8 +59,34 @@ func (s *Service) CallExternal(ctx context.Context, req *connect.Request[callerv
 	statusCode := int32(httpResp.StatusCode)
 	bodyLength := int32(n)
 
-	// 非同期パターン: レイテンシ影響なし、ログ欠損の可能性あり
-	if s.pool != nil {
+	// Transactional outbox: DB write + event in same transaction
+	if s.outbox != nil {
+		tx, txErr := s.outbox.BeginTx(ctx)
+		if txErr != nil {
+			slog.Error("failed to begin transaction", "error", txErr)
+		} else {
+			_, execErr := tx.Exec(ctx,
+				"INSERT INTO call_logs (url, status_code, body_length) VALUES ($1, $2, $3)",
+				targetURL, statusCode, bodyLength,
+			)
+			if execErr != nil {
+				_ = tx.Rollback(ctx)
+				slog.Error("failed to insert call log", "error", execErr)
+			} else {
+				event := platform.NewEvent("call.completed", "caller-service", map[string]any{
+					"url":         targetURL,
+					"status_code": statusCode,
+					"body_length": bodyLength,
+				})
+				if outboxErr := s.outbox.InsertEvent(ctx, tx, platform.TopicCallCompleted, event); outboxErr != nil {
+					_ = tx.Rollback(ctx)
+					slog.Error("failed to insert outbox event", "error", outboxErr)
+				} else if commitErr := tx.Commit(ctx); commitErr != nil {
+					slog.Error("failed to commit transaction", "error", commitErr)
+				}
+			}
+		}
+	} else if s.pool != nil {
 		capturedURL := targetURL
 		go func() {
 			_, err := s.pool.Exec(context.Background(), "INSERT INTO call_logs (url, status_code, body_length) VALUES ($1, $2, $3)", capturedURL, statusCode, bodyLength)
@@ -68,19 +94,6 @@ func (s *Service) CallExternal(ctx context.Context, req *connect.Request[callerv
 				slog.Error("failed to insert call log", "error", err)
 			}
 		}()
-	}
-
-	// Fire-and-forget: エラーはログに記録するがメイン処理は失敗させない
-	if err := s.publisher.Publish(ctx, platform.TopicCallCompleted, platform.NewEvent(
-		"call.completed",
-		"caller-service",
-		map[string]any{
-			"url":         targetURL,
-			"status_code": statusCode,
-			"body_length": bodyLength,
-		},
-	)); err != nil {
-		slog.Error("failed to publish call.completed event", "error", err)
 	}
 
 	resp := connect.NewResponse(&callerv1.CallExternalResponse{

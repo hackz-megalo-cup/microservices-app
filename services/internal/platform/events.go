@@ -69,6 +69,15 @@ func (p *EventPublisher) Publish(ctx context.Context, topic string, event Event)
 	return p.publisher.Publish(topic, msg)
 }
 
+// PublishRaw publishes raw bytes to a topic (used for DLQ forwarding).
+func (p *EventPublisher) PublishRaw(ctx context.Context, topic string, id string, payload []byte) error {
+	if p == nil {
+		return nil
+	}
+	msg := message.NewMessage(id, payload)
+	return p.publisher.Publish(topic, msg)
+}
+
 func (p *EventPublisher) Close() error {
 	if p == nil {
 		return nil

@@ -16,16 +16,28 @@ import (
 
 	callerv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/caller/v1"
 	greeterv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/greeter/v1"
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
 const createTableSQL = `
 CREATE TABLE IF NOT EXISTS greetings (
-    id SERIAL PRIMARY KEY,
-    name TEXT NOT NULL,
+    id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name VARCHAR(255) NOT NULL,
     message TEXT NOT NULL,
-    external_status INT NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);`
+    external_status INT,
+    status TEXT NOT NULL DEFAULT 'completed',
+    created_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE TABLE IF NOT EXISTS outbox_events (
+    id            UUID PRIMARY KEY,
+    event_type    TEXT NOT NULL,
+    topic         TEXT NOT NULL,
+    payload       JSONB NOT NULL,
+    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    published     BOOLEAN NOT NULL DEFAULT FALSE,
+    published_at  TIMESTAMPTZ
+);
+`
 
 func setupPostgres(t *testing.T) *pgxpool.Pool {
 	t.Helper()
@@ -77,7 +89,7 @@ func TestGreet_Integration_DBInsert(t *testing.T) {
 			BodyLength: 99,
 		}),
 	}
-	svc := NewService(mock, "http://example.com", 5*time.Second, pool, nil)
+	svc := NewService(mock, "http://example.com", 5*time.Second, pool, platform.NewOutboxStore(pool, nil))
 
 	ctx := context.Background()
 	resp, err := svc.Greet(ctx, connect.NewRequest(&greeterv1.GreetRequest{Name: "IntegrationUser"}))
@@ -123,7 +135,7 @@ func TestGreet_Integration_MultipleInserts(t *testing.T) {
 			BodyLength: 10,
 		}),
 	}
-	svc := NewService(mock, "http://example.com", 5*time.Second, pool, nil)
+	svc := NewService(mock, "http://example.com", 5*time.Second, pool, platform.NewOutboxStore(pool, nil))
 	ctx := context.Background()
 
 	for i := range 3 {

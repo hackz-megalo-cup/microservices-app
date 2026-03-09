@@ -14,8 +14,6 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
-
-	"github.com/jackc/pgx/v5/pgxpool"
 	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -55,38 +53,30 @@ func run() error {
 		customBaseURL = "http://custom-lang-service.microservices:3000"
 	}
 
-	// DB init (optional: サービスは DB なしでも起動する)
-	databaseURL := os.Getenv("DATABASE_URL")
-	var dbPool *pgxpool.Pool
-	if databaseURL != "" {
-		dbPool, err = platform.NewDBPool(ctx, databaseURL)
-		if err != nil {
-			logger.WarnContext(ctx, "database unavailable, running without DB", "error", err)
-			dbPool = nil
-		} else {
-			defer dbPool.Close()
-			migrationsFS, _ := fs.Sub(gateway.MigrationsFS, "migrations")
-			if err := platform.RunMigrations(databaseURL, migrationsFS); err != nil {
-				logger.WarnContext(ctx, "migration failed, running without DB", "error", err)
-				dbPool.Close()
-				dbPool = nil
-			} else {
-				logger.InfoContext(ctx, "database ready", "service", serviceName)
-			}
-		}
+	migrationsFS, _ := fs.Sub(gateway.MigrationsFS, "migrations")
+	dbPool := platform.InitDB(ctx, os.Getenv("DATABASE_URL"), migrationsFS, serviceName)
+	if dbPool != nil {
+		defer dbPool.Close()
 	}
 
 	brokers := platform.ParseKafkaBrokers(os.Getenv("KAFKA_BROKERS"))
+
+	platform.TryEnsureTopics(ctx, brokers)
+
 	publisher, _ := platform.NewEventPublisher(brokers)
 	defer publisher.Close()
 
+	outbox := platform.NewOutboxStore(dbPool, publisher)
+	outbox.StartPoller(ctx, 500*time.Millisecond)
+
 	verifier := platform.NewJWTVerifier(os.Getenv("JWKS_URL"))
 	idempotencyStore := platform.NewIdempotencyStore(dbPool)
+	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
 
 	svc := gateway.NewService(&http.Client{
 		Timeout:   2 * time.Second,
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
-	}, customBaseURL, time.Second, dbPool, publisher)
+	}, customBaseURL, time.Second, dbPool, outbox)
 	otelInterceptor, err := otelconnect.NewInterceptor()
 	if err != nil {
 		return err

@@ -14,14 +14,15 @@ import (
 type Projector struct {
 	subscriber *platform.EventSubscriber
 	pool       *pgxpool.Pool
+	dlq        *platform.EventPublisher
 }
 
-func New(brokers []string, pool *pgxpool.Pool) (*Projector, error) {
+func New(brokers []string, pool *pgxpool.Pool, dlq *platform.EventPublisher) (*Projector, error) {
 	sub, err := platform.NewEventSubscriber(brokers, "projector-group")
 	if err != nil {
 		return nil, err
 	}
-	return &Projector{subscriber: sub, pool: pool}, nil
+	return &Projector{subscriber: sub, pool: pool, dlq: dlq}, nil
 }
 
 func (p *Projector) Run(ctx context.Context) error {
@@ -30,6 +31,8 @@ func (p *Projector) Run(ctx context.Context) error {
 		platform.TopicCallCompleted,
 		platform.TopicInvocationCreated,
 		platform.TopicUserRegistered,
+		platform.TopicGreetingFailed,
+		platform.TopicInvocationFailed,
 	}
 
 	for _, topic := range topics {
@@ -44,6 +47,17 @@ func (p *Projector) Run(ctx context.Context) error {
 	return ctx.Err()
 }
 
+func (p *Projector) publishToDLQ(ctx context.Context, topic string, msg *message.Message) {
+	dlqTopic := platform.DLQTopic(topic)
+	if dlqTopic == "" {
+		slog.Warn("no DLQ topic mapped", "source_topic", topic)
+		return
+	}
+	if err := p.dlq.PublishRaw(ctx, dlqTopic, msg.UUID, msg.Payload); err != nil {
+		slog.Error("failed to publish to DLQ", "dlq_topic", dlqTopic, "error", err)
+	}
+}
+
 func (p *Projector) processMessages(ctx context.Context, topic string, ch <-chan *message.Message) {
 	for {
 		select {
@@ -56,11 +70,13 @@ func (p *Projector) processMessages(ctx context.Context, topic string, ch <-chan
 			event, err := platform.ParseEvent(msg)
 			if err != nil {
 				slog.Error("failed to parse event", "topic", topic, "error", err)
+				p.publishToDLQ(ctx, topic, msg)
 				msg.Nack()
 				continue
 			}
 			if err := p.handleEvent(ctx, event); err != nil {
 				slog.Error("failed to handle event", "type", event.Type, "error", err)
+				p.publishToDLQ(ctx, topic, msg)
 				msg.Nack()
 				continue
 			}

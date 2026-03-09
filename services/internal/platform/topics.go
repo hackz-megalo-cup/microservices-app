@@ -18,6 +18,18 @@ const (
 	TopicUserRegisteredDLQ    = "user.registered.dlq"
 )
 
+// DLQTopic returns the dead-letter queue topic for a given source topic.
+// Returns empty string if no DLQ mapping exists.
+func DLQTopic(source string) string {
+	m := map[string]string{
+		TopicGreetingCreated:   TopicGreetingCreatedDLQ,
+		TopicCallCompleted:     TopicCallCompletedDLQ,
+		TopicInvocationCreated: TopicInvocationCreatedDLQ,
+		TopicUserRegistered:    TopicUserRegisteredDLQ,
+	}
+	return m[source]
+}
+
 // DefaultTopics returns all topics with their partition counts.
 func DefaultTopics() map[string]int32 {
 	return map[string]int32{

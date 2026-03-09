@@ -68,6 +68,22 @@ func NewKafkaConsumer(ctx context.Context, brokers []string, group string, topic
 	return client, nil
 }
 
+// TryEnsureTopics creates a temporary Kafka client, ensures default topics exist, then closes it.
+func TryEnsureTopics(ctx context.Context, brokers []string) {
+	client, err := NewKafkaProducer(ctx, brokers)
+	if err != nil {
+		slog.Warn("failed to create kafka client for topic setup", "error", err)
+		return
+	}
+	if client == nil {
+		return
+	}
+	if err := EnsureTopics(ctx, client, DefaultTopics()); err != nil {
+		slog.Warn("failed to ensure topics", "error", err)
+	}
+	client.Close()
+}
+
 // EnsureTopics creates topics if they don't exist using kadm.
 func EnsureTopics(ctx context.Context, client *kgo.Client, topics map[string]int32) error {
 	if client == nil {

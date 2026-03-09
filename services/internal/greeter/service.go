@@ -25,10 +25,10 @@ type Service struct {
 	externalURL    string
 	timeout        time.Duration
 	pool           *pgxpool.Pool
-	publisher      *platform.EventPublisher
+	outbox         *platform.OutboxStore
 }
 
-func NewService(callerClient callerv1connect.CallerServiceClient, externalURL string, timeout time.Duration, pool *pgxpool.Pool, publisher *platform.EventPublisher) *Service {
+func NewService(callerClient callerv1connect.CallerServiceClient, externalURL string, timeout time.Duration, pool *pgxpool.Pool, outbox *platform.OutboxStore) *Service {
 	return &Service{
 		callerClient:   callerClient,
 		callerCB:       platform.NewCircuitBreaker[*callerv1.CallExternalResponse](platform.DefaultCBConfig("greeter-to-caller")),
@@ -36,7 +36,7 @@ func NewService(callerClient callerv1connect.CallerServiceClient, externalURL st
 		externalURL:    externalURL,
 		timeout:        timeout,
 		pool:           pool,
-		publisher:      publisher,
+		outbox:         outbox,
 	}
 }
 
@@ -67,6 +67,9 @@ func (s *Service) Greet(ctx context.Context, req *connect.Request[greeterv1.Gree
 		}, platform.WithMaxRetries(3))
 	})
 	if err != nil {
+		// Saga: publish greeting.failed via outbox
+		s.publishFailedEvent(ctx, name, err)
+
 		var connectErr *connect.Error
 		if errors.As(err, &connectErr) {
 			return nil, err
@@ -87,26 +90,63 @@ func (s *Service) Greet(ctx context.Context, req *connect.Request[greeterv1.Gree
 		ExternalBodyLength: callerResult.GetBodyLength(),
 	})
 
-	// 同期パターン: レスポンス前にDB書き込み完了を保証
-	if s.pool != nil {
+	if s.outbox != nil {
+		tx, txErr := s.outbox.BeginTx(ctx)
+		if txErr != nil {
+			slog.Error("failed to begin transaction", "error", txErr)
+			return resp, nil
+		}
+		_, execErr := tx.Exec(ctx,
+			"INSERT INTO greetings (name, message, external_status, status) VALUES ($1, $2, $3, $4)",
+			name, msg, callerResult.GetStatusCode(), "completed",
+		)
+		if execErr != nil {
+			_ = tx.Rollback(ctx)
+			slog.Error("failed to insert greeting", "error", execErr)
+			return resp, nil
+		}
+		event := platform.NewEvent("greeting.created", "greeter-service", map[string]any{
+			"name":            name,
+			"message":         msg,
+			"external_status": callerResult.GetStatusCode(),
+		})
+		if outboxErr := s.outbox.InsertEvent(ctx, tx, platform.TopicGreetingCreated, event); outboxErr != nil {
+			_ = tx.Rollback(ctx)
+			slog.Error("failed to insert outbox event", "error", outboxErr)
+			return resp, nil
+		}
+		if commitErr := tx.Commit(ctx); commitErr != nil {
+			slog.Error("failed to commit transaction", "error", commitErr)
+		}
+	} else if s.pool != nil {
 		_, dbErr := s.pool.Exec(ctx, "INSERT INTO greetings (name, message, external_status) VALUES ($1, $2, $3)", name, msg, callerResult.GetStatusCode())
 		if dbErr != nil {
 			slog.Error("failed to insert greeting", "error", dbErr)
 		}
 	}
 
-	// Fire-and-forget: エラーはログに記録するがメイン処理は失敗させない
-	if err := s.publisher.Publish(ctx, platform.TopicGreetingCreated, platform.NewEvent(
-		"greeting.created",
-		"greeter-service",
-		map[string]any{
-			"name":            name,
-			"message":         msg,
-			"external_status": callerResult.GetStatusCode(),
-		},
-	)); err != nil {
-		slog.Error("failed to publish greeting.created event", "error", err)
-	}
-
 	return resp, nil
+}
+
+func (s *Service) publishFailedEvent(ctx context.Context, name string, originalErr error) {
+	if s.outbox == nil {
+		return
+	}
+	tx, txErr := s.outbox.BeginTx(ctx)
+	if txErr != nil {
+		slog.Error("failed to begin tx for greeting.failed", "error", txErr)
+		return
+	}
+	event := platform.NewEvent("greeting.failed", "greeter-service", map[string]any{
+		"name":  name,
+		"error": originalErr.Error(),
+	})
+	if err := s.outbox.InsertEvent(ctx, tx, platform.TopicGreetingFailed, event); err != nil {
+		_ = tx.Rollback(ctx)
+		slog.Error("failed to insert greeting.failed outbox event", "error", err)
+		return
+	}
+	if err := tx.Commit(ctx); err != nil {
+		slog.Error("failed to commit greeting.failed event", "error", err)
+	}
 }

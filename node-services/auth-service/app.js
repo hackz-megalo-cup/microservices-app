@@ -5,7 +5,8 @@ import express from 'express';
 import jwt from 'jsonwebtoken';
 import pool, { healthCheck } from './db.js';
 import { idempotencyMiddleware } from './idempotency.js';
-import { publishEvent } from './kafka.js';
+import { insertEvent } from './outbox.js';
+import { retryWithBackoff } from './retry.js';
 
 const app = express();
 app.use(cors());
@@ -62,16 +63,18 @@ app.post('/auth/register', idempotencyMiddleware(), async (req, res) => {
 
   try {
     const passwordHash = await bcrypt.hash(password, 10);
-    const result = await pool.query(
-      'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, role',
-      [email, passwordHash],
-    );
-    const user = result.rows[0];
-
-    // Fire-and-forget: publish user.registered event
+    const client = await pool.connect();
     try {
-      await publishEvent('user.registered', {
-        key: String(user.id),
+      await client.query('BEGIN');
+      const result = await retryWithBackoff(() =>
+        client.query(
+          'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, role',
+          [email, passwordHash],
+        ),
+      );
+      const user = result.rows[0];
+
+      await insertEvent(client, 'user.registered', {
         payload: {
           userId: user.id,
           email: user.email,
@@ -79,11 +82,15 @@ app.post('/auth/register', idempotencyMiddleware(), async (req, res) => {
           timestamp: new Date().toISOString(),
         },
       });
-    } catch (err) {
-      console.error('failed to publish user.registered event:', err);
-    }
 
-    return res.status(201).json(user);
+      await client.query('COMMIT');
+      return res.status(201).json(user);
+    } catch (innerErr) {
+      await client.query('ROLLBACK');
+      throw innerErr;
+    } finally {
+      client.release();
+    }
   } catch (err) {
     if (err.code === '23505') {
       return res.status(409).json({ error: 'email already exists' });
@@ -112,7 +119,9 @@ app.post('/auth/login', async (req, res) => {
   }
 
   try {
-    const result = await pool.query('SELECT * FROM users WHERE email = $1', [email]);
+    const result = await retryWithBackoff(() =>
+      pool.query('SELECT * FROM users WHERE email = $1', [email]),
+    );
     const user = result.rows[0];
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
       return res.status(401).json({ error: 'invalid email or password' });

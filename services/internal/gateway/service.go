@@ -30,7 +30,7 @@ type Service struct {
 	retryBudget        *RetryBudget
 	customLangBulkhead *platform.Bulkhead
 	pool               *pgxpool.Pool
-	publisher          *platform.EventPublisher
+	outbox             *platform.OutboxStore
 }
 
 type invokeResult struct {
@@ -79,7 +79,7 @@ func (b *RetryBudget) Allow() bool {
 	}
 }
 
-func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, pool *pgxpool.Pool, publisher *platform.EventPublisher) *Service {
+func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, pool *pgxpool.Pool, outbox *platform.OutboxStore) *Service {
 	return &Service{
 		httpClient:         httpClient,
 		baseURL:            strings.TrimRight(baseURL, "/"),
@@ -88,7 +88,7 @@ func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, 
 		retryBudget:        NewRetryBudget(20, 10),
 		customLangBulkhead: platform.NewBulkhead(10),
 		pool:               pool,
-		publisher:          publisher,
+		outbox:             outbox,
 	}
 }
 
@@ -112,48 +112,55 @@ func (s *Service) InvokeCustom(ctx context.Context, req *connect.Request[gateway
 		}, platform.WithMaxRetries(3))
 	})
 	if err != nil {
-		// 同期パターン: 失敗もDB記録
-		if s.pool != nil {
-			_, dbErr := s.pool.Exec(ctx, "INSERT INTO invocations (name, result_message, success) VALUES ($1, $2, $3)", name, err.Error(), false)
-			if dbErr != nil {
-				slog.Error("failed to insert invocation", "error", dbErr)
-			}
-		}
-
-		// Saga compensation: publish invocation.failed event
-		_ = s.publisher.Publish(ctx, platform.TopicInvocationFailed, platform.NewEvent(
-			"invocation.failed",
-			"gateway-service",
-			map[string]any{
-				"name":  name,
-				"error": err.Error(),
-			},
-		))
-
+		s.recordInvocation(ctx, name, err.Error(), false, "failed", platform.TopicInvocationFailed, "invocation.failed")
 		return nil, mapError(err)
 	}
 
-	// 同期パターン: レスポンス前にDB書き込み完了を保証
-	if s.pool != nil {
-		_, dbErr := s.pool.Exec(ctx, "INSERT INTO invocations (name, result_message, success) VALUES ($1, $2, $3)", name, result.message, true)
+	s.recordInvocation(ctx, name, result.message, true, "completed", platform.TopicInvocationCreated, "invocation.created")
+	return connect.NewResponse(&gatewayv1.InvokeCustomResponse{Message: result.message}), nil
+}
+
+func (s *Service) recordInvocation(ctx context.Context, name, message string, success bool, status, topic, eventType string) {
+	if s.outbox != nil {
+		s.recordViaOutbox(ctx, name, message, success, status, topic, eventType)
+	} else if s.pool != nil {
+		_, dbErr := s.pool.Exec(ctx, "INSERT INTO invocations (name, result_message, success) VALUES ($1, $2, $3)", name, message, success)
 		if dbErr != nil {
 			slog.Error("failed to insert invocation", "error", dbErr)
 		}
 	}
+}
 
-	// Fire-and-forget: エラーはログに記録するがメイン処理は失敗させない
-	if err := s.publisher.Publish(ctx, platform.TopicInvocationCreated, platform.NewEvent(
-		"invocation.created",
-		"gateway-service",
-		map[string]any{
-			"name":    name,
-			"message": result.message,
-		},
-	)); err != nil {
-		slog.Error("failed to publish invocation.created event", "error", err)
+func (s *Service) recordViaOutbox(ctx context.Context, name, message string, success bool, status, topic, eventType string) {
+	tx, txErr := s.outbox.BeginTx(ctx)
+	if txErr != nil {
+		slog.Error("failed to begin transaction", "error", txErr)
+		return
 	}
-
-	return connect.NewResponse(&gatewayv1.InvokeCustomResponse{Message: result.message}), nil
+	_, execErr := tx.Exec(ctx,
+		"INSERT INTO invocations (name, result_message, success, status) VALUES ($1, $2, $3, $4)",
+		name, message, success, status,
+	)
+	if execErr != nil {
+		_ = tx.Rollback(ctx)
+		slog.Error("failed to insert invocation", "error", execErr)
+		return
+	}
+	data := map[string]any{"name": name}
+	if success {
+		data["message"] = message
+	} else {
+		data["error"] = message
+	}
+	event := platform.NewEvent(eventType, "gateway-service", data)
+	if outboxErr := s.outbox.InsertEvent(ctx, tx, topic, event); outboxErr != nil {
+		_ = tx.Rollback(ctx)
+		slog.Error("failed to insert outbox event", "error", outboxErr)
+		return
+	}
+	if commitErr := tx.Commit(ctx); commitErr != nil {
+		slog.Error("failed to commit transaction", "error", commitErr)
+	}
 }
 
 func (s *Service) callCustom(ctx context.Context, name string) (invokeResult, error) {
