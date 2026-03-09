@@ -19,6 +19,7 @@ import (
 	"github.com/sony/gobreaker/v2"
 
 	gatewayv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/gateway/v1"
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
 type Service struct {
@@ -77,24 +78,11 @@ func (b *RetryBudget) Allow() bool {
 }
 
 func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, pool *pgxpool.Pool) *Service {
-	breaker := gobreaker.NewCircuitBreaker[invokeResult](gobreaker.Settings{
-		Name:        "custom-lang-service",
-		MaxRequests: 3,
-		Interval:    10 * time.Second,
-		Timeout:     30 * time.Second,
-		ReadyToTrip: func(counts gobreaker.Counts) bool {
-			return counts.ConsecutiveFailures >= 5
-		},
-		IsSuccessful: func(err error) bool {
-			return err == nil || errors.Is(err, context.Canceled)
-		},
-	})
-
 	return &Service{
 		httpClient:  httpClient,
 		baseURL:     strings.TrimRight(baseURL, "/"),
 		timeout:     timeout,
-		breaker:     breaker,
+		breaker:     platform.NewCircuitBreaker[invokeResult](platform.DefaultCBConfig("custom-lang-service")),
 		retryBudget: NewRetryBudget(20, 10),
 		pool:        pool,
 	}
@@ -106,11 +94,11 @@ func (s *Service) InvokeCustom(ctx context.Context, req *connect.Request[gateway
 		name = "World"
 	}
 
-	result, err := s.breaker.Execute(func() (invokeResult, error) {
+	result, err := platform.CBExecute(s.breaker, func() (invokeResult, error) {
 		return s.callCustom(ctx, name)
 	})
 	if err != nil && shouldRetry(err) && s.retryBudget.Allow() {
-		result, err = s.breaker.Execute(func() (invokeResult, error) {
+		result, err = platform.CBExecute(s.breaker, func() (invokeResult, error) {
 			return s.callCustom(ctx, name)
 		})
 	}
