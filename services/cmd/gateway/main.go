@@ -69,6 +69,38 @@ func run() error {
 	outbox := platform.NewOutboxStore(dbPool, publisher)
 	outbox.StartPoller(ctx, 500*time.Millisecond)
 
+	// Compensation handler for invocation.failed
+	compensation := platform.NewCompensationRouter()
+	compensation.Handle(platform.TopicInvocationFailed, func(ctx context.Context, event platform.Event) error {
+		if dbPool == nil {
+			return nil
+		}
+		data, ok := event.Data.(map[string]any)
+		if !ok {
+			slog.Warn("compensation: unexpected data type", "event_id", event.ID)
+			return nil
+		}
+		invocationID, _ := data["invocation_id"].(string)
+		if invocationID == "" {
+			slog.Warn("compensation: missing invocation_id", "event_id", event.ID)
+			return nil
+		}
+		_, err := dbPool.Exec(ctx,
+			`UPDATE invocations SET status = 'compensated' WHERE id = $1`,
+			invocationID,
+		)
+		if err != nil {
+			return err
+		}
+		slog.Info("compensation: invocation compensated", "invocation_id", invocationID)
+		return nil
+	})
+	go func() {
+		if err := compensation.Run(ctx, brokers, "gateway-compensation"); err != nil && !errors.Is(err, context.Canceled) {
+			slog.Error("compensation router error", "error", err)
+		}
+	}()
+
 	verifier := platform.NewJWTVerifier(os.Getenv("JWKS_URL"))
 	idempotencyStore := platform.NewIdempotencyStore(dbPool)
 	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
@@ -76,7 +108,7 @@ func run() error {
 	svc := gateway.NewService(&http.Client{
 		Timeout:   2 * time.Second,
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
-	}, customBaseURL, time.Second, dbPool, outbox)
+	}, customBaseURL, time.Second, dbPool, outbox, nil)
 	otelInterceptor, err := otelconnect.NewInterceptor()
 	if err != nil {
 		return err

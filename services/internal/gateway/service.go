@@ -13,6 +13,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"connectrpc.com/connect"
 
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -31,6 +33,7 @@ type Service struct {
 	customLangBulkhead *platform.Bulkhead
 	pool               *pgxpool.Pool
 	outbox             *platform.OutboxStore
+	eventStore         *platform.EventStore
 }
 
 type invokeResult struct {
@@ -79,7 +82,7 @@ func (b *RetryBudget) Allow() bool {
 	}
 }
 
-func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, pool *pgxpool.Pool, outbox *platform.OutboxStore) *Service {
+func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, pool *pgxpool.Pool, outbox *platform.OutboxStore, eventStore *platform.EventStore) *Service {
 	return &Service{
 		httpClient:         httpClient,
 		baseURL:            strings.TrimRight(baseURL, "/"),
@@ -89,6 +92,7 @@ func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, 
 		customLangBulkhead: platform.NewBulkhead(10),
 		pool:               pool,
 		outbox:             outbox,
+		eventStore:         eventStore,
 	}
 }
 
@@ -121,13 +125,34 @@ func (s *Service) InvokeCustom(ctx context.Context, req *connect.Request[gateway
 }
 
 func (s *Service) recordInvocation(ctx context.Context, name, message string, success bool, status, topic, eventType string) {
+	// Event Sourcing path (preferred).
+	if s.eventStore != nil {
+		s.recordViaEventStore(ctx, name, message, success)
+		return
+	}
+	// Legacy outbox path.
 	if s.outbox != nil {
 		s.recordViaOutbox(ctx, name, message, success, status, topic, eventType)
-	} else if s.pool != nil {
+		return
+	}
+	// Direct DB fallback.
+	if s.pool != nil {
 		_, dbErr := s.pool.Exec(ctx, "INSERT INTO invocations (name, result_message, success) VALUES ($1, $2, $3)", name, message, success)
 		if dbErr != nil {
 			slog.Error("failed to insert invocation", "error", dbErr)
 		}
+	}
+}
+
+func (s *Service) recordViaEventStore(ctx context.Context, name, message string, success bool) {
+	agg := NewInvocationAggregate(uuid.NewString())
+	if success {
+		agg.Create(name, message)
+	} else {
+		agg.Fail(name, message)
+	}
+	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, InvocationTopicMapper); err != nil {
+		slog.Error("failed to save invocation aggregate", "error", err)
 	}
 }
 
