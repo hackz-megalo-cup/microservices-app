@@ -118,6 +118,7 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: ""
       OTEL_SERVICE_NAME: "custom-lang-service"
       KAFKA_BROKERS: "redpanda:9092"
+      JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
     networks:
       - app
     depends_on:
