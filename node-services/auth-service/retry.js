@@ -1,4 +1,4 @@
-import pRetry from "p-retry";
+import pRetry from 'p-retry';
 
 const NON_RETRYABLE_CODES = [400, 401, 403, 404, 409, 422];
 
@@ -10,9 +10,7 @@ export async function retryWithBackoff(fn, opts = {}) {
     factor: 2,
     randomize: true, // jitter
     onFailedAttempt: ({ attemptNumber, retriesLeft }) => {
-      console.warn(
-        `Attempt ${attemptNumber} failed. ${retriesLeft} retries left.`,
-      );
+      console.warn(`Attempt ${attemptNumber} failed. ${retriesLeft} retries left.`);
     },
     shouldRetry: ({ error }) => {
       const code = error?.statusCode ?? error?.response?.status ?? error?.status;

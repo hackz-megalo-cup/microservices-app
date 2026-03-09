@@ -1,8 +1,8 @@
-import { getPool } from "./db.js";
+import { getPool } from './db.js';
 
 export function idempotencyMiddleware() {
   return async (req, res, next) => {
-    const key = req.headers["idempotency-key"];
+    const key = req.headers['idempotency-key'];
     if (!key) return next();
 
     const pool = getPool();
@@ -10,14 +10,12 @@ export function idempotencyMiddleware() {
 
     try {
       const result = await pool.query(
-        "SELECT response, status_code FROM idempotency_keys WHERE key = $1 AND expires_at > NOW()",
+        'SELECT response, status_code FROM idempotency_keys WHERE key = $1 AND expires_at > NOW()',
         [key],
       );
       if (result.rows.length > 0) {
         const cached = result.rows[0];
-        return res
-          .status(cached.status_code)
-          .json(JSON.parse(cached.response));
+        return res.status(cached.status_code).json(JSON.parse(cached.response));
       }
     } catch {
       // store unavailable, proceed without idempotency

@@ -36,10 +36,14 @@ func NewJWTVerifier(jwksURL string) *JWTVerifier {
 	return &JWTVerifier{jwksURL: jwksURL}
 }
 
-func (v *JWTVerifier) fetchJWKS() error {
+func (v *JWTVerifier) forceFetchJWKS() error {
 	v.mu.Lock()
-	defer v.mu.Unlock()
+	v.lastFetch = time.Time{} // invalidate cache
+	v.mu.Unlock()
+	return v.fetchJWKS()
+}
 
+func (v *JWTVerifier) fetchJWKSLocked() error {
 	if time.Since(v.lastFetch) < 5*time.Minute {
 		return nil
 	}
@@ -67,6 +71,12 @@ func (v *JWTVerifier) fetchJWKS() error {
 	return nil
 }
 
+func (v *JWTVerifier) fetchJWKS() error {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	return v.fetchJWKSLocked()
+}
+
 func (v *JWTVerifier) Verify(tokenStr string) (*Claims, error) {
 	if v == nil {
 		return nil, nil // verification disabled
@@ -77,17 +87,31 @@ func (v *JWTVerifier) Verify(tokenStr string) (*Claims, error) {
 	}
 
 	v.mu.RLock()
-	defer v.mu.RUnlock()
-
 	tok, err := jwt.ParseSigned(tokenStr, []jose.SignatureAlgorithm{jose.RS256})
 	if err != nil {
+		v.mu.RUnlock()
 		return nil, fmt.Errorf("parse JWT: %w", err)
 	}
 
 	var claims Claims
 	var stdClaims jwt.Claims
 	if err := tok.Claims(v.jwks, &claims, &stdClaims); err != nil {
-		return nil, fmt.Errorf("verify JWT claims: %w", err)
+		v.mu.RUnlock()
+		// kid not found: auth-service may have restarted with new keys; invalidate cache and retry once
+		if strings.Contains(err.Error(), "kid not found") || strings.Contains(err.Error(), "matching kid") {
+			if retryErr := v.forceFetchJWKS(); retryErr != nil {
+				return nil, fmt.Errorf("verify JWT claims: %w", err)
+			}
+			v.mu.RLock()
+			defer v.mu.RUnlock()
+			if err := tok.Claims(v.jwks, &claims, &stdClaims); err != nil {
+				return nil, fmt.Errorf("verify JWT claims: %w", err)
+			}
+		} else {
+			return nil, fmt.Errorf("verify JWT claims: %w", err)
+		}
+	} else {
+		v.mu.RUnlock()
 	}
 
 	if err := stdClaims.Validate(jwt.Expected{

@@ -72,7 +72,12 @@ app.post('/auth/register', idempotencyMiddleware(), async (req, res) => {
     try {
       await publishEvent('user.registered', {
         key: String(user.id),
-        payload: { userId: user.id, email: user.email, role: user.role, timestamp: new Date().toISOString() },
+        payload: {
+          userId: user.id,
+          email: user.email,
+          role: user.role,
+          timestamp: new Date().toISOString(),
+        },
       });
     } catch (err) {
       console.error('failed to publish user.registered event:', err);
@@ -129,7 +134,7 @@ app.post('/auth/login', async (req, res) => {
   }
 });
 
-app.get('/verify', (req, res) => {
+const verifyHandler = (req, res) => {
   const authHeader = req.header('authorization') || '';
   if (!authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: 'missing bearer token' });
@@ -148,6 +153,9 @@ app.get('/verify', (req, res) => {
   } catch (_err) {
     return res.status(401).json({ error: 'invalid token' });
   }
-});
+};
+
+app.get('/verify', verifyHandler);
+app.get('/auth/verify', verifyHandler);
 
 export default app;

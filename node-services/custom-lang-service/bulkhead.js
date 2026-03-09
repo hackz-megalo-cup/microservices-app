@@ -1,4 +1,4 @@
-import pLimit from "p-limit";
+import pLimit from 'p-limit';
 
 export function createBulkhead(maxConcurrent) {
   const limit = pLimit(maxConcurrent);

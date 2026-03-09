@@ -1,10 +1,10 @@
-import { Kafka, logLevel } from "kafkajs";
+import { Kafka, logLevel } from 'kafkajs';
 
-const brokers = process.env.KAFKA_BROKERS?.split(",").filter(Boolean) || [];
+const brokers = process.env.KAFKA_BROKERS?.split(',').filter(Boolean) || [];
 
 let kafka = null;
 let producer = null;
-let consumer = null;
+const consumer = null;
 
 export function isKafkaEnabled() {
   return brokers.length > 0;
@@ -15,7 +15,7 @@ export async function getProducer() {
   if (producer) return producer;
 
   kafka = new Kafka({
-    clientId: process.env.OTEL_SERVICE_NAME || "unknown-service",
+    clientId: process.env.OTEL_SERVICE_NAME || 'unknown-service',
     brokers,
     logLevel: logLevel.WARN,
     retry: { retries: 3 },
@@ -24,9 +24,9 @@ export async function getProducer() {
   producer = kafka.producer();
   try {
     await producer.connect();
-    console.log(`Kafka producer connected to ${brokers.join(",")}`);
+    console.log(`Kafka producer connected to ${brokers.join(',')}`);
   } catch (err) {
-    console.warn("Kafka producer connection failed, disabling:", err.message);
+    console.warn('Kafka producer connection failed, disabling:', err.message);
     producer = null;
   }
   return producer;
@@ -37,7 +37,7 @@ export async function getConsumer(groupId, topics, eachMessageHandler) {
 
   if (!kafka) {
     kafka = new Kafka({
-      clientId: process.env.OTEL_SERVICE_NAME || "unknown-service",
+      clientId: process.env.OTEL_SERVICE_NAME || 'unknown-service',
       brokers,
       logLevel: logLevel.WARN,
     });
@@ -55,7 +55,7 @@ export async function getConsumer(groupId, topics, eachMessageHandler) {
     console.log(`Kafka consumer running: group=${groupId}, topics=${topics}`);
     return c;
   } catch (err) {
-    console.warn("Kafka consumer connection failed:", err.message);
+    console.warn('Kafka consumer connection failed:', err.message);
     return null;
   }
 }
