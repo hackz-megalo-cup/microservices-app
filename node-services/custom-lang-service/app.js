@@ -1,6 +1,7 @@
 import express from 'express';
 import { jwtAuthMiddleware } from './auth-middleware.js';
 import pool, { healthCheck } from './db.js';
+import { idempotencyMiddleware } from './idempotency.js';
 import { publishEvent } from './kafka.js';
 
 const app = express();
@@ -15,7 +16,7 @@ app.get('/healthz', async (_req, res) => {
   }
 });
 
-app.post('/invoke', jwtAuthMiddleware(), async (req, res) => {
+app.post('/invoke', jwtAuthMiddleware(), idempotencyMiddleware(), async (req, res) => {
   const name = (req.body?.name || 'World').toString();
 
   let statusCode;

@@ -74,6 +74,9 @@ func run() error {
 	publisher, _ := platform.NewEventPublisher(brokers)
 	defer publisher.Close()
 
+	verifier := platform.NewJWTVerifier(os.Getenv("JWKS_URL"))
+	idempotencyStore := platform.NewIdempotencyStore(dbPool)
+
 	svc := caller.NewService(&http.Client{Timeout: 2 * time.Second}, 2*time.Second, dbPool, publisher)
 	otelInterceptor, err := otelconnect.NewInterceptor()
 	if err != nil {
@@ -83,6 +86,8 @@ func run() error {
 		svc,
 		connect.WithInterceptors(
 			otelInterceptor,
+			platform.NewAuthInterceptor(verifier),
+			platform.NewIdempotencyInterceptor(idempotencyStore),
 			platform.NewLoggingInterceptor(logger),
 		),
 	)

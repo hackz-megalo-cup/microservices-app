@@ -51,18 +51,20 @@ func (s *Service) Greet(ctx context.Context, req *connect.Request[greeterv1.Gree
 
 	var callerResult *callerv1.CallExternalResponse
 	err := s.callerBulkhead.Execute(rpcCtx, func() error {
-		result, cbErr := platform.CBExecute(s.callerCB, func() (*callerv1.CallExternalResponse, error) {
-			resp, err := s.callerClient.CallExternal(rpcCtx, connect.NewRequest(&callerv1.CallExternalRequest{Url: s.externalURL}))
-			if err != nil {
-				return nil, err
+		return platform.RetryWithBackoff(rpcCtx, func() error {
+			result, cbErr := platform.CBExecute(s.callerCB, func() (*callerv1.CallExternalResponse, error) {
+				resp, err := s.callerClient.CallExternal(rpcCtx, connect.NewRequest(&callerv1.CallExternalRequest{Url: s.externalURL}))
+				if err != nil {
+					return nil, err
+				}
+				return resp.Msg, nil
+			})
+			if cbErr != nil {
+				return cbErr
 			}
-			return resp.Msg, nil
-		})
-		if cbErr != nil {
-			return cbErr
-		}
-		callerResult = result
-		return nil
+			callerResult = result
+			return nil
+		}, platform.WithMaxRetries(3))
 	})
 	if err != nil {
 		var connectErr *connect.Error

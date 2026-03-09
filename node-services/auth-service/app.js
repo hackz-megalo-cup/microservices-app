@@ -4,6 +4,7 @@ import cors from 'cors';
 import express from 'express';
 import jwt from 'jsonwebtoken';
 import pool, { healthCheck } from './db.js';
+import { idempotencyMiddleware } from './idempotency.js';
 import { publishEvent } from './kafka.js';
 
 const app = express();
@@ -49,7 +50,7 @@ app.get('/.well-known/jwks.json', (_req, res) => {
   });
 });
 
-app.post('/auth/register', async (req, res) => {
+app.post('/auth/register', idempotencyMiddleware(), async (req, res) => {
   if (!pool) {
     return res.status(503).json({ error: 'database not configured' });
   }

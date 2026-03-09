@@ -12,6 +12,8 @@ topics=(
   "call.completed.dlq:1"
   "invocation.created.dlq:1"
   "user.registered.dlq:1"
+  "greeting.failed:1"
+  "invocation.failed:1"
 )
 
 for entry in "${topics[@]}"; do

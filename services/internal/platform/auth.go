@@ -11,6 +11,7 @@ import (
 	"sync"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/go-jose/go-jose/v4"
 	"github.com/go-jose/go-jose/v4/jwt"
 )
@@ -120,4 +121,28 @@ func ContextWithClaims(ctx context.Context, claims *Claims) context.Context {
 func ClaimsFromContext(ctx context.Context) *Claims {
 	c, _ := ctx.Value(authContextKey{}).(*Claims)
 	return c
+}
+
+// NewAuthInterceptor returns a connect-go interceptor that verifies JWT tokens.
+// If verifier is nil, the interceptor is a no-op pass-through.
+func NewAuthInterceptor(verifier *JWTVerifier) connect.Interceptor {
+	return connect.UnaryInterceptorFunc(func(next connect.UnaryFunc) connect.UnaryFunc {
+		return func(ctx context.Context, req connect.AnyRequest) (connect.AnyResponse, error) {
+			if verifier == nil {
+				return next(ctx, req)
+			}
+			token, err := ExtractBearerToken(req.Header().Get("Authorization"))
+			if err != nil {
+				return next(ctx, req) // no token, let handler decide
+			}
+			claims, err := verifier.Verify(token)
+			if err != nil {
+				return nil, connect.NewError(connect.CodeUnauthenticated, err)
+			}
+			if claims != nil {
+				ctx = ContextWithClaims(ctx, claims)
+			}
+			return next(ctx, req)
+		}
+	})
 }

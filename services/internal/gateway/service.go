@@ -100,16 +100,16 @@ func (s *Service) InvokeCustom(ctx context.Context, req *connect.Request[gateway
 
 	var result invokeResult
 	err := s.customLangBulkhead.Execute(ctx, func() error {
-		var cbErr error
-		result, cbErr = platform.CBExecute(s.breaker, func() (invokeResult, error) {
-			return s.callCustom(ctx, name)
-		})
-		if cbErr != nil && shouldRetry(cbErr) && s.retryBudget.Allow() {
+		return platform.RetryWithBackoff(ctx, func() error {
+			var cbErr error
 			result, cbErr = platform.CBExecute(s.breaker, func() (invokeResult, error) {
 				return s.callCustom(ctx, name)
 			})
-		}
-		return cbErr
+			if cbErr != nil && !shouldRetry(cbErr) {
+				return platform.NewPermanentError(cbErr)
+			}
+			return cbErr
+		}, platform.WithMaxRetries(3))
 	})
 	if err != nil {
 		// 同期パターン: 失敗もDB記録

@@ -20,6 +20,7 @@ import (
 
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/caller/v1/callerv1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/greeter/v1/greeterv1connect"
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/greeter/v2/greeterv2connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/greeter"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
@@ -93,17 +94,26 @@ func run() error {
 	publisher, _ := platform.NewEventPublisher(brokers)
 	defer publisher.Close()
 
+	verifier := platform.NewJWTVerifier(os.Getenv("JWKS_URL"))
+	idempotencyStore := platform.NewIdempotencyStore(dbPool)
+
 	greeterSvc := greeter.NewService(callerClient, externalURL, 2*time.Second, dbPool, publisher)
-	path, handler := greeterv1connect.NewGreeterServiceHandler(
-		greeterSvc,
-		connect.WithInterceptors(
-			otelInterceptor,
-			platform.NewLoggingInterceptor(logger),
-		),
+
+	connectOpts := connect.WithInterceptors(
+		otelInterceptor,
+		platform.NewAuthInterceptor(verifier),
+		platform.NewIdempotencyInterceptor(idempotencyStore),
+		platform.NewLoggingInterceptor(logger),
 	)
 
+	pathV1, handlerV1 := greeterv1connect.NewGreeterServiceHandler(greeterSvc, connectOpts)
+
+	greeterSvcV2 := greeter.NewServiceV2(greeterSvc)
+	pathV2, handlerV2 := greeterv2connect.NewGreeterServiceHandler(greeterSvcV2, connectOpts)
+
 	mux := http.NewServeMux()
-	mux.Handle(path, handler)
+	mux.Handle(pathV1, handlerV1)
+	mux.Handle(pathV2, handlerV2)
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if dbPool != nil {
 			if err := dbPool.Ping(r.Context()); err != nil {
