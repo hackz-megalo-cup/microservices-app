@@ -95,13 +95,18 @@ func SaveAggregate(ctx context.Context, store *EventStore, outbox *OutboxStore, 
 				continue
 			}
 			event := NewEvent(change.Type, agg.StreamType()+"-service", change.Data)
-			// Add stream_id to event data for downstream consumers
+			// Add stream_id to event data for downstream consumers.
+			// Marshal struct to JSON then unmarshal to map so both typed structs
+			// and raw map[string]any payloads are merged correctly.
 			enrichedData := map[string]any{
 				"stream_id": agg.AggregateID(),
 			}
-			if m, ok := change.Data.(map[string]any); ok {
-				for k, v := range m {
-					enrichedData[k] = v
+			if raw, marshalErr := json.Marshal(change.Data); marshalErr == nil {
+				var m map[string]any
+				if json.Unmarshal(raw, &m) == nil {
+					for k, v := range m {
+						enrichedData[k] = v
+					}
 				}
 			}
 			event.Data = enrichedData

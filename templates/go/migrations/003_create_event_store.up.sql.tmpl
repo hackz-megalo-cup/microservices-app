@@ -11,6 +11,5 @@ CREATE TABLE IF NOT EXISTS event_store (
     PRIMARY KEY (stream_id, version)
 );
 
-CREATE INDEX IF NOT EXISTS idx_event_store_stream ON event_store (stream_id, version);
 CREATE INDEX IF NOT EXISTS idx_event_store_type ON event_store (event_type);
 CREATE INDEX IF NOT EXISTS idx_event_store_created ON event_store (created_at);
