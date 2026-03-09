@@ -35,6 +35,12 @@ func (h *ProjectionHandler) HandleEvent(ctx context.Context, event platform.Even
 		return h.onGreetingFailed(ctx, event)
 	case "greeting.compensated":
 		return h.onGreetingCompensated(ctx, event)
+	case "invocation.created":
+		return h.onInvocationCreated(ctx, event)
+	case "invocation.failed":
+		return h.onInvocationFailed(ctx, event)
+	case "invocation.compensated":
+		return h.onInvocationCompensated(ctx, event)
 	default:
 		return nil
 	}
@@ -117,6 +123,82 @@ func (h *ProjectionHandler) onGreetingCompensated(ctx context.Context, event pla
 	)
 	if err != nil {
 		slog.Error("projection: failed to update greetings_view (compensated)", "error", err)
+	}
+	return err
+}
+
+func (h *ProjectionHandler) onInvocationCreated(ctx context.Context, event platform.Event) error {
+	data, err := toMap(event.Data)
+	if err != nil {
+		slog.Warn("projection: invalid invocation.created data", "event_id", event.ID)
+		return nil //nolint:nilerr // Invalid data is not retryable.
+	}
+	streamID, _ := data["stream_id"].(string)
+	if streamID == "" {
+		streamID = event.ID
+	}
+	name, _ := data["name"].(string)
+	message, _ := data["message"].(string)
+
+	_, err = h.pool.Exec(ctx,
+		`INSERT INTO invocations_view (id, name, message, status, created_at, updated_at)
+		 VALUES ($1, $2, $3, 'completed', NOW(), NOW())
+		 ON CONFLICT (id) DO UPDATE SET
+		   name = EXCLUDED.name,
+		   message = EXCLUDED.message,
+		   status = 'completed',
+		   updated_at = NOW()`,
+		streamID, name, message,
+	)
+	if err != nil {
+		slog.Error("projection: failed to upsert invocations_view", "error", err)
+	}
+	return err
+}
+
+func (h *ProjectionHandler) onInvocationFailed(ctx context.Context, event platform.Event) error {
+	data, err := toMap(event.Data)
+	if err != nil {
+		slog.Warn("projection: invalid invocation.failed data", "event_id", event.ID)
+		return nil //nolint:nilerr // Invalid data is not retryable.
+	}
+	streamID, _ := data["stream_id"].(string)
+	if streamID == "" {
+		streamID = event.ID
+	}
+	name, _ := data["name"].(string)
+
+	_, err = h.pool.Exec(ctx,
+		`INSERT INTO invocations_view (id, name, status, created_at, updated_at)
+		 VALUES ($1, $2, 'failed', NOW(), NOW())
+		 ON CONFLICT (id) DO UPDATE SET
+		   status = 'failed',
+		   updated_at = NOW()`,
+		streamID, name,
+	)
+	if err != nil {
+		slog.Error("projection: failed to upsert invocations_view (failed)", "error", err)
+	}
+	return err
+}
+
+func (h *ProjectionHandler) onInvocationCompensated(ctx context.Context, event platform.Event) error {
+	data, err := toMap(event.Data)
+	if err != nil {
+		slog.Warn("projection: invalid invocation.compensated data", "event_id", event.ID)
+		return nil //nolint:nilerr // Invalid data is not retryable.
+	}
+	streamID, _ := data["stream_id"].(string)
+	if streamID == "" {
+		streamID = event.ID
+	}
+
+	_, err = h.pool.Exec(ctx,
+		`UPDATE invocations_view SET status = 'compensated', updated_at = NOW() WHERE id = $1`,
+		streamID,
+	)
+	if err != nil {
+		slog.Error("projection: failed to update invocations_view (compensated)", "error", err)
 	}
 	return err
 }
