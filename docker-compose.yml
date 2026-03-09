@@ -46,6 +46,7 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: ""
       OTEL_SERVICE_NAME: "greeter-service"
       KAFKA_BROKERS: "redpanda:9092"
+      JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.greeter.rule=PathPrefix(`/greeter.v1.GreeterService`)"
@@ -72,6 +73,7 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: ""
       OTEL_SERVICE_NAME: "caller-service"
       KAFKA_BROKERS: "redpanda:9092"
+      JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
     networks:
       - app
     depends_on:
@@ -89,6 +91,7 @@ services:
       OTEL_EXPORTER_OTLP_ENDPOINT: ""
       OTEL_SERVICE_NAME: "gateway-service"
       KAFKA_BROKERS: "redpanda:9092"
+      JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.gateway.rule=PathPrefix(`/gateway.v1.GatewayService`)"
