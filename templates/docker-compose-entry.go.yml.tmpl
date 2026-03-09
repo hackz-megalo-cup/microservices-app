@@ -1,7 +1,7 @@
   __SERVICE_NAME__:
     build:
       context: .
-      dockerfile: deploy/docker/__SERVICE_NAME__/Dockerfile
+      dockerfile: deploy/docker/__SERVICE_NAME__/Dockerfile.dev
     environment:
       PORT: "__PORT__"
       DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/__SERVICE_NAME_SNAKE___db"
@@ -13,4 +13,6 @@
       - app
     depends_on:
       postgres:
+        condition: service_healthy
+      redpanda:
         condition: service_healthy
