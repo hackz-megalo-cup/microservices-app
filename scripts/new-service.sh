@@ -146,6 +146,7 @@ case "$LANG" in
     apply_template "${TEMPLATES_DIR}/go/events.go.tmpl" "${REPO_ROOT}/services/internal/${SERVICE_NAME_SNAKE}/events.go"
     apply_template "${TEMPLATES_DIR}/go/aggregate.go.tmpl" "${REPO_ROOT}/services/internal/${SERVICE_NAME_SNAKE}/aggregate.go"
     apply_template "${TEMPLATES_DIR}/go/service.go.tmpl" "${REPO_ROOT}/services/internal/${SERVICE_NAME_SNAKE}/service.go"
+    apply_template "${TEMPLATES_DIR}/go/Dockerfile.tmpl" "${REPO_ROOT}/deploy/docker/${SERVICE_NAME}/Dockerfile"
     apply_template "${TEMPLATES_DIR}/go/Dockerfile.dev.tmpl" "${REPO_ROOT}/deploy/docker/${SERVICE_NAME}/Dockerfile.dev"
     apply_template "${TEMPLATES_DIR}/go/k8s.nix.tmpl" "${REPO_ROOT}/deploy/k8s/${SERVICE_NAME}.nix"
 
