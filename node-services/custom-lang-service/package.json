@@ -19,6 +19,7 @@
     "kafkajs": "^2.2.4",
     "node-pg-migrate": "^7.9.0",
     "opossum": "^9.0.0",
+    "p-limit": "^7.3.0",
     "p-retry": "^7.1.1",
     "pg": "^8.13.0"
   },
