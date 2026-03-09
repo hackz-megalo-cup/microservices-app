@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package greeter.v2;
+
+option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/greeter/v2;greeterv2";
+
+service GreeterService {
+  rpc Greet(GreetRequest) returns (GreetResponse) {}
+  rpc GreetStream(GreetRequest) returns (stream GreetResponse) {} // v2 新機能: ストリーミング
+}
+
+message GreetRequest {
+  string name = 1;
+  string locale = 2; // v2 新フィールド
+}
+
+message GreetResponse {
+  string message = 1;
+  int32 external_status = 2;
+  int64 external_body_length = 3;
+  string trace_id = 4; // v2 新フィールド
+}

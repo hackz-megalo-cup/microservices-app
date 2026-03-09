@@ -53,6 +53,10 @@ services:
       - "traefik.http.routers.greeter.entrypoints=web"
       - "traefik.http.routers.greeter.priority=100"
       - "traefik.http.routers.greeter.middlewares=cors@file,auth@file,rate-limit@file,retry@file"
+      - "traefik.http.routers.greeter-v2.rule=PathPrefix(`/greeter.v2.GreeterService`)"
+      - "traefik.http.routers.greeter-v2.entrypoints=web"
+      - "traefik.http.routers.greeter-v2.priority=100"
+      - "traefik.http.routers.greeter-v2.middlewares=cors@file,rate-limit@file"
       - "traefik.http.services.greeter.loadbalancer.server.port=8080"
       - "traefik.http.services.greeter.loadbalancer.server.scheme=h2c"
     networks:
