@@ -1,3 +1,7 @@
+import { initTracing } from '../lib/tracing';
+
+initTracing();
+
 import React from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
