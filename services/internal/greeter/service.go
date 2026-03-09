@@ -19,20 +19,22 @@ import (
 )
 
 type Service struct {
-	callerClient callerv1connect.CallerServiceClient
-	callerCB     *gobreaker.CircuitBreaker[*callerv1.CallExternalResponse]
-	externalURL  string
-	timeout      time.Duration
-	pool         *pgxpool.Pool
+	callerClient   callerv1connect.CallerServiceClient
+	callerCB       *gobreaker.CircuitBreaker[*callerv1.CallExternalResponse]
+	callerBulkhead *platform.Bulkhead
+	externalURL    string
+	timeout        time.Duration
+	pool           *pgxpool.Pool
 }
 
 func NewService(callerClient callerv1connect.CallerServiceClient, externalURL string, timeout time.Duration, pool *pgxpool.Pool) *Service {
 	return &Service{
-		callerClient: callerClient,
-		callerCB:     platform.NewCircuitBreaker[*callerv1.CallExternalResponse](platform.DefaultCBConfig("greeter-to-caller")),
-		externalURL:  externalURL,
-		timeout:      timeout,
-		pool:         pool,
+		callerClient:   callerClient,
+		callerCB:       platform.NewCircuitBreaker[*callerv1.CallExternalResponse](platform.DefaultCBConfig("greeter-to-caller")),
+		callerBulkhead: platform.NewBulkhead(10),
+		externalURL:    externalURL,
+		timeout:        timeout,
+		pool:           pool,
 	}
 }
 
@@ -45,12 +47,20 @@ func (s *Service) Greet(ctx context.Context, req *connect.Request[greeterv1.Gree
 	rpcCtx, cancel := context.WithTimeout(ctx, s.timeout)
 	defer cancel()
 
-	callerResult, err := platform.CBExecute(s.callerCB, func() (*callerv1.CallExternalResponse, error) {
-		resp, err := s.callerClient.CallExternal(rpcCtx, connect.NewRequest(&callerv1.CallExternalRequest{Url: s.externalURL}))
-		if err != nil {
-			return nil, err
+	var callerResult *callerv1.CallExternalResponse
+	err := s.callerBulkhead.Execute(rpcCtx, func() error {
+		result, cbErr := platform.CBExecute(s.callerCB, func() (*callerv1.CallExternalResponse, error) {
+			resp, err := s.callerClient.CallExternal(rpcCtx, connect.NewRequest(&callerv1.CallExternalRequest{Url: s.externalURL}))
+			if err != nil {
+				return nil, err
+			}
+			return resp.Msg, nil
+		})
+		if cbErr != nil {
+			return cbErr
 		}
-		return resp.Msg, nil
+		callerResult = result
+		return nil
 	})
 	if err != nil {
 		var connectErr *connect.Error

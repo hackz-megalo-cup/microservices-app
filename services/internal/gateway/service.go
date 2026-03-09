@@ -23,12 +23,13 @@ import (
 )
 
 type Service struct {
-	httpClient  *http.Client
-	baseURL     string
-	timeout     time.Duration
-	breaker     *gobreaker.CircuitBreaker[invokeResult]
-	retryBudget *RetryBudget
-	pool        *pgxpool.Pool
+	httpClient         *http.Client
+	baseURL            string
+	timeout            time.Duration
+	breaker            *gobreaker.CircuitBreaker[invokeResult]
+	retryBudget        *RetryBudget
+	customLangBulkhead *platform.Bulkhead
+	pool               *pgxpool.Pool
 }
 
 type invokeResult struct {
@@ -79,12 +80,13 @@ func (b *RetryBudget) Allow() bool {
 
 func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, pool *pgxpool.Pool) *Service {
 	return &Service{
-		httpClient:  httpClient,
-		baseURL:     strings.TrimRight(baseURL, "/"),
-		timeout:     timeout,
-		breaker:     platform.NewCircuitBreaker[invokeResult](platform.DefaultCBConfig("custom-lang-service")),
-		retryBudget: NewRetryBudget(20, 10),
-		pool:        pool,
+		httpClient:         httpClient,
+		baseURL:            strings.TrimRight(baseURL, "/"),
+		timeout:            timeout,
+		breaker:            platform.NewCircuitBreaker[invokeResult](platform.DefaultCBConfig("custom-lang-service")),
+		retryBudget:        NewRetryBudget(20, 10),
+		customLangBulkhead: platform.NewBulkhead(10),
+		pool:               pool,
 	}
 }
 
@@ -94,14 +96,19 @@ func (s *Service) InvokeCustom(ctx context.Context, req *connect.Request[gateway
 		name = "World"
 	}
 
-	result, err := platform.CBExecute(s.breaker, func() (invokeResult, error) {
-		return s.callCustom(ctx, name)
-	})
-	if err != nil && shouldRetry(err) && s.retryBudget.Allow() {
-		result, err = platform.CBExecute(s.breaker, func() (invokeResult, error) {
+	var result invokeResult
+	err := s.customLangBulkhead.Execute(ctx, func() error {
+		var cbErr error
+		result, cbErr = platform.CBExecute(s.breaker, func() (invokeResult, error) {
 			return s.callCustom(ctx, name)
 		})
-	}
+		if cbErr != nil && shouldRetry(cbErr) && s.retryBudget.Allow() {
+			result, cbErr = platform.CBExecute(s.breaker, func() (invokeResult, error) {
+				return s.callCustom(ctx, name)
+			})
+		}
+		return cbErr
+	})
 	if err != nil {
 		// 同期パターン: 失敗もDB記録
 		if s.pool != nil {
