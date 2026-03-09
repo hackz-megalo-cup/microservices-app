@@ -1,0 +1,100 @@
+package __SERVICE_NAME_SNAKE__
+
+import (
+	"encoding/json"
+	"log/slog"
+
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
+)
+
+// ============================================================
+// Aggregate — your domain entity with event sourcing.
+// Add fields that represent the current state.
+// ============================================================
+
+type __SERVICE_NAME_PASCAL__Aggregate struct {
+	platform.AggregateBase
+	Input  string
+	Output string
+	Status string // "created", "failed", "compensated"
+}
+
+func New__SERVICE_NAME_PASCAL__Aggregate(id string) *__SERVICE_NAME_PASCAL__Aggregate {
+	return &__SERVICE_NAME_PASCAL__Aggregate{
+		AggregateBase: platform.NewAggregateBase(id),
+	}
+}
+
+func (a *__SERVICE_NAME_PASCAL__Aggregate) StreamType() string { return "__SERVICE_NAME_SNAKE__" }
+
+// ApplyEvent replays a stored event to reconstruct state.
+// This is called when loading an aggregate from the event store.
+func (a *__SERVICE_NAME_PASCAL__Aggregate) ApplyEvent(eventType string, data json.RawMessage) {
+	switch eventType {
+	case Event__SERVICE_NAME_PASCAL__Created:
+		var d __SERVICE_NAME_PASCAL__CreatedData
+		if err := json.Unmarshal(data, &d); err != nil {
+			slog.Warn("failed to unmarshal created data", "error", err)
+		}
+		a.Input = d.Input
+		a.Output = d.Output
+		a.Status = "created"
+	case Event__SERVICE_NAME_PASCAL__Failed:
+		var d __SERVICE_NAME_PASCAL__FailedData
+		if err := json.Unmarshal(data, &d); err != nil {
+			slog.Warn("failed to unmarshal failed data", "error", err)
+		}
+		a.Input = d.Input
+		a.Status = "failed"
+	case Event__SERVICE_NAME_PASCAL__Compensated:
+		a.Status = "compensated"
+	}
+}
+
+// ============================================================
+// Command methods — business actions that produce events.
+// ============================================================
+
+// Create records a successful operation.
+func (a *__SERVICE_NAME_PASCAL__Aggregate) Create(input, output string) {
+	a.Raise(Event__SERVICE_NAME_PASCAL__Created, __SERVICE_NAME_PASCAL__CreatedData{
+		Input:  input,
+		Output: output,
+	})
+	a.Input = input
+	a.Output = output
+	a.Status = "created"
+}
+
+// Fail records a failed operation.
+func (a *__SERVICE_NAME_PASCAL__Aggregate) Fail(input string, reason string) {
+	a.Raise(Event__SERVICE_NAME_PASCAL__Failed, __SERVICE_NAME_PASCAL__FailedData{
+		Input: input,
+		Error: reason,
+	})
+	a.Input = input
+	a.Status = "failed"
+}
+
+// Compensate marks this aggregate as compensated.
+func (a *__SERVICE_NAME_PASCAL__Aggregate) Compensate(reason string) {
+	if a.Status == "compensated" {
+		return
+	}
+	a.Raise(Event__SERVICE_NAME_PASCAL__Compensated, __SERVICE_NAME_PASCAL__CompensatedData{
+		Reason: reason,
+	})
+	a.Status = "compensated"
+}
+
+// __SERVICE_NAME_PASCAL__TopicMapper maps event types to Kafka topics.
+func __SERVICE_NAME_PASCAL__TopicMapper(eventType string) string {
+	switch eventType {
+	case Event__SERVICE_NAME_PASCAL__Created:
+		return platform.Topic__SERVICE_NAME_PASCAL__Created
+	case Event__SERVICE_NAME_PASCAL__Failed:
+		return platform.Topic__SERVICE_NAME_PASCAL__Failed
+	default:
+		return ""
+	}
+}

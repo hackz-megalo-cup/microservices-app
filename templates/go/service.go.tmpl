@@ -1,0 +1,52 @@
+package __SERVICE_NAME_SNAKE__
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+
+	"connectrpc.com/connect"
+	"github.com/google/uuid"
+
+	pb "github.com/hackz-megalo-cup/microservices-app/services/gen/go/__SERVICE_NAME__/v1"
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
+)
+
+type Service struct {
+	eventStore *platform.EventStore
+	outbox     *platform.OutboxStore
+}
+
+func NewService(eventStore *platform.EventStore, outbox *platform.OutboxStore) *Service {
+	return &Service{
+		eventStore: eventStore,
+		outbox:     outbox,
+	}
+}
+
+// ============================================================
+// Invoke — implement your business logic here.
+// The infrastructure (ES, Outbox, Kafka) is handled for you.
+// ============================================================
+
+func (s *Service) Invoke(ctx context.Context, req *connect.Request[pb.__SERVICE_NAME_PASCAL__Request]) (*connect.Response[pb.__SERVICE_NAME_PASCAL__Response], error) {
+	input := req.Msg.GetInput()
+	if input == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("input is required"))
+	}
+
+	// TODO: Implement your business logic here.
+	output := fmt.Sprintf("Hello %s from __SERVICE_NAME__!", input)
+
+	// Save via Event Sourcing (EventStore + Outbox + Kafka — all automatic)
+	agg := New__SERVICE_NAME_PASCAL__Aggregate(uuid.NewString())
+	agg.Create(input, output)
+	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, __SERVICE_NAME_PASCAL__TopicMapper); err != nil {
+		slog.Error("failed to save aggregate", "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save"))
+	}
+
+	return connect.NewResponse(&pb.__SERVICE_NAME_PASCAL__Response{
+		Output: output,
+	}), nil
+}
