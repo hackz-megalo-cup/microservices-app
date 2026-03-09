@@ -69,10 +69,12 @@ func run() error {
 	outbox := platform.NewOutboxStore(dbPool, publisher)
 	outbox.StartPoller(ctx, 500*time.Millisecond)
 
+	eventStore := platform.NewEventStore(dbPool)
+
 	// Compensation handler for invocation.failed
 	compensation := platform.NewCompensationRouter()
 	compensation.Handle(platform.TopicInvocationFailed, func(ctx context.Context, event platform.Event) error {
-		if dbPool == nil {
+		if eventStore == nil {
 			return nil
 		}
 		data, ok := event.Data.(map[string]any)
@@ -80,20 +82,17 @@ func run() error {
 			slog.Warn("compensation: unexpected data type", "event_id", event.ID)
 			return nil
 		}
-		invocationID, _ := data["invocation_id"].(string)
-		if invocationID == "" {
-			slog.Warn("compensation: missing invocation_id", "event_id", event.ID)
+		streamID, _ := data["stream_id"].(string)
+		if streamID == "" {
+			slog.Warn("compensation: missing stream_id", "event_id", event.ID)
 			return nil
 		}
-		_, err := dbPool.Exec(ctx,
-			`UPDATE invocations SET status = 'compensated' WHERE id = $1`,
-			invocationID,
-		)
-		if err != nil {
+		agg := gateway.NewInvocationAggregate(streamID)
+		if err := platform.LoadAggregate(ctx, eventStore, agg); err != nil {
 			return err
 		}
-		slog.Info("compensation: invocation compensated", "invocation_id", invocationID)
-		return nil
+		agg.Compensate("downstream service failure")
+		return platform.SaveAggregate(ctx, eventStore, outbox, agg, gateway.InvocationTopicMapper)
 	})
 	go func() {
 		if err := compensation.Run(ctx, brokers, "gateway-compensation"); err != nil && !errors.Is(err, context.Canceled) {
@@ -108,7 +107,7 @@ func run() error {
 	svc := gateway.NewService(&http.Client{
 		Timeout:   2 * time.Second,
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
-	}, customBaseURL, time.Second, dbPool, outbox, nil)
+	}, customBaseURL, time.Second, dbPool, outbox, eventStore)
 	otelInterceptor, err := otelconnect.NewInterceptor()
 	if err != nil {
 		return err
