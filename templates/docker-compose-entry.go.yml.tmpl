@@ -1,0 +1,16 @@
+  __SERVICE_NAME__:
+    build:
+      context: .
+      dockerfile: deploy/docker/__SERVICE_NAME__/Dockerfile
+    environment:
+      PORT: "__PORT__"
+      DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/__SERVICE_NAME_SNAKE___db"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""
+      OTEL_SERVICE_NAME: "__SERVICE_NAME__-service"
+      KAFKA_BROKERS: "redpanda:9092"
+      JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
+    networks:
+      - app
+    depends_on:
+      postgres:
+        condition: service_healthy

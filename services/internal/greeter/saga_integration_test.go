@@ -82,7 +82,7 @@ func TestSaga_CallerFailure_PublishesGreetingFailed(t *testing.T) {
 
 	outbox := platform.NewOutboxStore(pool, nil)
 	mock := &mockCallerClient{err: errors.New("caller is down")}
-	svc := NewService(mock, "http://example.com", 5*time.Second, pool, outbox)
+	svc := NewService(mock, "http://example.com", 5*time.Second, pool, outbox, nil)
 
 	_, err := svc.Greet(ctx, connect.NewRequest(&greeterv1.GreetRequest{Name: "SagaUser"}))
 	if err == nil {
@@ -114,7 +114,7 @@ func TestSaga_CallerSuccess_AtomicOutboxWrite(t *testing.T) {
 	mock := &mockCallerClient{
 		resp: connect.NewResponse(&callerv1.CallExternalResponse{StatusCode: 200, BodyLength: 42}),
 	}
-	svc := NewService(mock, "http://example.com", 5*time.Second, pool, outbox)
+	svc := NewService(mock, "http://example.com", 5*time.Second, pool, outbox, nil)
 
 	resp, err := svc.Greet(ctx, connect.NewRequest(&greeterv1.GreetRequest{Name: "AtomicUser"}))
 	if err != nil {

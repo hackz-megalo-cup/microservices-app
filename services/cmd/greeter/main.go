@@ -83,11 +83,46 @@ func run() error {
 	outbox := platform.NewOutboxStore(dbPool, publisher)
 	outbox.StartPoller(ctx, 500*time.Millisecond)
 
+	eventStore := platform.NewEventStore(dbPool)
+
+	// Compensation handler for greeting.failed
+	compensation := platform.NewCompensationRouter()
+	compensation.Handle(platform.TopicGreetingFailed, func(ctx context.Context, event platform.Event) error {
+		if eventStore == nil {
+			return nil
+		}
+		data, ok := event.Data.(map[string]any)
+		if !ok {
+			slog.Warn("compensation: unexpected data type", "event_id", event.ID)
+			return nil
+		}
+		streamID, _ := data["stream_id"].(string)
+		if streamID == "" {
+			slog.Warn("compensation: missing stream_id", "event_id", event.ID)
+			return nil
+		}
+		agg := greeter.NewGreetingAggregate(streamID)
+		if err := platform.LoadAggregate(ctx, eventStore, agg); err != nil {
+			return err
+		}
+		agg.Compensate("saga compensation")
+		if err := platform.SaveAggregate(ctx, eventStore, outbox, agg, greeter.GreetingTopicMapper); err != nil {
+			return err
+		}
+		slog.Info("compensation: greeting compensated via ES", "stream_id", streamID)
+		return nil
+	})
+	go func() {
+		if err := compensation.Run(ctx, brokers, "greeter-compensation"); err != nil && !errors.Is(err, context.Canceled) {
+			slog.Error("compensation router error", "error", err)
+		}
+	}()
+
 	verifier := platform.NewJWTVerifier(os.Getenv("JWKS_URL"))
 	idempotencyStore := platform.NewIdempotencyStore(dbPool)
 	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
 
-	greeterSvc := greeter.NewService(callerClient, externalURL, 2*time.Second, dbPool, outbox)
+	greeterSvc := greeter.NewService(callerClient, externalURL, 2*time.Second, dbPool, outbox, eventStore)
 
 	connectOpts := connect.WithInterceptors(
 		otelInterceptor,

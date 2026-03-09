@@ -3,10 +3,10 @@ import bcrypt from 'bcrypt';
 import cors from 'cors';
 import express from 'express';
 import jwt from 'jsonwebtoken';
-import pool, { healthCheck } from './db.js';
-import { idempotencyMiddleware } from './idempotency.js';
-import { insertEvent } from './outbox.js';
-import { retryWithBackoff } from './retry.js';
+import { healthCheck } from '@microservices/shared';
+import pool from '@microservices/shared/db.js';
+import { idempotencyMiddleware } from '@microservices/shared';
+import { retryWithBackoff } from '@microservices/shared';
 
 const app = express();
 app.use(cors());
@@ -74,7 +74,7 @@ app.post('/auth/register', idempotencyMiddleware(), async (req, res) => {
       );
       const user = result.rows[0];
 
-      await insertEvent(client, 'user.registered', {
+      await req.app.locals.outbox.insertEvent(client, 'user.registered', {
         payload: {
           userId: user.id,
           email: user.email,

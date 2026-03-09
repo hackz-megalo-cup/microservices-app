@@ -106,24 +106,34 @@ func (s *OutboxStore) Cleanup(ctx context.Context, maxAge time.Duration) error {
 }
 
 // StartPoller runs a background goroutine that polls for unpublished events.
+// It uses exponential backoff: the interval doubles (up to 5s) when idle,
+// and resets to the base interval when events are found.
 func (s *OutboxStore) StartPoller(ctx context.Context, interval time.Duration) {
 	if s == nil {
 		return
 	}
+	const maxInterval = 5 * time.Second
 	go func() {
-		ticker := time.NewTicker(interval)
-		defer ticker.Stop()
+		current := interval
+		timer := time.NewTimer(current)
+		defer timer.Stop()
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case <-ticker.C:
+			case <-timer.C:
 				n, err := s.PublishPending(ctx)
-				if err != nil {
+				switch {
+				case err != nil:
 					slog.Error("outbox poller error", "error", err)
-				} else if n > 0 {
+					current = min(current*2, maxInterval)
+				case n > 0:
 					slog.Info("outbox poller published events", "count", n)
+					current = interval
+				default:
+					current = min(current*2, maxInterval)
 				}
+				timer.Reset(current)
 			}
 		}
 	}()

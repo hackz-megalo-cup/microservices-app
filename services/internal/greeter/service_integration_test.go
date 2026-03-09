@@ -89,7 +89,7 @@ func TestGreet_Integration_DBInsert(t *testing.T) {
 			BodyLength: 99,
 		}),
 	}
-	svc := NewService(mock, "http://example.com", 5*time.Second, pool, platform.NewOutboxStore(pool, nil))
+	svc := NewService(mock, "http://example.com", 5*time.Second, pool, platform.NewOutboxStore(pool, nil), nil)
 
 	ctx := context.Background()
 	resp, err := svc.Greet(ctx, connect.NewRequest(&greeterv1.GreetRequest{Name: "IntegrationUser"}))
@@ -135,7 +135,7 @@ func TestGreet_Integration_MultipleInserts(t *testing.T) {
 			BodyLength: 10,
 		}),
 	}
-	svc := NewService(mock, "http://example.com", 5*time.Second, pool, platform.NewOutboxStore(pool, nil))
+	svc := NewService(mock, "http://example.com", 5*time.Second, pool, platform.NewOutboxStore(pool, nil), nil)
 	ctx := context.Background()
 
 	for i := range 3 {

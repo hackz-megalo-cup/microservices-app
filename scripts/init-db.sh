@@ -15,6 +15,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "gateway_db" <<-EOS
         event_type TEXT NOT NULL,
         source TEXT NOT NULL,
         data JSONB,
+        version INTEGER NOT NULL DEFAULT 1,
         created_at TIMESTAMPTZ NOT NULL,
         processed_at TIMESTAMPTZ DEFAULT NOW()
     );

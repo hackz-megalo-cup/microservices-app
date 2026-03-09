@@ -9,20 +9,12 @@
     "lint": "biome check ."
   },
   "dependencies": {
-    "@opentelemetry/auto-instrumentations-node": "^0.70.1",
-    "@opentelemetry/exporter-metrics-otlp-grpc": "^0.213.0",
-    "@opentelemetry/exporter-trace-otlp-grpc": "^0.213.0",
-    "@opentelemetry/resources": "^2.6.0",
-    "@opentelemetry/sdk-node": "^0.213.0",
-    "@opentelemetry/semantic-conventions": "^1.40.0",
+    "@microservices/shared": "*",
     "bcrypt": "^6.0.0",
     "cors": "^2.8.6",
     "express": "^5.2.1",
     "jsonwebtoken": "^9.0.2",
-    "kafkajs": "^2.2.4",
-    "node-pg-migrate": "^7.9.0",
-    "p-retry": "^7.1.1",
-    "pg": "^8.13.0"
+    "node-pg-migrate": "^7.9.0"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.4.6",

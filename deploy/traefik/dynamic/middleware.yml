@@ -47,4 +47,6 @@ http:
       service: greeter
       middlewares:
         - cors
+        - auth
         - rate-limit
+        - retry

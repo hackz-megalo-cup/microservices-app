@@ -4,7 +4,6 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"log/slog"
 	"time"
 
 	"connectrpc.com/connect"
@@ -82,40 +81,7 @@ func (s *ServiceV2) Greet(ctx context.Context, req *connect.Request[greeterv2.Gr
 		TraceId:            traceID,
 	})
 
-	if s.outbox != nil {
-		tx, txErr := s.outbox.BeginTx(ctx)
-		if txErr != nil {
-			slog.Error("failed to begin transaction", "error", txErr)
-			return resp, nil
-		}
-		_, execErr := tx.Exec(ctx,
-			"INSERT INTO greetings (name, message, external_status, status) VALUES ($1, $2, $3, $4)",
-			name, msg, callerResult.GetStatusCode(), "completed",
-		)
-		if execErr != nil {
-			_ = tx.Rollback(ctx)
-			slog.Error("failed to insert greeting", "error", execErr)
-			return resp, nil
-		}
-		event := platform.NewEvent("greeting.created", "greeter-service", map[string]any{
-			"name":            name,
-			"message":         msg,
-			"external_status": callerResult.GetStatusCode(),
-		})
-		if outboxErr := s.outbox.InsertEvent(ctx, tx, platform.TopicGreetingCreated, event); outboxErr != nil {
-			_ = tx.Rollback(ctx)
-			slog.Error("failed to insert outbox event", "error", outboxErr)
-			return resp, nil
-		}
-		if commitErr := tx.Commit(ctx); commitErr != nil {
-			slog.Error("failed to commit transaction", "error", commitErr)
-		}
-	} else if s.pool != nil {
-		_, dbErr := s.pool.Exec(ctx, "INSERT INTO greetings (name, message, external_status) VALUES ($1, $2, $3)", name, msg, callerResult.GetStatusCode())
-		if dbErr != nil {
-			slog.Error("failed to insert greeting", "error", dbErr)
-		}
-	}
+	s.persistGreeting(ctx, name, msg, callerResult.GetStatusCode())
 
 	return resp, nil
 }

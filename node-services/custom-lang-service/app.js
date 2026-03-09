@@ -1,9 +1,9 @@
 import express from 'express';
 import { jwtAuthMiddleware } from './auth-middleware.js';
-import pool, { healthCheck } from './db.js';
-import { idempotencyMiddleware } from './idempotency.js';
-import { insertEvent } from './outbox.js';
-import { retryWithBackoff } from './retry.js';
+import { healthCheck } from '@microservices/shared';
+import pool from '@microservices/shared/db.js';
+import { idempotencyMiddleware } from '@microservices/shared';
+import { retryWithBackoff } from '@microservices/shared';
 
 const app = express();
 app.use(express.json());
@@ -57,7 +57,7 @@ app.post('/invoke', jwtAuthMiddleware(), idempotencyMiddleware(), async (req, re
         ),
       );
       if (statusCode === 200) {
-        await insertEvent(client, 'invocation.created', {
+        await req.app.locals.outbox.insertEvent(client, 'invocation.created', {
           payload: { name, message, statusCode, timestamp: new Date().toISOString() },
         });
       }
