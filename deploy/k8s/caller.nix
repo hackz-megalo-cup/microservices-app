@@ -25,7 +25,14 @@ in
               OTEL_EXPORTER_OTLP_ENDPOINT.value = "http://otel-collector.observability:4317";
               OTEL_SERVICE_NAME.value = "caller-service";
               PORT.value = "8081";
-              DATABASE_URL.value = "postgresql://devuser:devpass@postgresql.database:5432/caller_db";
+              DATABASE_URL.valueFrom.secretKeyRef = {
+                name = "caller-secrets";
+                key = "DATABASE_URL";
+              };
+              KAFKA_BROKERS.valueFrom.secretKeyRef = {
+                name = "caller-secrets";
+                key = "KAFKA_BROKERS";
+              };
             };
 
             livenessProbe = {

@@ -27,7 +27,14 @@ in
               CALLER_BASE_URL.value = "http://caller-service.microservices:8081";
               EXTERNAL_API_URL.value = "https://httpbin.org/get";
               PORT.value = "8080";
-              DATABASE_URL.value = "postgresql://devuser:devpass@postgresql.database:5432/greeter_db";
+              DATABASE_URL.valueFrom.secretKeyRef = {
+                name = "greeter-secrets";
+                key = "DATABASE_URL";
+              };
+              KAFKA_BROKERS.valueFrom.secretKeyRef = {
+                name = "greeter-secrets";
+                key = "KAFKA_BROKERS";
+              };
             };
 
             livenessProbe = {

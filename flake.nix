@@ -144,6 +144,11 @@
               charts = inputs.nixhelm.chartsDerivations.${system};
               modules = [ ./deploy/nixidy/env/local.nix ];
             };
+            prod = inputs.nixidy.lib.mkEnv {
+              inherit pkgs;
+              charts = inputs.nixhelm.chartsDerivations.${system};
+              modules = [ ./deploy/nixidy/env/prod.nix ];
+            };
           };
 
           # Nixidy CLI

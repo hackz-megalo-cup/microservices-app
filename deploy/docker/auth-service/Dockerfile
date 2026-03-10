@@ -1,6 +1,6 @@
 FROM node:24-alpine
 WORKDIR /app
-COPY node-services/package.json ./
+COPY node-services/package.json node-services/package-lock.json ./
 COPY node-services/shared/ ./shared/
 COPY node-services/auth-service/package.json ./auth-service/
 RUN cd /app && npm ci --omit=dev -w auth-service

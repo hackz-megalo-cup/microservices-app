@@ -26,7 +26,14 @@ in
               OTEL_SERVICE_NAME.value = "gateway-service";
               CUSTOM_LANG_BASE_URL.value = "http://custom-lang-service.microservices:3000";
               PORT.value = "8082";
-              DATABASE_URL.value = "postgresql://devuser:devpass@postgresql.database:5432/gateway_db";
+              DATABASE_URL.valueFrom.secretKeyRef = {
+                name = "gateway-secrets";
+                key = "DATABASE_URL";
+              };
+              KAFKA_BROKERS.valueFrom.secretKeyRef = {
+                name = "gateway-secrets";
+                key = "KAFKA_BROKERS";
+              };
             };
 
             livenessProbe = {
