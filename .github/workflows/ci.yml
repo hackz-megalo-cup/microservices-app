@@ -54,6 +54,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
       - name: Buf lint
         run: buf lint
       - name: Buf breaking
@@ -133,8 +135,8 @@ jobs:
       - run: npm ci
         working-directory: node-services
       - name: Biome check
-        run: npx biome check .
-        working-directory: node-services/${{ matrix.service }}
+        run: npm run lint --workspace=${{ matrix.service }}
+        working-directory: node-services
 
   node-test:
     needs: [changes]
@@ -155,8 +157,8 @@ jobs:
       - run: npm ci
         working-directory: node-services
       - name: Vitest
-        run: npm test
-        working-directory: node-services/${{ matrix.service }}
+        run: npm test --workspace=${{ matrix.service }}
+        working-directory: node-services
 
   frontend-build:
     needs: [changes]
