@@ -39,12 +39,20 @@ func (s *OutboxStore) InsertEvent(ctx context.Context, tx pgx.Tx, topic string, 
 }
 
 // PublishPending polls unpublished events and publishes them to Kafka.
+// The SELECT and UPDATE are wrapped in a single transaction so that
+// FOR UPDATE SKIP LOCKED actually holds the row locks until commit.
 func (s *OutboxStore) PublishPending(ctx context.Context) (int, error) {
 	if s == nil || s.publisher == nil {
 		return 0, nil
 	}
 
-	rows, err := s.pool.Query(ctx,
+	tx, err := s.pool.Begin(ctx)
+	if err != nil {
+		return 0, err
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	rows, err := tx.Query(ctx,
 		`SELECT id, event_type, topic, payload
 		 FROM outbox_events
 		 WHERE published = FALSE
@@ -82,13 +90,17 @@ func (s *OutboxStore) PublishPending(ctx context.Context) (int, error) {
 			slog.Error("outbox: failed to publish event", "id", r.id, "topic", r.topic, "error", err)
 			continue
 		}
-		if _, err := s.pool.Exec(ctx,
+		if _, err := tx.Exec(ctx,
 			`UPDATE outbox_events SET published = TRUE, published_at = $1 WHERE id = $2`,
 			time.Now().UTC(), r.id,
 		); err != nil {
 			slog.Error("outbox: failed to mark event as published", "id", r.id, "error", err)
 		}
 		published++
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		return 0, err
 	}
 	return published, nil
 }

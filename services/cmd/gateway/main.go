@@ -108,7 +108,7 @@ func run() error {
 		Timeout:   2 * time.Second,
 		Transport: otelhttp.NewTransport(http.DefaultTransport),
 	}, customBaseURL, time.Second, dbPool, outbox, eventStore)
-	otelInterceptor, err := otelconnect.NewInterceptor()
+	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
 	if err != nil {
 		return err
 	}

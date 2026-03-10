@@ -28,7 +28,9 @@ export function initTracing() {
   registerInstrumentations({
     instrumentations: [
       new FetchInstrumentation({
-        propagateTraceHeaderCorsUrls: [/.*/],
+        propagateTraceHeaderCorsUrls: [
+          new RegExp(import.meta.env.VITE_API_BASE_URL || 'http://localhost:30081'),
+        ],
         clearTimingResources: true,
       }),
     ],

@@ -29,7 +29,6 @@ type Service struct {
 	baseURL            string
 	timeout            time.Duration
 	breaker            *gobreaker.CircuitBreaker[invokeResult]
-	retryBudget        *RetryBudget
 	customLangBulkhead *platform.Bulkhead
 	pool               *pgxpool.Pool
 	outbox             *platform.OutboxStore
@@ -49,46 +48,12 @@ func (e *statusError) Error() string {
 	return fmt.Sprintf("downstream status %d: %s", e.status, e.body)
 }
 
-type RetryBudget struct {
-	tokens chan struct{}
-}
-
-func NewRetryBudget(capacity, refillPerSecond int) *RetryBudget {
-	b := &RetryBudget{tokens: make(chan struct{}, capacity)}
-	for i := 0; i < capacity; i++ {
-		b.tokens <- struct{}{}
-	}
-	go func() {
-		ticker := time.NewTicker(time.Second)
-		defer ticker.Stop()
-		for range ticker.C {
-			for i := 0; i < refillPerSecond; i++ {
-				select {
-				case b.tokens <- struct{}{}:
-				default:
-				}
-			}
-		}
-	}()
-	return b
-}
-
-func (b *RetryBudget) Allow() bool {
-	select {
-	case <-b.tokens:
-		return true
-	default:
-		return false
-	}
-}
-
 func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, pool *pgxpool.Pool, outbox *platform.OutboxStore, eventStore *platform.EventStore) *Service {
 	return &Service{
 		httpClient:         httpClient,
 		baseURL:            strings.TrimRight(baseURL, "/"),
 		timeout:            timeout,
 		breaker:            platform.NewCircuitBreaker[invokeResult](platform.DefaultCBConfig("custom-lang-service")),
-		retryBudget:        NewRetryBudget(20, 10),
 		customLangBulkhead: platform.NewBulkhead(10),
 		pool:               pool,
 		outbox:             outbox,
@@ -102,12 +67,14 @@ func (s *Service) InvokeCustom(ctx context.Context, req *connect.Request[gateway
 		name = "World"
 	}
 
+	authHeader := req.Header().Get("Authorization")
+
 	var result invokeResult
 	err := s.customLangBulkhead.Execute(ctx, func() error {
 		return platform.RetryWithBackoff(ctx, func() error {
 			var cbErr error
 			result, cbErr = platform.CBExecute(s.breaker, func() (invokeResult, error) {
-				return s.callCustom(ctx, name)
+				return s.callCustom(ctx, name, authHeader)
 			})
 			if cbErr != nil && !shouldRetry(cbErr) {
 				return platform.NewPermanentError(cbErr)
@@ -188,7 +155,7 @@ func (s *Service) recordViaOutbox(ctx context.Context, name, message string, suc
 	}
 }
 
-func (s *Service) callCustom(ctx context.Context, name string) (invokeResult, error) {
+func (s *Service) callCustom(ctx context.Context, name string, authHeader string) (invokeResult, error) {
 	payload, err := json.Marshal(map[string]string{"name": name})
 	if err != nil {
 		return invokeResult{}, err
@@ -202,6 +169,9 @@ func (s *Service) callCustom(ctx context.Context, name string) (invokeResult, er
 		return invokeResult{}, err
 	}
 	httpReq.Header.Set("content-type", "application/json")
+	if authHeader != "" {
+		httpReq.Header.Set("Authorization", authHeader)
+	}
 
 	httpResp, err := s.httpClient.Do(httpReq)
 	if err != nil {

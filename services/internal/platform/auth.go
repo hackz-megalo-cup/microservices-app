@@ -82,8 +82,8 @@ func (v *JWTVerifier) Verify(tokenStr string) (*Claims, error) {
 		return nil, nil // verification disabled
 	}
 	if err := v.fetchJWKS(); err != nil {
-		slog.Warn("JWKS fetch failed, skipping verification", "error", err)
-		return nil, nil
+		slog.Error("JWKS fetch failed, rejecting request", "error", err)
+		return nil, fmt.Errorf("JWKS unavailable: %w", err)
 	}
 
 	v.mu.RLock()

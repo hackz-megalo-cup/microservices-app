@@ -12,12 +12,21 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Generate RSA key pair at startup (dev only; prod should load from K8s Secret)
-const { publicKey, privateKey } = crypto.generateKeyPairSync('rsa', {
-  modulusLength: 2048,
-  publicKeyEncoding: { type: 'spki', format: 'pem' },
-  privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
-});
+// Load RSA key pair from env (prod) or generate at startup (dev)
+let publicKey, privateKey;
+
+if (process.env.RSA_PRIVATE_KEY && process.env.RSA_PUBLIC_KEY) {
+  privateKey = process.env.RSA_PRIVATE_KEY;
+  publicKey = process.env.RSA_PUBLIC_KEY;
+} else {
+  const pair = crypto.generateKeyPairSync('rsa', {
+    modulusLength: 2048,
+    publicKeyEncoding: { type: 'spki', format: 'pem' },
+    privateKeyEncoding: { type: 'pkcs8', format: 'pem' },
+  });
+  publicKey = pair.publicKey;
+  privateKey = pair.privateKey;
+}
 
 // Extract key components for JWKS
 const publicKeyObj = crypto.createPublicKey(publicKey);
@@ -66,11 +75,9 @@ app.post('/auth/register', idempotencyMiddleware(), async (req, res) => {
     const client = await pool.connect();
     try {
       await client.query('BEGIN');
-      const result = await retryWithBackoff(() =>
-        client.query(
-          'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, role',
-          [email, passwordHash],
-        ),
+      const result = await client.query(
+        'INSERT INTO users (email, password_hash) VALUES ($1, $2) RETURNING id, email, role',
+        [email, passwordHash],
       );
       const user = result.rows[0];
 

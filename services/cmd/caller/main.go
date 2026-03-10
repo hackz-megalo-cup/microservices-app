@@ -14,6 +14,7 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
@@ -67,8 +68,11 @@ func run() error {
 	idempotencyStore := platform.NewIdempotencyStore(dbPool)
 	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
 
-	svc := caller.NewService(&http.Client{Timeout: 2 * time.Second}, 2*time.Second, dbPool, outbox)
-	otelInterceptor, err := otelconnect.NewInterceptor()
+	svc := caller.NewService(&http.Client{
+		Timeout:   2 * time.Second,
+		Transport: otelhttp.NewTransport(http.DefaultTransport),
+	}, 2*time.Second, dbPool, outbox)
+	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
 	if err != nil {
 		return err
 	}

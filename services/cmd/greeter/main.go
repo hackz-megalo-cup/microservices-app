@@ -14,6 +14,7 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
@@ -58,11 +59,14 @@ func run() error {
 		externalURL = "https://httpbin.org/get"
 	}
 
-	otelInterceptor, err := otelconnect.NewInterceptor()
+	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
 	if err != nil {
 		return err
 	}
-	clientHTTP := &http.Client{Timeout: 3 * time.Second}
+	clientHTTP := &http.Client{
+		Timeout:   3 * time.Second,
+		Transport: otelhttp.NewTransport(http.DefaultTransport),
+	}
 	callerClient := callerv1connect.NewCallerServiceClient(
 		clientHTTP,
 		callerBaseURL,
@@ -84,6 +88,10 @@ func run() error {
 	outbox.StartPoller(ctx, 500*time.Millisecond)
 
 	eventStore := platform.NewEventStore(dbPool)
+
+	// CQRS read-model projection: materializes event_store → greetings table
+	projection := greeter.NewGreetingProjection(eventStore, dbPool)
+	projection.Start(ctx, 1*time.Second)
 
 	// Compensation handler for greeting.failed
 	compensation := platform.NewCompensationRouter()

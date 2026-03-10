@@ -12,7 +12,7 @@ export async function retryWithBackoff(fn, opts = {}) {
     onFailedAttempt: ({ attemptNumber, retriesLeft }) => {
       console.warn(`Attempt ${attemptNumber} failed. ${retriesLeft} retries left.`);
     },
-    shouldRetry: ({ error }) => {
+    shouldRetry: (error) => {
       const code = error?.statusCode ?? error?.response?.status ?? error?.status;
       if (code === undefined) return true;
       return !NON_RETRYABLE_CODES.includes(code);

@@ -2,6 +2,7 @@ package gateway
 
 import (
 	"encoding/json"
+	"log/slog"
 
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
@@ -51,13 +52,17 @@ func (a *InvocationAggregate) ApplyEvent(eventType string, data json.RawMessage)
 	switch eventType {
 	case EventInvocationCreated:
 		var d InvocationCreatedData
-		_ = json.Unmarshal(data, &d)
+		if err := json.Unmarshal(data, &d); err != nil {
+			slog.Warn("failed to unmarshal InvocationCreatedData", "error", err)
+		}
 		a.Name = d.Name
 		a.Message = d.Message
 		a.Status = "completed"
 	case EventInvocationFailed:
 		var d InvocationFailedData
-		_ = json.Unmarshal(data, &d)
+		if err := json.Unmarshal(data, &d); err != nil {
+			slog.Warn("failed to unmarshal InvocationFailedData", "error", err)
+		}
 		a.Name = d.Name
 		a.Status = "failed"
 	case EventInvocationCompensated:

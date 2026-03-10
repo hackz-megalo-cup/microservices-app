@@ -23,35 +23,47 @@ export function createOutbox(serviceName, pool, kafkaClient) {
   async function publishPending() {
     if (!pool || !kafkaClient.isKafkaEnabled()) return 0;
 
-    const { rows } = await pool.query(
-      `SELECT id, event_type, topic, payload
-       FROM outbox_events
-       WHERE published = FALSE
-       ORDER BY created_at ASC
-       LIMIT 50
-       FOR UPDATE SKIP LOCKED`,
-    );
+    const client = await pool.connect();
+    try {
+      await client.query('BEGIN');
 
-    let published = 0;
-    for (const row of rows) {
-      try {
-        const envelope = typeof row.payload === 'string' ? JSON.parse(row.payload) : row.payload;
-        const producer = await kafkaClient.getProducer();
-        if (!producer) continue;
-        await producer.send({
-          topic: row.topic,
-          messages: [{ key: row.id, value: JSON.stringify(envelope) }],
-        });
-        await pool.query(
-          `UPDATE outbox_events SET published = TRUE, published_at = NOW() WHERE id = $1`,
-          [row.id],
-        );
-        published++;
-      } catch (err) {
-        console.error('outbox: failed to publish event', row.id, err);
+      const { rows } = await client.query(
+        `SELECT id, event_type, topic, payload
+         FROM outbox_events
+         WHERE published = FALSE
+         ORDER BY created_at ASC
+         LIMIT 50
+         FOR UPDATE SKIP LOCKED`,
+      );
+
+      let published = 0;
+      for (const row of rows) {
+        try {
+          const envelope = typeof row.payload === 'string' ? JSON.parse(row.payload) : row.payload;
+          const producer = await kafkaClient.getProducer();
+          if (!producer) continue;
+          await producer.send({
+            topic: row.topic,
+            messages: [{ key: row.id, value: JSON.stringify(envelope) }],
+          });
+          await client.query(
+            `UPDATE outbox_events SET published = TRUE, published_at = NOW() WHERE id = $1`,
+            [row.id],
+          );
+          published++;
+        } catch (err) {
+          console.error('outbox: failed to publish event', row.id, err);
+        }
       }
+
+      await client.query('COMMIT');
+      return published;
+    } catch (err) {
+      await client.query('ROLLBACK');
+      throw err;
+    } finally {
+      client.release();
     }
-    return published;
   }
 
   async function cleanup(maxAgeMs = 24 * 60 * 60 * 1000) {

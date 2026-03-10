@@ -53,10 +53,18 @@ func (s *EventStore) AppendToStream(ctx context.Context, tx pgx.Tx, streamID, st
 		return expectedVersion, nil
 	}
 
-	// Verify expected version with a row-level lock
+	// Acquire a transaction-scoped advisory lock for this stream to prevent
+	// concurrent appends. We use hashtext() so the stream_id string maps to
+	// a stable int suitable for pg_advisory_xact_lock.
+	if _, err := tx.Exec(ctx,
+		`SELECT pg_advisory_xact_lock(hashtext($1))`, streamID,
+	); err != nil {
+		return 0, fmt.Errorf("event store: advisory lock: %w", err)
+	}
+
 	var currentVersion int
 	err := tx.QueryRow(ctx,
-		`SELECT COALESCE(MAX(version), 0) FROM event_store WHERE stream_id = $1 FOR UPDATE`,
+		`SELECT COALESCE(MAX(version), 0) FROM event_store WHERE stream_id = $1`,
 		streamID,
 	).Scan(&currentVersion)
 	if err != nil {
