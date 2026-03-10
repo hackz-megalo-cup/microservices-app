@@ -1,34 +1,30 @@
 package __SERVICE_NAME_SNAKE__
 
-// ==========================================================.
-// Event types — define your domain events here.
-// These map directly to your Event Storming sticky notes.
-// ==========================================================.
-
 const (
-	Event__SERVICE_NAME_PASCAL__Created     = "__SERVICE_NAME_SNAKE__.created"
-	Event__SERVICE_NAME_PASCAL__Failed      = "__SERVICE_NAME_SNAKE__.failed"
-	Event__SERVICE_NAME_PASCAL__Compensated = "__SERVICE_NAME_SNAKE__.compensated"
+	Event__SERVICE_NAME_PASCAL__Created = "__SERVICE_NAME_SNAKE__.created"
+	// ↓ ドメインイベントを追加する
+	// 例: Event__SERVICE_NAME_PASCAL__Completed = "__SERVICE_NAME_SNAKE__.completed"
+
+	Event__SERVICE_NAME_PASCAL__Failed      = "__SERVICE_NAME_SNAKE__.failed"      // main.go が参照 — 削除禁止
+	Event__SERVICE_NAME_PASCAL__Compensated = "__SERVICE_NAME_SNAKE__.compensated" // main.go が参照 — 削除禁止
 )
 
-// ==========================================================.
-// Event data — the payload for each event.
-// Add fields that capture what happened.
-// ==========================================================.
-
-// __SERVICE_NAME_PASCAL__CreatedData is the payload for the created event.
+// __SERVICE_NAME_PASCAL__CreatedData — 作成イベントのペイロード。
+// ドメインに合わせてフィールドを書き換える。
 type __SERVICE_NAME_PASCAL__CreatedData struct {
-	Input  string `json:"input"`
-	Output string `json:"output"`
+	// 例: Title string `json:"title"`
 }
 
-// __SERVICE_NAME_PASCAL__FailedData is the payload for the failed event.
+// ↓ 追加イベントのペイロードをここに定義する
+// 例: type __SERVICE_NAME_PASCAL__CompletedData struct{}
+
+// --- 以下は main.go の補償ハンドラが使用。型名とフィールドは残すこと。 ---
+
 type __SERVICE_NAME_PASCAL__FailedData struct {
 	Input string `json:"input"`
 	Error string `json:"error"`
 }
 
-// __SERVICE_NAME_PASCAL__CompensatedData is the payload for the compensated event.
 type __SERVICE_NAME_PASCAL__CompensatedData struct {
 	Reason string `json:"reason"`
 }

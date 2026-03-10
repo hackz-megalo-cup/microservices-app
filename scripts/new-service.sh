@@ -68,10 +68,10 @@ add_to_docker_compose() {
 add_to_init_db() {
   local db_name="${SERVICE_NAME_SNAKE}_db"
   local init_file="${REPO_ROOT}/scripts/init-db.sh"
-  # Insert CREATE DATABASE before the first EOSQL
+  # Insert CREATE DATABASE before the first closing EOSQL (line starting with EOSQL)
   local tmp_file
   tmp_file=$(mktemp)
-  awk -v db="    CREATE DATABASE ${db_name};" 'NR==1{found=0} /EOSQL/ && !found { print db; found=1 } { print }' "$init_file" > "$tmp_file"
+  awk -v db="    CREATE DATABASE ${db_name};" 'BEGIN{found=0} /^EOSQL/ && !found { print db; found=1 } { print }' "$init_file" > "$tmp_file"
   mv "$tmp_file" "$init_file"
   chmod +x "$init_file"
   echo "  Updated scripts/init-db.sh"
@@ -132,6 +132,31 @@ add_to_topics() {
   echo "  Updated services/internal/platform/topics.go"
 }
 
+add_to_secrets() {
+  local secrets_file="${REPO_ROOT}/deploy/k8s/secrets.nix"
+  local secret_name="${SERVICE_NAME}-secrets"
+  local db_name="${SERVICE_NAME_SNAKE}_db"
+
+  # Insert new secret block before the closing '};' of resources.secrets
+  local tmp_file
+  tmp_file=$(mktemp)
+  awk -v sn="$secret_name" -v db="$db_name" '
+    /^    };$/ && !inserted {
+      printf "      %s = {\n", sn
+      printf "        type = \"Opaque\";\n"
+      printf "        stringData = {\n"
+      printf "          DATABASE_URL = \"postgresql://devuser:devpass@postgresql.database:5432/%s\";\n", db
+      printf "          KAFKA_BROKERS = \"redpanda.messaging:9092\";\n"
+      printf "        };\n"
+      printf "      };\n\n"
+      inserted=1
+    }
+    { print }
+  ' "$secrets_file" > "$tmp_file"
+  mv "$tmp_file" "$secrets_file"
+  echo "  Updated deploy/k8s/secrets.nix"
+}
+
 case "$LANG" in
   go)
     echo "==> Creating Go service: ${SERVICE_NAME}"
@@ -170,6 +195,7 @@ case "$LANG" in
     add_to_docker_compose "${TEMPLATES_DIR}/docker-compose-entry.go.yml.tmpl"
     add_to_init_db
     add_to_topics
+    add_to_secrets
 
     echo ""
     echo "Created Go service '${SERVICE_NAME}' (port ${PORT})."
@@ -226,6 +252,7 @@ case "$LANG" in
     echo "==> Auto-wiring integrations..."
     add_to_docker_compose "${TEMPLATES_DIR}/docker-compose-entry.custom.yml.tmpl"
     add_to_init_db
+    add_to_secrets
 
     echo ""
     echo "Created custom service '${SERVICE_NAME}' (port ${PORT})."

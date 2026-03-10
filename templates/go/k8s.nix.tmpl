@@ -25,6 +25,14 @@ in
               OTEL_EXPORTER_OTLP_ENDPOINT.value = "http://otel-collector.observability:4317";
               OTEL_SERVICE_NAME.value = "__SERVICE_NAME__-service";
               PORT.value = "__PORT__";
+              DATABASE_URL.valueFrom.secretKeyRef = {
+                name = "__SERVICE_NAME__-secrets";
+                key = "DATABASE_URL";
+              };
+              KAFKA_BROKERS.valueFrom.secretKeyRef = {
+                name = "__SERVICE_NAME__-secrets";
+                key = "KAFKA_BROKERS";
+              };
             };
 
             livenessProbe = {

@@ -5,8 +5,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 SYSTEM="$(nix eval --raw --impure --expr 'builtins.currentSystem')"
 
+ENV="${1:-local}"
+echo "==> Environment: ${ENV}"
 echo "==> Building nixidy manifests..."
-nix build "${REPO_ROOT}#legacyPackages.${SYSTEM}.nixidyEnvs.local.environmentPackage" -o "${REPO_ROOT}/manifests-result"
+nix build "${REPO_ROOT}#legacyPackages.${SYSTEM}.nixidyEnvs.${ENV}.environmentPackage" -o "${REPO_ROOT}/manifests-result"
 
 echo "==> Copying to deploy/manifests/..."
 rm -rf "${REPO_ROOT}/deploy/manifests"

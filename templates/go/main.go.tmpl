@@ -111,7 +111,7 @@ func run() error {
 	svc := __SERVICE_NAME_SNAKE__.NewService(eventStore, outbox)
 
 	// --- Connect-RPC Handler with interceptors ---
-	otelInterceptor, err := otelconnect.NewInterceptor()
+	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
 	if err != nil {
 		return err
 	}
