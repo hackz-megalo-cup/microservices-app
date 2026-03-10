@@ -23,8 +23,8 @@
   };
 
   nixConfig = {
-    extra-trusted-public-keys = "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw=";
-    extra-substituters = "https://devenv.cachix.org";
+    extra-trusted-public-keys = "devenv.cachix.org-1:w1cLUi8dv3hnoSPGAuibQv+f9TZLr6cv/Hm9XgU50cw= hackz-megalo-cup.cachix.org-1:21679nTC27hKWUad5U5+MGAxkw1+8y0/9RGAbuvlmUY=";
+    extra-substituters = "https://devenv.cachix.org https://hackz-megalo-cup.cachix.org";
   };
 
   outputs =
