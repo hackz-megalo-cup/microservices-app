@@ -1,12 +1,10 @@
 import crypto from "node:crypto";
+import { healthCheck, idempotencyMiddleware, retryWithBackoff } from "@microservices/shared";
+import pool from "@microservices/shared/db.js";
 import bcrypt from "bcrypt";
 import cors from "cors";
 import express from "express";
 import jwt from "jsonwebtoken";
-import { healthCheck } from "@microservices/shared";
-import pool from "@microservices/shared/db.js";
-import { idempotencyMiddleware } from "@microservices/shared";
-import { retryWithBackoff } from "@microservices/shared";
 
 const app = express();
 app.use(cors());

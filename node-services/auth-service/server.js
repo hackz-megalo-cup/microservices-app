@@ -1,6 +1,6 @@
-import app from "./app.js";
 import { createKafkaClient, createOutbox } from "@microservices/shared";
 import pool from "@microservices/shared/db.js";
+import app from "./app.js";
 
 const kafka = createKafkaClient("auth-service");
 const outbox = createOutbox("auth-service", pool, kafka);

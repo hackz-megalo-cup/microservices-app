@@ -58,7 +58,7 @@
             pname = "caller";
             version = "0.1.0";
             src = ./services;
-            vendorHash = "sha256-IKFViGM0LGSlm+EmtCk99I+67Yn0RBpwKmcBi89Eir4=";
+            vendorHash = null;
             env.CGO_ENABLED = 0;
             ldflags = [
               "-s"
@@ -82,7 +82,7 @@
             pname = "greeter";
             version = "0.1.0";
             src = ./services;
-            vendorHash = "sha256-IKFViGM0LGSlm+EmtCk99I+67Yn0RBpwKmcBi89Eir4=";
+            vendorHash = null;
             env.CGO_ENABLED = 0;
             ldflags = [
               "-s"
@@ -106,7 +106,7 @@
             pname = "gateway";
             version = "0.1.0";
             src = ./services;
-            vendorHash = "sha256-IKFViGM0LGSlm+EmtCk99I+67Yn0RBpwKmcBi89Eir4=";
+            vendorHash = null;
             env.CGO_ENABLED = 0;
             ldflags = [
               "-s"

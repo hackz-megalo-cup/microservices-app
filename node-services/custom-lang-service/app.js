@@ -1,9 +1,7 @@
+import { healthCheck, idempotencyMiddleware, retryWithBackoff } from "@microservices/shared";
+import pool from "@microservices/shared/db.js";
 import express from "express";
 import { jwtAuthMiddleware } from "./auth-middleware.js";
-import { healthCheck } from "@microservices/shared";
-import pool from "@microservices/shared/db.js";
-import { idempotencyMiddleware } from "@microservices/shared";
-import { retryWithBackoff } from "@microservices/shared";
 
 const app = express();
 app.use(express.json());
