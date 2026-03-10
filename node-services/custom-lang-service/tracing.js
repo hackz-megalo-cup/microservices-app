@@ -1,2 +1,2 @@
-import { initTracing } from '@microservices/shared';
-initTracing('custom-lang-service');
+import { initTracing } from "@microservices/shared";
+initTracing("custom-lang-service");

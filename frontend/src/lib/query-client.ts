@@ -1,5 +1,5 @@
-import { Code, ConnectError } from '@connectrpc/connect';
-import { QueryCache, QueryClient } from '@tanstack/react-query';
+import { Code, ConnectError } from "@connectrpc/connect";
+import { QueryCache, QueryClient } from "@tanstack/react-query";
 
 const NON_RETRYABLE_CODES = new Set([
   Code.InvalidArgument,
@@ -26,7 +26,7 @@ export const queryClient = new QueryClient({
   },
   queryCache: new QueryCache({
     onError: (error) => {
-      console.error('query failed', error);
+      console.error("query failed", error);
     },
   }),
 });

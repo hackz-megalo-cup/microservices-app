@@ -1,10 +1,10 @@
-import { apiBaseUrl } from '../../../lib/transport';
-import type { AuthCredentials, LoginResponse, RegisterResponse } from '../types';
+import { apiBaseUrl } from "../../../lib/transport";
+import type { AuthCredentials, LoginResponse, RegisterResponse } from "../types";
 
 export async function registerUser(credentials: AuthCredentials): Promise<RegisterResponse> {
   const res = await fetch(`${apiBaseUrl}/auth/register`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    method: "POST",
+    headers: { "content-type": "application/json" },
     body: JSON.stringify(credentials),
   });
   const json = await res.json();
@@ -16,8 +16,8 @@ export async function registerUser(credentials: AuthCredentials): Promise<Regist
 
 export async function loginUser(credentials: AuthCredentials): Promise<LoginResponse> {
   const res = await fetch(`${apiBaseUrl}/auth/login`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    method: "POST",
+    headers: { "content-type": "application/json" },
     body: JSON.stringify(credentials),
   });
   const json = await res.json();

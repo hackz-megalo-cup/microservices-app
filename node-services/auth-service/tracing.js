@@ -1,2 +1,2 @@
-import { initTracing } from '@microservices/shared';
-initTracing('auth-service');
+import { initTracing } from "@microservices/shared";
+initTracing("auth-service");

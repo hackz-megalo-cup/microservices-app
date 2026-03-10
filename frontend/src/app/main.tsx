@@ -1,21 +1,21 @@
-import { initTracing } from '../lib/tracing';
+import { initTracing } from "../lib/tracing";
 
 initTracing();
 
-import React from 'react';
-import { createRoot } from 'react-dom/client';
-import { App } from './App';
-import { AppProvider } from './providers/app-provider';
+import React from "react";
+import { createRoot } from "react-dom/client";
+import { App } from "./App";
+import { AppProvider } from "./providers/app-provider";
 
 async function bootstrap() {
-  if (import.meta.env.VITE_USE_MOCK === 'true') {
-    const { worker } = await import('../testing/browser');
-    await worker.start({ onUnhandledRequest: 'bypass' });
+  if (import.meta.env.VITE_USE_MOCK === "true") {
+    const { worker } = await import("../testing/browser");
+    await worker.start({ onUnhandledRequest: "bypass" });
   }
 
-  const el = document.getElementById('root');
+  const el = document.getElementById("root");
   if (!el) {
-    throw new Error('Root element not found');
+    throw new Error("Root element not found");
   }
   const root = createRoot(el);
   root.render(
