@@ -66,7 +66,8 @@ jobs:
             echo "Skipping buf breaking: proto baseline does not exist on main yet"
           fi
 
-  go-lint:
+  # Consolidated: go-lint + go-test → 1 job (saves ~1 billable minute per run)
+  go-check:
     needs: [changes]
     if: >-
       needs.changes.outputs.go == 'true'
@@ -81,8 +82,12 @@ jobs:
         with:
           version: v2.10
           working-directory: services
+      - name: Go test
+        run: go test ./...
+        working-directory: services
 
-  frontend-lint:
+  # Consolidated: frontend-lint + frontend-build → 1 job (saves ~1 billable minute)
+  frontend-check:
     needs: [changes]
     if: >-
       needs.changes.outputs.frontend == 'true'
@@ -100,32 +105,17 @@ jobs:
       - name: Biome check
         run: npx biome check src/
         working-directory: frontend
+      - name: Build
+        run: npm run build
+        working-directory: frontend
 
-  go-test:
-    needs: [changes]
-    if: >-
-      needs.changes.outputs.go == 'true'
-      && github.event_name != 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: services/go.mod
-      - name: Go test
-        run: go test ./...
-        working-directory: services
-
-  node-lint:
+  # Consolidated: node-lint + node-test → 1 job (saves ~3 billable minutes)
+  node-check:
     needs: [changes]
     if: >-
       needs.changes.outputs.node == 'true'
       && github.event_name != 'push'
     runs-on: ubuntu-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        service: [auth-service, custom-lang-service]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -136,56 +126,109 @@ jobs:
       - run: npm ci
         working-directory: node-services
       - name: Biome check
-        run: npm run lint --workspace=${{ matrix.service }}
-        working-directory: node-services
-
-  node-test:
-    needs: [changes]
-    if: >-
-      needs.changes.outputs.node == 'true'
-      && github.event_name != 'push'
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: [auth-service, custom-lang-service]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: node-services/package-lock.json
-      - run: npm ci
+        run: npm run lint --workspaces --if-present
         working-directory: node-services
       - name: Vitest
-        run: npm test --workspace=${{ matrix.service }}
+        run: npm test --workspaces --if-present
         working-directory: node-services
 
-  frontend-build:
-    needs: [changes]
-    if: >-
-      needs.changes.outputs.frontend == 'true'
-      && github.event_name != 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - name: Frontend build
-        run: |
-          npm ci
-          npm run build
-        working-directory: frontend
-
-  nix-build:
+  # Phase 1: Check nix cache on cheap ubuntu runner
+  nix-cache-check:
     needs: [changes]
     if: >-
       needs.changes.outputs.go == 'true'
       || needs.changes.outputs.nix == 'true'
+    runs-on: ubuntu-latest
+    outputs:
+      needs-build: ${{ steps.check.outputs.needs-build }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          extra_nix_config: |
+            accept-flake-config = true
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: hackz-megalo-cup
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+          skipPush: true
+
+      - name: Check if builds are cached
+        id: check
+        run: |
+          OUTPUT=$(nix build --dry-run .#caller .#greeter .#gateway 2>&1) || true
+          if echo "$OUTPUT" | grep -q "will be built"; then
+            echo "needs-build=true" >> "$GITHUB_OUTPUT"
+            echo "::notice::Cache miss — build required"
+            echo "$OUTPUT"
+          else
+            echo "needs-build=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::All outputs cached — skipping build"
+          fi
+
+  # Phase 2: Build on Blacksmith (fast runner, timeout 1m — fallback if unavailable)
+  nix-build:
+    needs: [nix-cache-check]
+    if: needs.nix-cache-check.outputs.needs-build == 'true'
     runs-on: blacksmith-2vcpu-ubuntu-2404
+    timeout-minutes: 1
+    continue-on-error: true
+    permissions:
+      contents: read
+      packages: write
+    outputs:
+      completed: ${{ steps.mark-done.outputs.completed }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: cachix/install-nix-action@v31
+        with:
+          github_access_token: ${{ secrets.GITHUB_TOKEN }}
+          extra_nix_config: |
+            accept-flake-config = true
+
+      - uses: cachix/cachix-action@v15
+        with:
+          name: hackz-megalo-cup
+          authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
+
+      - name: Build service binaries
+        run: nix build .#caller .#greeter .#gateway
+
+      - name: Build service images
+        run: nix build .#caller-image .#greeter-image .#gateway-image
+
+      - name: Push images to ghcr.io
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          AUTH_FILE="$(mktemp)"
+          echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin --authfile "$AUTH_FILE"
+          for svc in caller greeter gateway; do
+            nix build .#${svc}-image
+            bash ./result | skopeo copy --authfile "$AUTH_FILE" docker-archive:/dev/stdin \
+              docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }}
+            skopeo copy --authfile "$AUTH_FILE" \
+              docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }} \
+              docker://ghcr.io/hackz-megalo-cup/${svc}:latest
+          done
+
+      - name: Mark completed
+        id: mark-done
+        run: echo "completed=true" >> "$GITHUB_OUTPUT"
+
+  # Phase 3: Fallback to ubuntu-latest if Blacksmith timed out / failed
+  nix-build-fallback:
+    needs: [nix-cache-check, nix-build]
+    if: >-
+      always() && !cancelled()
+      && needs.nix-cache-check.outputs.needs-build == 'true'
+      && needs.nix-build.outputs.completed != 'true'
+    runs-on: ubuntu-latest
     permissions:
       contents: read
       packages: write
@@ -226,8 +269,11 @@ jobs:
           done
 
   render-manifests:
-    if: github.ref == 'refs/heads/main' && github.event_name == 'push'
-    needs: [nix-build]
+    needs: [nix-build, nix-build-fallback]
+    if: >-
+      always() && !cancelled()
+      && github.ref == 'refs/heads/main' && github.event_name == 'push'
+      && (needs.nix-build.outputs.completed == 'true' || needs.nix-build-fallback.result == 'success')
     runs-on: blacksmith-2vcpu-ubuntu-2404
     timeout-minutes: 15
     permissions:
