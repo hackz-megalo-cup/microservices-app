@@ -1,4 +1,4 @@
-import pRetry from 'p-retry';
+import pRetry from "p-retry";
 
 const NON_RETRYABLE_CODES = [400, 401, 403, 404, 409, 422];
 

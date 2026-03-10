@@ -160,7 +160,7 @@ services:
     environment:
       KAFKA_BROKERS: "redpanda:9092"
       DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/gateway_db"
-      GREETER_DATABASE_URL: "postgres://app:app@postgres:5432/greeter_db?sslmode=disable"
+      GREETER_DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/greeter_db?sslmode=disable"
       HEALTH_PORT: "8083"
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:8083/healthz || exit 1"]

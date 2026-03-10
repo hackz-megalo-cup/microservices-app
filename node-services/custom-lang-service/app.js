@@ -1,4 +1,4 @@
-import { healthCheck, idempotencyMiddleware, retryWithBackoff } from "@microservices/shared";
+import { healthCheck, idempotencyMiddleware } from "@microservices/shared";
 import pool from "@microservices/shared/db.js";
 import express from "express";
 import { jwtAuthMiddleware } from "./auth-middleware.js";
@@ -48,11 +48,9 @@ app.post("/invoke", jwtAuthMiddleware(), idempotencyMiddleware(), async (req, re
     const client = await pool.connect();
     try {
       await client.query("BEGIN");
-      await retryWithBackoff(() =>
-        client.query(
-          "INSERT INTO executions (name, result_message, status_code) VALUES ($1, $2, $3)",
-          [name, message, statusCode],
-        ),
+      await client.query(
+        "INSERT INTO executions (name, result_message, status_code) VALUES ($1, $2, $3)",
+        [name, message, statusCode],
       );
       if (statusCode === 200) {
         await req.app.locals.outbox.insertEvent(client, "invocation.created", {

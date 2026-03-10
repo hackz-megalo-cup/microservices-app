@@ -53,7 +53,7 @@
     golangci-lint = {
       enable = true;
       name = "golangci-lint";
-      entry = "bash -c 'export PATH=\"$DEVENV_ROOT/.devenv/go-bin:$PATH\" && cd services && golangci-lint run'";
+      entry = "bash -c 'export PATH=\"$DEVENV_ROOT/.devenv/go-bin:$PATH\" && cd services && golangci-lint run --modules-download-mode=mod'";
       files = "\\.go$";
       excludes = [
         "^services/gen/go/"
@@ -97,7 +97,7 @@
     go-test = {
       enable = true;
       name = "go test";
-      entry = "bash -c 'cd services && go test ./...'";
+      entry = "bash -c 'cd services && go test -mod=mod ./...'";
       files = "\\.go$";
       excludes = [
         "^services/gen/go/"

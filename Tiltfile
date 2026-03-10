@@ -105,8 +105,8 @@ def go_service(name, cmd_path):
     else:
         local_resource(
             '%s-compile' % name,
-            'rm -f services/%s/build/%s && cd services && CGO_ENABLED=0 GOOS=linux GOARCH=%s go build -o %s/build/%s ./%s'
-            % (name, name, go_arch, name, name, cmd_path),
+            'mkdir -p services/%s/build && rm -f services/%s/build/%s && cd services && CGO_ENABLED=0 GOOS=linux GOARCH=%s go build -o %s/build/%s ./%s'
+            % (name, name, name, go_arch, name, name, cmd_path),
             deps=compile_deps,
             ignore=['services/%s/build/' % name],
             resource_deps=['buf-generate'],

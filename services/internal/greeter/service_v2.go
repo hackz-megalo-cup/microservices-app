@@ -53,6 +53,9 @@ func (s *ServiceV2) Greet(ctx context.Context, req *connect.Request[greeterv2.Gr
 		}, platform.WithMaxRetries(3))
 	})
 	if err != nil {
+		// Saga: publish greeting.failed via outbox
+		s.publishFailedEvent(ctx, name, err)
+
 		var connectErr *connect.Error
 		if errors.As(err, &connectErr) {
 			return nil, err

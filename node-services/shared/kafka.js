@@ -1,8 +1,8 @@
-import crypto from 'node:crypto';
-import { Kafka, logLevel } from 'kafkajs';
+import crypto from "node:crypto";
+import { Kafka, logLevel } from "kafkajs";
 
 export function createKafkaClient(serviceName) {
-  const brokers = process.env.KAFKA_BROKERS?.split(',').filter(Boolean) || [];
+  const brokers = process.env.KAFKA_BROKERS?.split(",").filter(Boolean) || [];
 
   let kafka = null;
   let producer = null;
@@ -26,9 +26,9 @@ export function createKafkaClient(serviceName) {
     producer = kafka.producer();
     try {
       await producer.connect();
-      console.log(`Kafka producer connected to ${brokers.join(',')}`);
+      console.log(`Kafka producer connected to ${brokers.join(",")}`);
     } catch (err) {
-      console.warn('Kafka producer connection failed, disabling:', err.message);
+      console.warn("Kafka producer connection failed, disabling:", err.message);
       producer = null;
     }
     return producer;
@@ -58,7 +58,7 @@ export function createKafkaClient(serviceName) {
       consumer = c;
       return c;
     } catch (err) {
-      console.warn('Kafka consumer connection failed:', err.message);
+      console.warn("Kafka consumer connection failed:", err.message);
       return null;
     }
   }

@@ -1,4 +1,4 @@
-import crypto from 'node:crypto';
+import crypto from "node:crypto";
 
 export function createOutbox(serviceName, pool, kafkaClient) {
   let pollerTimeout = null;
@@ -25,7 +25,7 @@ export function createOutbox(serviceName, pool, kafkaClient) {
 
     const client = await pool.connect();
     try {
-      await client.query('BEGIN');
+      await client.query("BEGIN");
 
       const { rows } = await client.query(
         `SELECT id, event_type, topic, payload
@@ -39,7 +39,7 @@ export function createOutbox(serviceName, pool, kafkaClient) {
       let published = 0;
       for (const row of rows) {
         try {
-          const envelope = typeof row.payload === 'string' ? JSON.parse(row.payload) : row.payload;
+          const envelope = typeof row.payload === "string" ? JSON.parse(row.payload) : row.payload;
           const producer = await kafkaClient.getProducer();
           if (!producer) continue;
           await producer.send({
@@ -52,14 +52,14 @@ export function createOutbox(serviceName, pool, kafkaClient) {
           );
           published++;
         } catch (err) {
-          console.error('outbox: failed to publish event', row.id, err);
+          console.error("outbox: failed to publish event", row.id, err);
         }
       }
 
-      await client.query('COMMIT');
+      await client.query("COMMIT");
       return published;
     } catch (err) {
-      await client.query('ROLLBACK');
+      await client.query("ROLLBACK");
       throw err;
     } finally {
       client.release();
@@ -69,10 +69,9 @@ export function createOutbox(serviceName, pool, kafkaClient) {
   async function cleanup(maxAgeMs = 24 * 60 * 60 * 1000) {
     if (!pool) return;
     const cutoff = new Date(Date.now() - maxAgeMs);
-    await pool.query(
-      `DELETE FROM outbox_events WHERE published = TRUE AND published_at < $1`,
-      [cutoff],
-    );
+    await pool.query(`DELETE FROM outbox_events WHERE published = TRUE AND published_at < $1`, [
+      cutoff,
+    ]);
   }
 
   const BASE_INTERVAL = 500;
@@ -92,7 +91,7 @@ export function createOutbox(serviceName, pool, kafkaClient) {
           currentInterval = Math.min(currentInterval * 2, MAX_INTERVAL);
         }
       } catch (err) {
-        console.error('outbox poller error:', err);
+        console.error("outbox poller error:", err);
         currentInterval = Math.min(currentInterval * 2, MAX_INTERVAL);
       }
       pollerTimeout = setTimeout(poll, currentInterval);
