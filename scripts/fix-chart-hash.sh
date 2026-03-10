@@ -39,7 +39,11 @@ while [ "$ITERATION" -lt "$MAX_ITERATIONS" ]; do
   FIXED=false
   while IFS= read -r -d '' file; do
     if grep -q 'chartHash = ""' "$file" || grep -q 'chartHash = "sha256-AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA="' "$file"; then
-      sed -i '' "s|chartHash = \".*\"|chartHash = \"${GOT_HASH}\"|" "$file"
+      if sed --version >/dev/null 2>&1; then
+        sed -i "s|chartHash = \".*\"|chartHash = \"${GOT_HASH}\"|" "$file"
+      else
+        sed -i '' "s|chartHash = \".*\"|chartHash = \"${GOT_HASH}\"|" "$file"
+      fi
       echo "Updated: ${file}"
       FIXED=true
       break

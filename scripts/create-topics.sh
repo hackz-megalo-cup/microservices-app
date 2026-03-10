@@ -1,8 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-BROKER="${KAFKA_BROKERS:-localhost:19092}"
-
 topics=(
   "greeting.created:3"
   "call.completed:3"

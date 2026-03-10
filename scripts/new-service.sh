@@ -27,7 +27,7 @@ PORT="${3:-8080}"
 
 # Convert kebab-case to PascalCase
 to_pascal() {
-  echo "$1" | sed -E 's/(^|-)([a-z])/\U\2/g'
+  echo "$1" | awk -F'-' '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1' OFS=''
 }
 
 SERVICE_NAME_PASCAL="$(to_pascal "$SERVICE_NAME")"
@@ -132,6 +132,21 @@ add_to_topics() {
   echo "  Updated services/internal/platform/topics.go"
 }
 
+add_to_local_nix() {
+  local local_nix="${REPO_ROOT}/deploy/nixidy/env/local.nix"
+  local import_line="    ../../k8s/${SERVICE_NAME}.nix"
+
+  # Insert before the secrets.nix import line
+  local tmp_file
+  tmp_file=$(mktemp)
+  awk -v line="$import_line" '
+    /\.\.\/\.\.\/k8s\/secrets\.nix/ { print line }
+    { print }
+  ' "$local_nix" > "$tmp_file"
+  mv "$tmp_file" "$local_nix"
+  echo "  Updated deploy/nixidy/env/local.nix"
+}
+
 add_to_secrets() {
   local secrets_file="${REPO_ROOT}/deploy/k8s/secrets.nix"
   local secret_name="${SERVICE_NAME}-secrets"
@@ -196,6 +211,14 @@ case "$LANG" in
     add_to_init_db
     add_to_topics
     add_to_secrets
+    add_to_local_nix
+
+    echo "==> Staging nix files for flake visibility..."
+    (cd "${REPO_ROOT}" && git add \
+      "deploy/k8s/${SERVICE_NAME}.nix" \
+      "deploy/nixidy/env/local.nix" \
+      "deploy/k8s/secrets.nix" \
+    2>/dev/null || true)
 
     echo ""
     echo "Created Go service '${SERVICE_NAME}' (port ${PORT})."
@@ -214,6 +237,8 @@ case "$LANG" in
     echo "  docker-compose.yml  (service entry added)"
     echo "  scripts/init-db.sh  (database added)"
     echo "  services/internal/platform/topics.go  (topics added)"
+    echo "  deploy/k8s/secrets.nix  (secrets added)"
+    echo "  deploy/nixidy/env/local.nix  (nix import added)"
     echo ""
     echo "Next steps:"
     echo "  1. Edit proto/${SERVICE_NAME}/v1/${SERVICE_NAME}.proto (define your API)"
@@ -237,7 +262,7 @@ case "$LANG" in
     # Init package.json with shared dependency
     (cd "${REPO_ROOT}/node-services/${SERVICE_NAME}" && npm init -y --silent)
     # Add @microservices/shared workspace dependency
-    local pkg="${REPO_ROOT}/node-services/${SERVICE_NAME}/package.json"
+    pkg="${REPO_ROOT}/node-services/${SERVICE_NAME}/package.json"
     if command -v node &>/dev/null; then
       node -e "
         const fs = require('fs');
@@ -253,6 +278,14 @@ case "$LANG" in
     add_to_docker_compose "${TEMPLATES_DIR}/docker-compose-entry.custom.yml.tmpl"
     add_to_init_db
     add_to_secrets
+    add_to_local_nix
+
+    echo "==> Staging nix files for flake visibility..."
+    (cd "${REPO_ROOT}" && git add \
+      "deploy/k8s/${SERVICE_NAME}.nix" \
+      "deploy/nixidy/env/local.nix" \
+      "deploy/k8s/secrets.nix" \
+    2>/dev/null || true)
 
     echo ""
     echo "Created custom service '${SERVICE_NAME}' (port ${PORT})."
@@ -265,9 +298,8 @@ case "$LANG" in
     echo "Auto-wired:"
     echo "  docker-compose.yml  (service entry added)"
     echo "  scripts/init-db.sh  (database added)"
-    echo ""
-    echo "Next steps:"
-    echo "  1. Add the nixidy import to deploy/nixidy/env/local.nix"
+    echo "  deploy/k8s/secrets.nix  (secrets added)"
+    echo "  deploy/nixidy/env/local.nix  (nix import added)"
     ;;
 
   *)

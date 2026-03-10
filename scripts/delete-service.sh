@@ -23,7 +23,7 @@ SERVICE_NAME="$1"
 
 # Convert kebab-case to PascalCase
 to_pascal() {
-  echo "$1" | sed -E 's/(^|-)([a-z])/\U\2/g'
+  echo "$1" | awk -F'-' '{for(i=1;i<=NF;i++) $i=toupper(substr($i,1,1)) substr($i,2)}1' OFS=''
 }
 
 SERVICE_NAME_PASCAL="$(to_pascal "$SERVICE_NAME")"
@@ -136,6 +136,52 @@ remove_from_topics() {
   echo "  Updated services/internal/platform/topics.go"
 }
 
+# --- Remove from secrets.nix ---
+
+remove_from_secrets() {
+  local secrets_file="${REPO_ROOT}/deploy/k8s/secrets.nix"
+
+  if [[ ! -f "$secrets_file" ]]; then
+    return
+  fi
+
+  local secret_name="${SERVICE_NAME}-secrets"
+  local tmp_file
+  tmp_file=$(mktemp)
+
+  # Remove the block: "      <name>-secrets = { ... };" (6-space indent)
+  awk -v sn="$secret_name" '
+    BEGIN { skip=0 }
+    $0 ~ "^      " sn " = \\{" { skip=1; next }
+    skip && /^      };$/ { skip=0; next }
+    skip { next }
+    { print }
+  ' "$secrets_file" > "$tmp_file"
+
+  # Clean up double blank lines
+  awk 'NR==1{print; blank=0; next} /^$/{blank++; if(blank<=1) print; next} {blank=0; print}' "$tmp_file" > "${tmp_file}.clean"
+  mv "${tmp_file}.clean" "$secrets_file"
+  rm -f "$tmp_file"
+  echo "  Updated deploy/k8s/secrets.nix"
+}
+
+# --- Remove from local.nix ---
+
+remove_from_local_nix() {
+  local local_nix="${REPO_ROOT}/deploy/nixidy/env/local.nix"
+
+  if [[ ! -f "$local_nix" ]]; then
+    return
+  fi
+
+  local tmp_file
+  tmp_file=$(mktemp)
+
+  grep -v "../../k8s/${SERVICE_NAME}.nix" "$local_nix" > "$tmp_file"
+  mv "$tmp_file" "$local_nix"
+  echo "  Updated deploy/nixidy/env/local.nix"
+}
+
 # --- Stop and remove Docker container/image ---
 
 stop_docker() {
@@ -168,6 +214,14 @@ echo "==> Removing wiring..."
 remove_from_docker_compose
 remove_from_init_db
 remove_from_topics
+remove_from_secrets
+remove_from_local_nix
+
+echo "==> Staging nix changes..."
+(cd "${REPO_ROOT}" && \
+  git rm -f --cached "deploy/k8s/${SERVICE_NAME}.nix" 2>/dev/null || true
+  git add "deploy/nixidy/env/local.nix" "deploy/k8s/secrets.nix" 2>/dev/null || true
+)
 
 echo ""
 echo "Deleted service '${SERVICE_NAME}'."
@@ -186,3 +240,5 @@ echo "Un-wired:"
 echo "  docker-compose.yml  (service entry removed)"
 echo "  scripts/init-db.sh  (database removed)"
 echo "  services/internal/platform/topics.go  (topics removed)"
+echo "  deploy/k8s/secrets.nix  (secrets removed)"
+echo "  deploy/nixidy/env/local.nix  (nix import removed)"
