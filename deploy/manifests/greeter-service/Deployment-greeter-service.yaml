@@ -20,9 +20,17 @@ spec:
             - name: CALLER_BASE_URL
               value: http://caller-service.microservices:8081
             - name: DATABASE_URL
-              value: postgresql://devuser:devpass@postgresql.database:5432/greeter_db
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_URL
+                  name: greeter-secrets
             - name: EXTERNAL_API_URL
               value: https://httpbin.org/get
+            - name: KAFKA_BROKERS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_BROKERS
+                  name: greeter-secrets
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: http://otel-collector.observability:4317
             - name: OTEL_SERVICE_NAME

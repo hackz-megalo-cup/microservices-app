@@ -19,10 +19,16 @@ curl -s -X POST http://localhost:30081/auth/login \
 ```bash
 TOKEN="<jwt token from login>"
 
+# v1（認証必要）
 curl -s -X POST http://localhost:30081/greeter.v1.GreeterService/Greet \
   -H "Content-Type: application/json" \
   -H "Authorization: Bearer $TOKEN" \
   -d '{"name":"Alice"}'
+
+# v2（認証なしでも可、レスポンスに traceId 付き、externalBodyLength が int64）
+curl -s -X POST http://localhost:30081/greeter.v2.GreeterService/Greet \
+  -H "Content-Type: application/json" \
+  -d '{"name":"Alice","locale":"ja"}'
 ```
 
 ## 3. Gateway InvokeCustom
@@ -63,6 +69,11 @@ kubectl exec -n observability tempo-0 -- \
 # トレース詳細を取得（traceID は上記の結果から取得）
 kubectl exec -n observability tempo-0 -- \
   wget -qO- 'http://localhost:3200/api/traces/<traceID>'
+
+# parent-child 関係の検証（サービス名・スパン名・親子関係を一覧表示）
+kubectl exec -n observability tempo-0 -- \
+  wget -qO- 'http://localhost:3200/api/traces/<traceID>' | \
+  jq '[.batches[] | {service: (.resource.attributes[] | select(.key=="service.name") | .value.stringValue), spans: [.scopeSpans[].spans[] | {name: .name, spanId: .spanId, parentSpanId: .parentSpanId, kind: .kind}]}]'
 ```
 
 正しく分散トレーシングが動いている場合、1 つのトレースに複数サービスの batch が含まれる:
@@ -93,7 +104,7 @@ kubectl exec -n database postgresql-0 -c postgresql -- \
   env PGPASSWORD=devpass psql -U devuser -d greeter_db \
   -c "SELECT e.stream_id, e.event_type, g.name, g.status
        FROM event_store e
-       LEFT JOIN greetings g ON g.id = e.stream_id
+       LEFT JOIN greetings g ON g.id::text = e.stream_id
        ORDER BY e.created_at;"
 ```
 
@@ -144,8 +155,18 @@ kubectl exec -n database postgresql-0 -c postgresql -- \
   env PGPASSWORD=devpass psql -U devuser -d greeter_db \
   -c "SELECT * FROM greetings ORDER BY created_at;"
 
-# Check invocations data
+# Check invocations data (Projection の read model — 現時点では未実装のため空)
 kubectl exec -n database postgresql-0 -c postgresql -- \
   env PGPASSWORD=devpass psql -U devuser -d gateway_db \
   -c "SELECT * FROM invocations ORDER BY created_at;"
+
+# Check event_store (gateway — Saga イベント)
+kubectl exec -n database postgresql-0 -c postgresql -- \
+  env PGPASSWORD=devpass psql -U devuser -d gateway_db \
+  -c "SELECT event_id, stream_id, event_type, version, created_at FROM event_store ORDER BY created_at;"
+
+# Check outbox_events (gateway)
+kubectl exec -n database postgresql-0 -c postgresql -- \
+  env PGPASSWORD=devpass psql -U devuser -d gateway_db \
+  -c "SELECT id, event_type, topic, published, created_at FROM outbox_events ORDER BY created_at;"
 ```

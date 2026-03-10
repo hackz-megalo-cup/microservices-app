@@ -20,7 +20,15 @@ spec:
             - name: CUSTOM_LANG_BASE_URL
               value: http://custom-lang-service.microservices:3000
             - name: DATABASE_URL
-              value: postgresql://devuser:devpass@postgresql.database:5432/gateway_db
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_URL
+                  name: gateway-secrets
+            - name: KAFKA_BROKERS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_BROKERS
+                  name: gateway-secrets
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: http://otel-collector.observability:4317
             - name: OTEL_SERVICE_NAME
