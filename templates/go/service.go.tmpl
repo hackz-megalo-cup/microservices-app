@@ -1,0 +1,59 @@
+package __SERVICE_NAME_SNAKE__
+
+import (
+	"context"
+	"fmt"
+	"log/slog"
+
+	"connectrpc.com/connect"
+	"github.com/google/uuid"
+
+	pb "github.com/hackz-megalo-cup/microservices-app/services/gen/go/__SERVICE_NAME__/v1"
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
+)
+
+type Service struct {
+	eventStore *platform.EventStore
+	outbox     *platform.OutboxStore
+}
+
+func NewService(eventStore *platform.EventStore, outbox *platform.OutboxStore) *Service {
+	return &Service{
+		eventStore: eventStore,
+		outbox:     outbox,
+	}
+}
+
+// ==========================================================.
+// proto を編集して RPC を定義したら、このメソッドを書き換える。
+//
+// 新規作成パターン:
+//   agg := New__SERVICE_NAME_PASCAL__Aggregate(uuid.NewString())
+//   agg.Create(...)
+//   platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, __SERVICE_NAME_PASCAL__TopicMapper)
+//   return agg.AggregateID()  // 生成された ID
+//
+// 既存更新パターン:
+//   agg := New__SERVICE_NAME_PASCAL__Aggregate(id)
+//   platform.LoadAggregate(ctx, s.eventStore, agg)  // イベント再生で状態復元
+//   agg.SomeCommand()
+//   platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, __SERVICE_NAME_PASCAL__TopicMapper)
+// ==========================================================.
+
+func (s *Service) Invoke(ctx context.Context, req *connect.Request[pb.__SERVICE_NAME_PASCAL__Request]) (*connect.Response[pb.__SERVICE_NAME_PASCAL__Response], error) {
+	input := req.Msg.GetInput()
+	if input == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("input is required"))
+	}
+
+	agg := New__SERVICE_NAME_PASCAL__Aggregate(uuid.NewString())
+	agg.Create()
+	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, __SERVICE_NAME_PASCAL__TopicMapper); err != nil {
+		slog.Error("failed to save aggregate", "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save"))
+	}
+
+	return connect.NewResponse(&pb.__SERVICE_NAME_PASCAL__Response{
+		Output: agg.AggregateID(),
+	}), nil
+}

@@ -25,8 +25,18 @@ in
               OTEL_EXPORTER_OTLP_ENDPOINT.value = "http://otel-collector.observability:4317";
               OTEL_SERVICE_NAME.value = "auth-service";
               PORT.value = "8090";
-              JWT_SECRET.value = "dev-secret";
-              DATABASE_URL.value = "postgresql://devuser:devpass@postgresql.database:5432/auth_db";
+              DATABASE_URL.valueFrom.secretKeyRef = {
+                name = "auth-secrets";
+                key = "DATABASE_URL";
+              };
+              KAFKA_BROKERS.valueFrom.secretKeyRef = {
+                name = "auth-secrets";
+                key = "KAFKA_BROKERS";
+              };
+              JWT_SECRET.valueFrom.secretKeyRef = {
+                name = "auth-secrets";
+                key = "JWT_SECRET";
+              };
             };
 
             livenessProbe = {

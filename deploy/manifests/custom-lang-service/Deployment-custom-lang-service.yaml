@@ -18,7 +18,15 @@ spec:
       containers:
         - env:
             - name: DATABASE_URL
-              value: postgresql://devuser:devpass@postgresql.database:5432/lang_db
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_URL
+                  name: custom-lang-secrets
+            - name: KAFKA_BROKERS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_BROKERS
+                  name: custom-lang-secrets
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: http://otel-collector.observability:4317
             - name: OTEL_SERVICE_NAME

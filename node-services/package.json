@@ -1,0 +1,8 @@
+{
+  "private": true,
+  "workspaces": [
+    "shared",
+    "auth-service",
+    "custom-lang-service"
+  ]
+}

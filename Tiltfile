@@ -4,6 +4,10 @@ load('ext://restart_process', 'docker_build_with_restart')
 use_nix = str(os.getenv('USE_NIX', 'false')).lower() == 'true'
 skip_cluster_up = str(os.getenv('TILT_SKIP_CLUSTER_UP', 'false')).lower() == 'true'
 
+# Detect host architecture for cross-compilation targeting kind cluster
+_arch = str(local('uname -m', quiet=True)).strip()
+go_arch = 'arm64' if _arch == 'arm64' or _arch == 'aarch64' else 'amd64'
+
 cluster_bootstrap_deps = []
 if not skip_cluster_up:
     local_resource(
@@ -69,6 +73,7 @@ manifests += find_yaml('deploy/manifests/gateway-service')
 manifests += find_yaml('deploy/manifests/custom-lang-service')
 manifests += find_yaml('deploy/manifests/auth-service')
 manifests += find_yaml('deploy/manifests/frontend')
+manifests += find_yaml('deploy/manifests/microservices-secrets')
 
 namespaces = [m for m in manifests if '/Namespace-' in m]
 # Gateway API CRDs are pre-installed at v1.5.0+; skip the older ones bundled in the Traefik chart.
@@ -100,8 +105,8 @@ def go_service(name, cmd_path):
     else:
         local_resource(
             '%s-compile' % name,
-            'mkdir -p services/%s/build && cd services && CGO_ENABLED=0 GOOS=linux GOARCH=amd64 go build -o %s/build/%s ./%s'
-            % (name, name, name, cmd_path),
+            'mkdir -p services/%s/build && rm -f services/%s/build/%s && cd services && CGO_ENABLED=0 GOOS=linux GOARCH=%s go build -o %s/build/%s ./%s'
+            % (name, name, name, go_arch, name, name, cmd_path),
             deps=compile_deps,
             ignore=['services/%s/build/' % name],
             resource_deps=['buf-generate'],

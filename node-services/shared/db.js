@@ -1,4 +1,4 @@
-import pg from 'pg';
+import pg from "pg";
 
 const databaseUrl = process.env.DATABASE_URL;
 
@@ -8,7 +8,7 @@ export async function healthCheck() {
   if (!pool) return;
   const client = await pool.connect();
   try {
-    await client.query('SELECT 1');
+    await client.query("SELECT 1");
   } finally {
     client.release();
   }

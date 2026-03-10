@@ -14,12 +14,13 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
-	"github.com/jackc/pgx/v5/pgxpool"
+	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/caller/v1/callerv1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/greeter/v1/greeterv1connect"
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/greeter/v2/greeterv2connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/greeter"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
@@ -58,48 +59,94 @@ func run() error {
 		externalURL = "https://httpbin.org/get"
 	}
 
-	otelInterceptor, err := otelconnect.NewInterceptor()
+	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
 	if err != nil {
 		return err
 	}
-	clientHTTP := &http.Client{Timeout: 3 * time.Second}
+	clientHTTP := &http.Client{
+		Timeout:   3 * time.Second,
+		Transport: otelhttp.NewTransport(http.DefaultTransport),
+	}
 	callerClient := callerv1connect.NewCallerServiceClient(
 		clientHTTP,
 		callerBaseURL,
 		connect.WithInterceptors(otelInterceptor),
 	)
-	// DB init (optional: サービスは DB なしでも起動する)
-	databaseURL := os.Getenv("DATABASE_URL")
-	var dbPool *pgxpool.Pool
-	if databaseURL != "" {
-		dbPool, err = platform.NewDBPool(ctx, databaseURL)
-		if err != nil {
-			logger.WarnContext(ctx, "database unavailable, running without DB", "error", err)
-			dbPool = nil
-		} else {
-			defer dbPool.Close()
-			migrationsFS, _ := fs.Sub(greeter.MigrationsFS, "migrations")
-			if err := platform.RunMigrations(databaseURL, migrationsFS); err != nil {
-				logger.WarnContext(ctx, "migration failed, running without DB", "error", err)
-				dbPool.Close()
-				dbPool = nil
-			} else {
-				logger.InfoContext(ctx, "database ready", "service", serviceName)
-			}
-		}
+	migrationsFS, _ := fs.Sub(greeter.MigrationsFS, "migrations")
+	dbPool := platform.InitDB(ctx, os.Getenv("DATABASE_URL"), migrationsFS, serviceName)
+	if dbPool != nil {
+		defer dbPool.Close()
 	}
 
-	greeterSvc := greeter.NewService(callerClient, externalURL, 2*time.Second, dbPool)
-	path, handler := greeterv1connect.NewGreeterServiceHandler(
-		greeterSvc,
-		connect.WithInterceptors(
-			otelInterceptor,
-			platform.NewLoggingInterceptor(logger),
-		),
+	brokers := platform.ParseKafkaBrokers(os.Getenv("KAFKA_BROKERS"))
+	platform.TryEnsureTopics(ctx, brokers)
+
+	publisher, _ := platform.NewEventPublisher(brokers)
+	defer publisher.Close()
+
+	outbox := platform.NewOutboxStore(dbPool, publisher)
+	outbox.StartPoller(ctx, 500*time.Millisecond)
+
+	eventStore := platform.NewEventStore(dbPool)
+
+	// CQRS read-model projection: materializes event_store → greetings table
+	projection := greeter.NewGreetingProjection(eventStore, dbPool)
+	projection.Start(ctx, 1*time.Second)
+
+	// Compensation handler for greeting.failed
+	compensation := platform.NewCompensationRouter()
+	compensation.Handle(platform.TopicGreetingFailed, func(ctx context.Context, event platform.Event) error {
+		if eventStore == nil {
+			return nil
+		}
+		data, ok := event.Data.(map[string]any)
+		if !ok {
+			slog.Warn("compensation: unexpected data type", "event_id", event.ID)
+			return nil
+		}
+		streamID, _ := data["stream_id"].(string)
+		if streamID == "" {
+			slog.Warn("compensation: missing stream_id", "event_id", event.ID)
+			return nil
+		}
+		agg := greeter.NewGreetingAggregate(streamID)
+		if err := platform.LoadAggregate(ctx, eventStore, agg); err != nil {
+			return err
+		}
+		agg.Compensate("saga compensation")
+		if err := platform.SaveAggregate(ctx, eventStore, outbox, agg, greeter.GreetingTopicMapper); err != nil {
+			return err
+		}
+		slog.Info("compensation: greeting compensated via ES", "stream_id", streamID)
+		return nil
+	})
+	go func() {
+		if err := compensation.Run(ctx, brokers, "greeter-compensation"); err != nil && !errors.Is(err, context.Canceled) {
+			slog.Error("compensation router error", "error", err)
+		}
+	}()
+
+	verifier := platform.NewJWTVerifier(os.Getenv("JWKS_URL"))
+	idempotencyStore := platform.NewIdempotencyStore(dbPool)
+	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
+
+	greeterSvc := greeter.NewService(callerClient, externalURL, 2*time.Second, dbPool, outbox, eventStore)
+
+	connectOpts := connect.WithInterceptors(
+		otelInterceptor,
+		platform.NewAuthInterceptor(verifier),
+		platform.NewIdempotencyInterceptor(idempotencyStore),
+		platform.NewLoggingInterceptor(logger),
 	)
 
+	pathV1, handlerV1 := greeterv1connect.NewGreeterServiceHandler(greeterSvc, connectOpts)
+
+	greeterSvcV2 := greeter.NewServiceV2(greeterSvc)
+	pathV2, handlerV2 := greeterv2connect.NewGreeterServiceHandler(greeterSvcV2, connectOpts)
+
 	mux := http.NewServeMux()
-	mux.Handle(path, handler)
+	mux.Handle(pathV1, handlerV1)
+	mux.Handle(pathV2, handlerV2)
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if dbPool != nil {
 			if err := dbPool.Ping(r.Context()); err != nil {

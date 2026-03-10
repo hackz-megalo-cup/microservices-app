@@ -53,9 +53,12 @@
     golangci-lint = {
       enable = true;
       name = "golangci-lint";
-      entry = "bash -c 'export PATH=\"$DEVENV_ROOT/.devenv/go-bin:$PATH\" && cd services && golangci-lint run'";
+      entry = "bash -c 'export PATH=\"$DEVENV_ROOT/.devenv/go-bin:$PATH\" && cd services && golangci-lint run --modules-download-mode=mod'";
       files = "\\.go$";
-      excludes = [ "^services/gen/go/" ];
+      excludes = [
+        "^services/gen/go/"
+        "^services/vendor/"
+      ];
       language = "system";
       pass_filenames = false;
     };
@@ -63,18 +66,30 @@
     gofmt = {
       enable = true;
       name = "goimports";
-      entry = "bash -c 'export PATH=\"$DEVENV_ROOT/.devenv/go-bin:$PATH\" && cd services && goimports -l -w .'";
+      entry = "bash -c 'export PATH=\"$DEVENV_ROOT/.devenv/go-bin:$PATH\" && cd services && find . -name \"*.go\" -not -path \"./vendor/*\" -not -path \"./gen/*\" | xargs goimports -l -w'";
       files = "\\.go$";
-      excludes = [ "^services/gen/go/" ];
+      excludes = [
+        "^services/gen/go/"
+        "^services/vendor/"
+      ];
       language = "system";
       pass_filenames = false;
     };
 
     biome = {
       enable = true;
-      name = "biome check";
+      name = "biome check (frontend)";
       entry = "bash -c 'cd frontend && npx biome check src/'";
       files = "\\.(ts|tsx)$";
+      language = "system";
+      pass_filenames = false;
+    };
+
+    biome-node = {
+      enable = true;
+      name = "biome check (node-services)";
+      entry = "bash -c 'cd node-services && npx biome check --write .'";
+      files = "^node-services/.*\\.js$";
       language = "system";
       pass_filenames = false;
     };
@@ -82,9 +97,12 @@
     go-test = {
       enable = true;
       name = "go test";
-      entry = "bash -c 'cd services && go test ./...'";
+      entry = "bash -c 'cd services && go test -mod=mod ./...'";
       files = "\\.go$";
-      excludes = [ "^services/gen/go/" ];
+      excludes = [
+        "^services/gen/go/"
+        "^services/vendor/"
+      ];
       language = "system";
       pass_filenames = false;
     };
@@ -96,6 +114,7 @@
       export PATH="$DEVENV_ROOT/.devenv/go-bin:$PATH"
       (cd services && goimports -l -w . && golangci-lint fmt ./...)
       (cd frontend && npx biome format --write src/)
+      (cd node-services && npx biome check --write .)
       treefmt --no-cache
       echo "=== Done. Staging formatted files ==="
       git add -u
@@ -106,6 +125,7 @@
       export PATH="$DEVENV_ROOT/.devenv/go-bin:$PATH"
       (cd services && golangci-lint run ./...)
       (cd frontend && npx biome check src/)
+      (cd node-services && npx biome check .)
       echo "=== Done ==="
     '';
     gen-manifests.exec = ''
@@ -151,6 +171,9 @@
     fix-chart-hash.exec = ''
       bash "$DEVENV_ROOT/scripts/fix-chart-hash.sh"
     '';
+    sync-vendor.exec = ''
+      bash "$DEVENV_ROOT/scripts/sync-vendor.sh"
+    '';
     new-service.exec = ''
       bash "$DEVENV_ROOT/scripts/new-service.sh" "$@"
     '';
@@ -180,8 +203,8 @@
     echo "microservice-app dev environment loaded"
     echo ""
     echo "Available commands:"
-    echo "  fmt              : Format all (Go + TS + Nix) and git add -u"
-    echo "  lint             : Lint all (golangci-lint + Biome)"
+    echo "  fmt              : Format all (Go + TS + Node + Nix) and git add -u"
+    echo "  lint             : Lint all (golangci-lint + Biome frontend/node)"
     echo "  gen-manifests    : Regenerate nixidy manifests into deploy/manifests/"
     echo "  load-microservice-images  : Build + load all microservice images into kind"
     echo "  watch-manifests  : Watch nixidy modules and apply changes"
@@ -191,6 +214,7 @@
     echo "  debug-grpc       : grpcurl checks for local services"
     echo "  fix-chart-hash   : Auto-fix empty chartHash in nixidy modules"
     echo "  test-smoke       : Smoke test for health and RPC endpoints"
+    echo "  sync-vendor      : Sync Go vendor/ with go.mod (tidy + vendor + stage)"
     echo "  new-service      : Scaffold a new service (new-service <go|custom> <name> [port])"
     echo ""
     echo "Microservice tools:"

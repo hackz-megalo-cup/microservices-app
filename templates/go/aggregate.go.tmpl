@@ -1,0 +1,104 @@
+package __SERVICE_NAME_SNAKE__
+
+import (
+	"encoding/json"
+	"log/slog"
+
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
+)
+
+// ==========================================================.
+// Aggregate — ドメインエンティティ。
+// ↓ ドメインの状態フィールドを追加する（例: Title string）
+// ==========================================================.
+
+type __SERVICE_NAME_PASCAL__Aggregate struct {
+	platform.AggregateBase
+	Status string
+}
+
+func New__SERVICE_NAME_PASCAL__Aggregate(id string) *__SERVICE_NAME_PASCAL__Aggregate {
+	return &__SERVICE_NAME_PASCAL__Aggregate{
+		AggregateBase: platform.NewAggregateBase(id),
+	}
+}
+
+func (a *__SERVICE_NAME_PASCAL__Aggregate) StreamType() string { return "__SERVICE_NAME_SNAKE__" }
+
+// ApplyEvent はイベントを再生して状態を復元する。
+// Created の case を書き換え、追加イベントの case を足す。
+func (a *__SERVICE_NAME_PASCAL__Aggregate) ApplyEvent(eventType string, data json.RawMessage) {
+	switch eventType {
+	case Event__SERVICE_NAME_PASCAL__Created:
+		var d __SERVICE_NAME_PASCAL__CreatedData
+		if err := json.Unmarshal(data, &d); err != nil {
+			slog.Warn("failed to unmarshal created data", "error", err)
+		}
+		// ↓ フィールドの復元を書く（例: a.Title = d.Title）
+		a.Status = "created"
+	// ↓ 追加イベントの case をここに足す
+	// 例:
+	// case Event__SERVICE_NAME_PASCAL__Completed:
+	//     a.Status = "completed"
+	case Event__SERVICE_NAME_PASCAL__Failed:
+		a.Status = "failed"
+	case Event__SERVICE_NAME_PASCAL__Compensated:
+		a.Status = "compensated"
+	}
+}
+
+// ==========================================================.
+// コマンドメソッド — Raise() でイベントを発行し、状態を更新する。
+//
+// Fail / Compensate は main.go の補償ハンドラが参照 — 削除禁止。
+// AggregateID() で集約の ID を取得できる。
+// 既存集約のロード: platform.LoadAggregate(ctx, eventStore, agg)
+// ==========================================================.
+
+// Create — 引数をドメインに合わせて変更する（例: Create(title string)）
+func (a *__SERVICE_NAME_PASCAL__Aggregate) Create() {
+	a.Raise(Event__SERVICE_NAME_PASCAL__Created, __SERVICE_NAME_PASCAL__CreatedData{
+		// ↓ フィールドを渡す（例: Title: title）
+	})
+	// ↓ 状態を更新する（例: a.Title = title）
+	a.Status = "created"
+}
+
+// ↓ 追加コマンドをここに定義する
+// 例:
+// func (a *__SERVICE_NAME_PASCAL__Aggregate) Complete() {
+//     a.Raise(Event__SERVICE_NAME_PASCAL__Completed, __SERVICE_NAME_PASCAL__CompletedData{})
+//     a.Status = "completed"
+// }
+
+// Fail records a failed operation — main.go が参照、削除禁止。
+func (a *__SERVICE_NAME_PASCAL__Aggregate) Fail(input string, reason string) {
+	a.Raise(Event__SERVICE_NAME_PASCAL__Failed, __SERVICE_NAME_PASCAL__FailedData{
+		Input: input,
+		Error: reason,
+	})
+	a.Status = "failed"
+}
+
+// Compensate marks this aggregate as compensated — main.go が参照、削除禁止。
+func (a *__SERVICE_NAME_PASCAL__Aggregate) Compensate(reason string) {
+	if a.Status == "compensated" {
+		return
+	}
+	a.Raise(Event__SERVICE_NAME_PASCAL__Compensated, __SERVICE_NAME_PASCAL__CompensatedData{
+		Reason: reason,
+	})
+	a.Status = "compensated"
+}
+
+// __SERVICE_NAME_PASCAL__TopicMapper maps event types to Kafka topics.
+func __SERVICE_NAME_PASCAL__TopicMapper(eventType string) string {
+	switch eventType {
+	case Event__SERVICE_NAME_PASCAL__Created:
+		return platform.Topic__SERVICE_NAME_PASCAL__Created
+	case Event__SERVICE_NAME_PASCAL__Failed:
+		return platform.Topic__SERVICE_NAME_PASCAL__Failed
+	default:
+		return ""
+	}
+}

@@ -58,7 +58,7 @@
             pname = "caller";
             version = "0.1.0";
             src = ./services;
-            vendorHash = "sha256-IKFViGM0LGSlm+EmtCk99I+67Yn0RBpwKmcBi89Eir4=";
+            vendorHash = "sha256-+fP1zjxu/VGLkfy6Bj4zlS27Zd1qfM0udBYFaxk79MQ=";
             env.CGO_ENABLED = 0;
             ldflags = [
               "-s"
@@ -82,7 +82,7 @@
             pname = "greeter";
             version = "0.1.0";
             src = ./services;
-            vendorHash = "sha256-IKFViGM0LGSlm+EmtCk99I+67Yn0RBpwKmcBi89Eir4=";
+            vendorHash = "sha256-+fP1zjxu/VGLkfy6Bj4zlS27Zd1qfM0udBYFaxk79MQ=";
             env.CGO_ENABLED = 0;
             ldflags = [
               "-s"
@@ -106,7 +106,7 @@
             pname = "gateway";
             version = "0.1.0";
             src = ./services;
-            vendorHash = "sha256-IKFViGM0LGSlm+EmtCk99I+67Yn0RBpwKmcBi89Eir4=";
+            vendorHash = "sha256-+fP1zjxu/VGLkfy6Bj4zlS27Zd1qfM0udBYFaxk79MQ=";
             env.CGO_ENABLED = 0;
             ldflags = [
               "-s"
@@ -143,6 +143,11 @@
               inherit pkgs;
               charts = inputs.nixhelm.chartsDerivations.${system};
               modules = [ ./deploy/nixidy/env/local.nix ];
+            };
+            prod = inputs.nixidy.lib.mkEnv {
+              inherit pkgs;
+              charts = inputs.nixhelm.chartsDerivations.${system};
+              modules = [ ./deploy/nixidy/env/prod.nix ];
             };
           };
 

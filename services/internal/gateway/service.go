@@ -13,21 +13,26 @@ import (
 	"strings"
 	"time"
 
+	"github.com/google/uuid"
+
 	"connectrpc.com/connect"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/sony/gobreaker/v2"
 
 	gatewayv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/gateway/v1"
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
 type Service struct {
-	httpClient  *http.Client
-	baseURL     string
-	timeout     time.Duration
-	breaker     *gobreaker.CircuitBreaker[invokeResult]
-	retryBudget *RetryBudget
-	pool        *pgxpool.Pool
+	httpClient         *http.Client
+	baseURL            string
+	timeout            time.Duration
+	breaker            *gobreaker.CircuitBreaker[invokeResult]
+	customLangBulkhead *platform.Bulkhead
+	pool               *pgxpool.Pool
+	outbox             *platform.OutboxStore
+	eventStore         *platform.EventStore
 }
 
 type invokeResult struct {
@@ -43,60 +48,16 @@ func (e *statusError) Error() string {
 	return fmt.Sprintf("downstream status %d: %s", e.status, e.body)
 }
 
-type RetryBudget struct {
-	tokens chan struct{}
-}
-
-func NewRetryBudget(capacity, refillPerSecond int) *RetryBudget {
-	b := &RetryBudget{tokens: make(chan struct{}, capacity)}
-	for i := 0; i < capacity; i++ {
-		b.tokens <- struct{}{}
-	}
-	go func() {
-		ticker := time.NewTicker(time.Second)
-		defer ticker.Stop()
-		for range ticker.C {
-			for i := 0; i < refillPerSecond; i++ {
-				select {
-				case b.tokens <- struct{}{}:
-				default:
-				}
-			}
-		}
-	}()
-	return b
-}
-
-func (b *RetryBudget) Allow() bool {
-	select {
-	case <-b.tokens:
-		return true
-	default:
-		return false
-	}
-}
-
-func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, pool *pgxpool.Pool) *Service {
-	breaker := gobreaker.NewCircuitBreaker[invokeResult](gobreaker.Settings{
-		Name:        "custom-lang-service",
-		MaxRequests: 3,
-		Interval:    10 * time.Second,
-		Timeout:     30 * time.Second,
-		ReadyToTrip: func(counts gobreaker.Counts) bool {
-			return counts.ConsecutiveFailures >= 5
-		},
-		IsSuccessful: func(err error) bool {
-			return err == nil || errors.Is(err, context.Canceled)
-		},
-	})
-
+func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, pool *pgxpool.Pool, outbox *platform.OutboxStore, eventStore *platform.EventStore) *Service {
 	return &Service{
-		httpClient:  httpClient,
-		baseURL:     strings.TrimRight(baseURL, "/"),
-		timeout:     timeout,
-		breaker:     breaker,
-		retryBudget: NewRetryBudget(20, 10),
-		pool:        pool,
+		httpClient:         httpClient,
+		baseURL:            strings.TrimRight(baseURL, "/"),
+		timeout:            timeout,
+		breaker:            platform.NewCircuitBreaker[invokeResult](platform.DefaultCBConfig("custom-lang-service")),
+		customLangBulkhead: platform.NewBulkhead(10),
+		pool:               pool,
+		outbox:             outbox,
+		eventStore:         eventStore,
 	}
 }
 
@@ -106,37 +67,95 @@ func (s *Service) InvokeCustom(ctx context.Context, req *connect.Request[gateway
 		name = "World"
 	}
 
-	result, err := s.breaker.Execute(func() (invokeResult, error) {
-		return s.callCustom(ctx, name)
-	})
-	if err != nil && shouldRetry(err) && s.retryBudget.Allow() {
-		result, err = s.breaker.Execute(func() (invokeResult, error) {
-			return s.callCustom(ctx, name)
-		})
-	}
-	if err != nil {
-		// 同期パターン: 失敗もDB記録
-		if s.pool != nil {
-			_, dbErr := s.pool.Exec(ctx, "INSERT INTO invocations (name, result_message, success) VALUES ($1, $2, $3)", name, err.Error(), false)
-			if dbErr != nil {
-				slog.Error("failed to insert invocation", "error", dbErr)
+	authHeader := req.Header().Get("Authorization")
+
+	var result invokeResult
+	err := s.customLangBulkhead.Execute(ctx, func() error {
+		return platform.RetryWithBackoff(ctx, func() error {
+			var cbErr error
+			result, cbErr = platform.CBExecute(s.breaker, func() (invokeResult, error) {
+				return s.callCustom(ctx, name, authHeader)
+			})
+			if cbErr != nil && !shouldRetry(cbErr) {
+				return platform.NewPermanentError(cbErr)
 			}
-		}
+			return cbErr
+		}, platform.WithMaxRetries(3))
+	})
+	if err != nil {
+		s.recordInvocation(ctx, name, err.Error(), false, "failed", platform.TopicInvocationFailed, "invocation.failed")
 		return nil, mapError(err)
 	}
 
-	// 同期パターン: レスポンス前にDB書き込み完了を保証
+	s.recordInvocation(ctx, name, result.message, true, "completed", platform.TopicInvocationCreated, "invocation.created")
+	return connect.NewResponse(&gatewayv1.InvokeCustomResponse{Message: result.message}), nil
+}
+
+func (s *Service) recordInvocation(ctx context.Context, name, message string, success bool, status, topic, eventType string) {
+	// Event Sourcing path (preferred).
+	if s.eventStore != nil {
+		s.recordViaEventStore(ctx, name, message, success)
+		return
+	}
+	// Legacy outbox path.
+	if s.outbox != nil {
+		s.recordViaOutbox(ctx, name, message, success, status, topic, eventType)
+		return
+	}
+	// Direct DB fallback.
 	if s.pool != nil {
-		_, dbErr := s.pool.Exec(ctx, "INSERT INTO invocations (name, result_message, success) VALUES ($1, $2, $3)", name, result.message, true)
+		_, dbErr := s.pool.Exec(ctx, "INSERT INTO invocations (name, result_message, success) VALUES ($1, $2, $3)", name, message, success)
 		if dbErr != nil {
 			slog.Error("failed to insert invocation", "error", dbErr)
 		}
 	}
-
-	return connect.NewResponse(&gatewayv1.InvokeCustomResponse{Message: result.message}), nil
 }
 
-func (s *Service) callCustom(ctx context.Context, name string) (invokeResult, error) {
+func (s *Service) recordViaEventStore(ctx context.Context, name, message string, success bool) {
+	agg := NewInvocationAggregate(uuid.NewString())
+	if success {
+		agg.Create(name, message)
+	} else {
+		agg.Fail(name, message)
+	}
+	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, InvocationTopicMapper); err != nil {
+		slog.Error("failed to save invocation aggregate", "error", err)
+	}
+}
+
+func (s *Service) recordViaOutbox(ctx context.Context, name, message string, success bool, status, topic, eventType string) {
+	tx, txErr := s.outbox.BeginTx(ctx)
+	if txErr != nil {
+		slog.Error("failed to begin transaction", "error", txErr)
+		return
+	}
+	_, execErr := tx.Exec(ctx,
+		"INSERT INTO invocations (name, result_message, success, status) VALUES ($1, $2, $3, $4)",
+		name, message, success, status,
+	)
+	if execErr != nil {
+		_ = tx.Rollback(ctx)
+		slog.Error("failed to insert invocation", "error", execErr)
+		return
+	}
+	data := map[string]any{"name": name}
+	if success {
+		data["message"] = message
+	} else {
+		data["error"] = message
+	}
+	event := platform.NewEvent(eventType, "gateway-service", data)
+	if outboxErr := s.outbox.InsertEvent(ctx, tx, topic, event); outboxErr != nil {
+		_ = tx.Rollback(ctx)
+		slog.Error("failed to insert outbox event", "error", outboxErr)
+		return
+	}
+	if commitErr := tx.Commit(ctx); commitErr != nil {
+		slog.Error("failed to commit transaction", "error", commitErr)
+	}
+}
+
+func (s *Service) callCustom(ctx context.Context, name string, authHeader string) (invokeResult, error) {
 	payload, err := json.Marshal(map[string]string{"name": name})
 	if err != nil {
 		return invokeResult{}, err
@@ -150,6 +169,9 @@ func (s *Service) callCustom(ctx context.Context, name string) (invokeResult, er
 		return invokeResult{}, err
 	}
 	httpReq.Header.Set("content-type", "application/json")
+	if authHeader != "" {
+		httpReq.Header.Set("Authorization", authHeader)
+	}
 
 	httpResp, err := s.httpClient.Do(httpReq)
 	if err != nil {

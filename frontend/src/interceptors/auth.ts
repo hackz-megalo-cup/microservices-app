@@ -1,9 +1,9 @@
-import type { Interceptor } from '@connectrpc/connect';
+import type { Interceptor } from "@connectrpc/connect";
 
 export const authInterceptor: Interceptor = (next) => async (req) => {
-  const token = localStorage.getItem('demo_jwt');
+  const token = localStorage.getItem("demo_jwt");
   if (token) {
-    req.header.set('authorization', `Bearer ${token}`);
+    req.header.set("authorization", `Bearer ${token}`);
   }
   return next(req);
 };

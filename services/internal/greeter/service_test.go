@@ -29,7 +29,7 @@ func TestGreet_Normal(t *testing.T) {
 			BodyLength: 42,
 		}),
 	}
-	svc := NewService(mock, "http://example.com", 5*time.Second, nil)
+	svc := NewService(mock, "http://example.com", 5*time.Second, nil, nil, nil)
 
 	resp, err := svc.Greet(context.Background(), connect.NewRequest(&greeterv1.GreetRequest{Name: "Alice"}))
 	if err != nil {
@@ -53,7 +53,7 @@ func TestGreet_EmptyNameFallback(t *testing.T) {
 			BodyLength: 10,
 		}),
 	}
-	svc := NewService(mock, "http://example.com", 5*time.Second, nil)
+	svc := NewService(mock, "http://example.com", 5*time.Second, nil, nil, nil)
 
 	resp, err := svc.Greet(context.Background(), connect.NewRequest(&greeterv1.GreetRequest{Name: ""}))
 	if err != nil {
@@ -67,7 +67,7 @@ func TestGreet_EmptyNameFallback(t *testing.T) {
 func TestGreet_CallerConnectError(t *testing.T) {
 	callerErr := connect.NewError(connect.CodeInternal, errors.New("caller exploded"))
 	mock := &mockCallerClient{err: callerErr}
-	svc := NewService(mock, "http://example.com", 5*time.Second, nil)
+	svc := NewService(mock, "http://example.com", 5*time.Second, nil, nil, nil)
 
 	_, err := svc.Greet(context.Background(), connect.NewRequest(&greeterv1.GreetRequest{Name: "Bob"}))
 	if err == nil {
@@ -84,7 +84,7 @@ func TestGreet_CallerConnectError(t *testing.T) {
 
 func TestGreet_CallerGenericError(t *testing.T) {
 	mock := &mockCallerClient{err: errors.New("network failure")}
-	svc := NewService(mock, "http://example.com", 5*time.Second, nil)
+	svc := NewService(mock, "http://example.com", 5*time.Second, nil, nil, nil)
 
 	_, err := svc.Greet(context.Background(), connect.NewRequest(&greeterv1.GreetRequest{Name: "Charlie"}))
 	if err == nil {

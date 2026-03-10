@@ -1,0 +1,30 @@
+package __SERVICE_NAME_SNAKE__
+
+const (
+	Event__SERVICE_NAME_PASCAL__Created = "__SERVICE_NAME_SNAKE__.created"
+	// ↓ ドメインイベントを追加する
+	// 例: Event__SERVICE_NAME_PASCAL__Completed = "__SERVICE_NAME_SNAKE__.completed"
+
+	Event__SERVICE_NAME_PASCAL__Failed      = "__SERVICE_NAME_SNAKE__.failed"      // main.go が参照 — 削除禁止
+	Event__SERVICE_NAME_PASCAL__Compensated = "__SERVICE_NAME_SNAKE__.compensated" // main.go が参照 — 削除禁止
+)
+
+// __SERVICE_NAME_PASCAL__CreatedData — 作成イベントのペイロード。
+// ドメインに合わせてフィールドを書き換える。
+type __SERVICE_NAME_PASCAL__CreatedData struct {
+	// 例: Title string `json:"title"`
+}
+
+// ↓ 追加イベントのペイロードをここに定義する
+// 例: type __SERVICE_NAME_PASCAL__CompletedData struct{}
+
+// --- 以下は main.go の補償ハンドラが使用。型名とフィールドは残すこと。 ---
+
+type __SERVICE_NAME_PASCAL__FailedData struct {
+	Input string `json:"input"`
+	Error string `json:"error"`
+}
+
+type __SERVICE_NAME_PASCAL__CompensatedData struct {
+	Reason string `json:"reason"`
+}

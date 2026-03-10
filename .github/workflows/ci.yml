@@ -54,6 +54,8 @@ jobs:
         with:
           fetch-depth: 0
       - uses: bufbuild/buf-action@v1
+        with:
+          setup_only: true
       - name: Buf lint
         run: buf lint
       - name: Buf breaking
@@ -64,7 +66,8 @@ jobs:
             echo "Skipping buf breaking: proto baseline does not exist on main yet"
           fi
 
-  go-lint:
+  # Consolidated: go-lint + go-test (saves ~1 billable minute per run)
+  go-check:
     needs: [changes]
     if: >-
       needs.changes.outputs.go == 'true'
@@ -79,8 +82,12 @@ jobs:
         with:
           version: v2.10
           working-directory: services
+      - name: Go test
+        run: go test ./...
+        working-directory: services
 
-  frontend-lint:
+  # Consolidated: frontend-lint + frontend-build (saves ~1 billable minute)
+  frontend-check:
     needs: [changes]
     if: >-
       needs.changes.outputs.frontend == 'true'
@@ -98,91 +105,40 @@ jobs:
       - name: Biome check
         run: npx biome check src/
         working-directory: frontend
-
-  go-test:
-    needs: [changes]
-    if: >-
-      needs.changes.outputs.go == 'true'
-      && github.event_name != 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-go@v5
-        with:
-          go-version-file: services/go.mod
-      - name: Go test
-        run: go test ./...
-        working-directory: services
-
-  node-lint:
-    needs: [changes]
-    if: >-
-      needs.changes.outputs.node == 'true'
-      && github.event_name != 'push'
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: [auth-service, custom-lang-service]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: node-services/${{ matrix.service }}/package-lock.json
-      - run: npm ci
-        working-directory: node-services/${{ matrix.service }}
-      - name: Biome check
-        run: npx biome check .
-        working-directory: node-services/${{ matrix.service }}
-
-  node-test:
-    needs: [changes]
-    if: >-
-      needs.changes.outputs.node == 'true'
-      && github.event_name != 'push'
-    runs-on: ubuntu-latest
-    strategy:
-      matrix:
-        service: [auth-service, custom-lang-service]
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: node-services/${{ matrix.service }}/package-lock.json
-      - run: npm ci
-        working-directory: node-services/${{ matrix.service }}
-      - name: Vitest
-        run: npm test
-        working-directory: node-services/${{ matrix.service }}
-
-  frontend-build:
-    needs: [changes]
-    if: >-
-      needs.changes.outputs.frontend == 'true'
-      && github.event_name != 'push'
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: "22"
-          cache: npm
-          cache-dependency-path: frontend/package-lock.json
-      - name: Frontend build
-        run: |
-          npm ci
-          npm run build
+      - name: Build
+        run: npm run build
         working-directory: frontend
 
+  # Consolidated: node-lint + node-test (saves ~3 billable minutes)
+  node-check:
+    needs: [changes]
+    if: >-
+      needs.changes.outputs.node == 'true'
+      && github.event_name != 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: node-services/package-lock.json
+      - run: npm ci
+        working-directory: node-services
+      - name: Biome check
+        run: npm run lint --workspaces --if-present
+        working-directory: node-services
+      - name: Vitest
+        run: npm test --workspaces --if-present
+        working-directory: node-services
+
+  # Nix build: ubuntu-latest for auto, blacksmith for manual dispatch
   nix-build:
     needs: [changes]
     if: >-
       needs.changes.outputs.go == 'true'
       || needs.changes.outputs.nix == 'true'
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     permissions:
       contents: read
       packages: write
@@ -225,7 +181,7 @@ jobs:
   render-manifests:
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     needs: [nix-build]
-    runs-on: blacksmith-2vcpu-ubuntu-2404
+    runs-on: ${{ github.event_name == 'workflow_dispatch' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     timeout-minutes: 15
     permissions:
       contents: write

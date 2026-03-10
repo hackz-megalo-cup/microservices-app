@@ -25,7 +25,14 @@ in
               OTEL_EXPORTER_OTLP_ENDPOINT.value = "http://otel-collector.observability:4317";
               OTEL_SERVICE_NAME.value = "custom-lang-service";
               PORT.value = "3000";
-              DATABASE_URL.value = "postgresql://devuser:devpass@postgresql.database:5432/lang_db";
+              DATABASE_URL.valueFrom.secretKeyRef = {
+                name = "custom-lang-secrets";
+                key = "DATABASE_URL";
+              };
+              KAFKA_BROKERS.valueFrom.secretKeyRef = {
+                name = "custom-lang-secrets";
+                key = "KAFKA_BROKERS";
+              };
             };
 
             livenessProbe = {

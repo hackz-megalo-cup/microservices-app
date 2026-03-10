@@ -14,6 +14,8 @@ http:
           - "Grpc-Timeout"
           - "X-Grpc-Web"
           - "X-User-Agent"
+          - "traceparent"
+          - "tracestate"
         accessControlAllowOriginList:
           - "http://localhost:30081"
         accessControlExposeHeaders:
@@ -38,3 +40,12 @@ http:
       retry:
         attempts: 3
         initialInterval: "100ms"
+
+  routers:
+    greeter-v2-route:
+      rule: "PathPrefix(`/greeter.v2.GreeterService`)"
+      service: greeter
+      middlewares:
+        - cors
+        - rate-limit
+        - retry

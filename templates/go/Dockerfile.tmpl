@@ -1,0 +1,10 @@
+FROM golang:1.26-alpine AS builder
+WORKDIR /src/services
+COPY services/go.mod services/go.sum ./
+RUN go mod download
+COPY services ./
+RUN CGO_ENABLED=0 go build -ldflags='-s -w' -o /__SERVICE_NAME__ ./cmd/__SERVICE_NAME__
+
+FROM gcr.io/distroless/static-debian12:nonroot
+COPY --from=builder /__SERVICE_NAME__ /__SERVICE_NAME__
+ENTRYPOINT ["/__SERVICE_NAME__"]
