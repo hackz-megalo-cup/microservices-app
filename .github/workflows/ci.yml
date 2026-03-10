@@ -168,6 +168,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           AUTH_FILE="$(mktemp)"
+          echo '{}' > "$AUTH_FILE"
           echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin --authfile "$AUTH_FILE"
           for svc in caller greeter gateway; do
             nix build .#${svc}-image
