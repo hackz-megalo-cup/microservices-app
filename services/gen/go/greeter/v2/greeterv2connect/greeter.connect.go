@@ -44,7 +44,7 @@ const (
 // GreeterServiceClient is a client for the greeter.v2.GreeterService service.
 type GreeterServiceClient interface {
 	Greet(context.Context, *connect.Request[v2.GreetRequest]) (*connect.Response[v2.GreetResponse], error)
-	GreetStream(context.Context, *connect.Request[v2.GreetRequest]) (*connect.ServerStreamForClient[v2.GreetResponse], error)
+	GreetStream(context.Context, *connect.Request[v2.GreetStreamRequest]) (*connect.ServerStreamForClient[v2.GreetStreamResponse], error)
 }
 
 // NewGreeterServiceClient constructs a client for the greeter.v2.GreeterService service. By
@@ -64,7 +64,7 @@ func NewGreeterServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 			connect.WithSchema(greeterServiceMethods.ByName("Greet")),
 			connect.WithClientOptions(opts...),
 		),
-		greetStream: connect.NewClient[v2.GreetRequest, v2.GreetResponse](
+		greetStream: connect.NewClient[v2.GreetStreamRequest, v2.GreetStreamResponse](
 			httpClient,
 			baseURL+GreeterServiceGreetStreamProcedure,
 			connect.WithSchema(greeterServiceMethods.ByName("GreetStream")),
@@ -76,7 +76,7 @@ func NewGreeterServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 // greeterServiceClient implements GreeterServiceClient.
 type greeterServiceClient struct {
 	greet       *connect.Client[v2.GreetRequest, v2.GreetResponse]
-	greetStream *connect.Client[v2.GreetRequest, v2.GreetResponse]
+	greetStream *connect.Client[v2.GreetStreamRequest, v2.GreetStreamResponse]
 }
 
 // Greet calls greeter.v2.GreeterService.Greet.
@@ -85,14 +85,14 @@ func (c *greeterServiceClient) Greet(ctx context.Context, req *connect.Request[v
 }
 
 // GreetStream calls greeter.v2.GreeterService.GreetStream.
-func (c *greeterServiceClient) GreetStream(ctx context.Context, req *connect.Request[v2.GreetRequest]) (*connect.ServerStreamForClient[v2.GreetResponse], error) {
+func (c *greeterServiceClient) GreetStream(ctx context.Context, req *connect.Request[v2.GreetStreamRequest]) (*connect.ServerStreamForClient[v2.GreetStreamResponse], error) {
 	return c.greetStream.CallServerStream(ctx, req)
 }
 
 // GreeterServiceHandler is an implementation of the greeter.v2.GreeterService service.
 type GreeterServiceHandler interface {
 	Greet(context.Context, *connect.Request[v2.GreetRequest]) (*connect.Response[v2.GreetResponse], error)
-	GreetStream(context.Context, *connect.Request[v2.GreetRequest], *connect.ServerStream[v2.GreetResponse]) error
+	GreetStream(context.Context, *connect.Request[v2.GreetStreamRequest], *connect.ServerStream[v2.GreetStreamResponse]) error
 }
 
 // NewGreeterServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -133,6 +133,6 @@ func (UnimplementedGreeterServiceHandler) Greet(context.Context, *connect.Reques
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("greeter.v2.GreeterService.Greet is not implemented"))
 }
 
-func (UnimplementedGreeterServiceHandler) GreetStream(context.Context, *connect.Request[v2.GreetRequest], *connect.ServerStream[v2.GreetResponse]) error {
+func (UnimplementedGreeterServiceHandler) GreetStream(context.Context, *connect.Request[v2.GreetStreamRequest], *connect.ServerStream[v2.GreetStreamResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("greeter.v2.GreeterService.GreetStream is not implemented"))
 }

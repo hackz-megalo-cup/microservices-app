@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file greeter/v2/greeter.proto.
  */
 export const file_greeter_v2_greeter: GenFile = /*@__PURE__*/
-  fileDesc("ChhncmVldGVyL3YyL2dyZWV0ZXIucHJvdG8SCmdyZWV0ZXIudjIiLAoMR3JlZXRSZXF1ZXN0EgwKBG5hbWUYASABKAkSDgoGbG9jYWxlGAIgASgJImkKDUdyZWV0UmVzcG9uc2USDwoHbWVzc2FnZRgBIAEoCRIXCg9leHRlcm5hbF9zdGF0dXMYAiABKAUSHAoUZXh0ZXJuYWxfYm9keV9sZW5ndGgYAyABKAMSEAoIdHJhY2VfaWQYBCABKAkymAEKDkdyZWV0ZXJTZXJ2aWNlEj4KBUdyZWV0EhguZ3JlZXRlci52Mi5HcmVldFJlcXVlc3QaGS5ncmVldGVyLnYyLkdyZWV0UmVzcG9uc2UiABJGCgtHcmVldFN0cmVhbRIYLmdyZWV0ZXIudjIuR3JlZXRSZXF1ZXN0GhkuZ3JlZXRlci52Mi5HcmVldFJlc3BvbnNlIgAwAUJUWlJnaXRodWIuY29tL2hhY2t6LW1lZ2Fsby1jdXAvbWljcm9zZXJ2aWNlcy1hcHAvc2VydmljZXMvZ2VuL2dvL2dyZWV0ZXIvdjI7Z3JlZXRlcnYyYgZwcm90bzM");
+  fileDesc("ChhncmVldGVyL3YyL2dyZWV0ZXIucHJvdG8SCmdyZWV0ZXIudjIiLAoMR3JlZXRSZXF1ZXN0EgwKBG5hbWUYASABKAkSDgoGbG9jYWxlGAIgASgJImkKDUdyZWV0UmVzcG9uc2USDwoHbWVzc2FnZRgBIAEoCRIXCg9leHRlcm5hbF9zdGF0dXMYAiABKAUSHAoUZXh0ZXJuYWxfYm9keV9sZW5ndGgYAyABKAMSEAoIdHJhY2VfaWQYBCABKAkiMgoSR3JlZXRTdHJlYW1SZXF1ZXN0EgwKBG5hbWUYASABKAkSDgoGbG9jYWxlGAIgASgJIm8KE0dyZWV0U3RyZWFtUmVzcG9uc2USDwoHbWVzc2FnZRgBIAEoCRIXCg9leHRlcm5hbF9zdGF0dXMYAiABKAUSHAoUZXh0ZXJuYWxfYm9keV9sZW5ndGgYAyABKAMSEAoIdHJhY2VfaWQYBCABKAkypAEKDkdyZWV0ZXJTZXJ2aWNlEj4KBUdyZWV0EhguZ3JlZXRlci52Mi5HcmVldFJlcXVlc3QaGS5ncmVldGVyLnYyLkdyZWV0UmVzcG9uc2UiABJSCgtHcmVldFN0cmVhbRIeLmdyZWV0ZXIudjIuR3JlZXRTdHJlYW1SZXF1ZXN0Gh8uZ3JlZXRlci52Mi5HcmVldFN0cmVhbVJlc3BvbnNlIgAwAUJUWlJnaXRodWIuY29tL2hhY2t6LW1lZ2Fsby1jdXAvbWljcm9zZXJ2aWNlcy1hcHAvc2VydmljZXMvZ2VuL2dvL2dyZWV0ZXIvdjI7Z3JlZXRlcnYyYgZwcm90bzM");
 
 /**
  * @generated from message greeter.v2.GreetRequest
@@ -71,6 +71,60 @@ export const GreetResponseSchema: GenMessage<GreetResponse> = /*@__PURE__*/
   messageDesc(file_greeter_v2_greeter, 1);
 
 /**
+ * @generated from message greeter.v2.GreetStreamRequest
+ */
+export type GreetStreamRequest = Message<"greeter.v2.GreetStreamRequest"> & {
+  /**
+   * @generated from field: string name = 1;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string locale = 2;
+   */
+  locale: string;
+};
+
+/**
+ * Describes the message greeter.v2.GreetStreamRequest.
+ * Use `create(GreetStreamRequestSchema)` to create a new message.
+ */
+export const GreetStreamRequestSchema: GenMessage<GreetStreamRequest> = /*@__PURE__*/
+  messageDesc(file_greeter_v2_greeter, 2);
+
+/**
+ * @generated from message greeter.v2.GreetStreamResponse
+ */
+export type GreetStreamResponse = Message<"greeter.v2.GreetStreamResponse"> & {
+  /**
+   * @generated from field: string message = 1;
+   */
+  message: string;
+
+  /**
+   * @generated from field: int32 external_status = 2;
+   */
+  externalStatus: number;
+
+  /**
+   * @generated from field: int64 external_body_length = 3;
+   */
+  externalBodyLength: bigint;
+
+  /**
+   * @generated from field: string trace_id = 4;
+   */
+  traceId: string;
+};
+
+/**
+ * Describes the message greeter.v2.GreetStreamResponse.
+ * Use `create(GreetStreamResponseSchema)` to create a new message.
+ */
+export const GreetStreamResponseSchema: GenMessage<GreetStreamResponse> = /*@__PURE__*/
+  messageDesc(file_greeter_v2_greeter, 3);
+
+/**
  * @generated from service greeter.v2.GreeterService
  */
 export const GreeterService: GenService<{
@@ -87,8 +141,8 @@ export const GreeterService: GenService<{
    */
   greetStream: {
     methodKind: "server_streaming";
-    input: typeof GreetRequestSchema;
-    output: typeof GreetResponseSchema;
+    input: typeof GreetStreamRequestSchema;
+    output: typeof GreetStreamResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_greeter_v2_greeter, 0);

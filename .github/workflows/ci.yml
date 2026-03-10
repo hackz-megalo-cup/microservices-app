@@ -129,9 +129,9 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: node-services/${{ matrix.service }}/package-lock.json
+          cache-dependency-path: node-services/package-lock.json
       - run: npm ci
-        working-directory: node-services/${{ matrix.service }}
+        working-directory: node-services
       - name: Biome check
         run: npx biome check .
         working-directory: node-services/${{ matrix.service }}
@@ -151,9 +151,9 @@ jobs:
         with:
           node-version: "22"
           cache: npm
-          cache-dependency-path: node-services/${{ matrix.service }}/package-lock.json
+          cache-dependency-path: node-services/package-lock.json
       - run: npm ci
-        working-directory: node-services/${{ matrix.service }}
+        working-directory: node-services
       - name: Vitest
         run: npm test
         working-directory: node-services/${{ matrix.service }}

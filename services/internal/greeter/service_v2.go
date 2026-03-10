@@ -86,7 +86,7 @@ func (s *ServiceV2) Greet(ctx context.Context, req *connect.Request[greeterv2.Gr
 	return resp, nil
 }
 
-func (s *ServiceV2) GreetStream(ctx context.Context, req *connect.Request[greeterv2.GreetRequest], stream *connect.ServerStream[greeterv2.GreetResponse]) error {
+func (s *ServiceV2) GreetStream(ctx context.Context, req *connect.Request[greeterv2.GreetStreamRequest], stream *connect.ServerStream[greeterv2.GreetStreamResponse]) error {
 	name := req.Msg.GetName()
 	if name == "" {
 		name = "World"
@@ -107,7 +107,7 @@ func (s *ServiceV2) GreetStream(ctx context.Context, req *connect.Request[greete
 	}
 
 	for _, part := range parts {
-		if err := stream.Send(&greeterv2.GreetResponse{
+		if err := stream.Send(&greeterv2.GreetStreamResponse{
 			Message: part,
 			TraceId: traceID,
 		}); err != nil {
