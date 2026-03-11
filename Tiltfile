@@ -8,6 +8,13 @@ skip_cluster_up = str(os.getenv('TILT_SKIP_CLUSTER_UP', 'false')).lower() == 'tr
 _arch = str(local('uname -m', quiet=True)).strip()
 go_arch = 'arm64' if _arch == 'arm64' or _arch == 'aarch64' else 'amd64'
 
+# --- Service configuration (auto-watched by read_json) ---
+services_config = read_json('tilt-services.json', default={})
+go_svcs = services_config.get('go_services', {})
+custom_svcs = services_config.get('custom_services', {})
+special_svcs = services_config.get('special', {})
+
+# --- Cluster bootstrap ---
 cluster_bootstrap_deps = []
 if not skip_cluster_up:
     local_resource(
@@ -29,24 +36,23 @@ def find_yaml(path, exclude=''):
         return []
     return [line for line in out.split('\n') if line]
 
-watch_file('deploy/manifests')
 
+# --- gen-manifests with dynamic nix deps ---
+watch_file('deploy/k8s')
+_nix_deps = str(local('find deploy/k8s -name "*.nix" 2>/dev/null | sort', quiet=True)).strip()
+nix_files = [f for f in _nix_deps.split('\n') if f] if _nix_deps else []
+
+gen_manifest_deps = [
+    'flake.nix',
+    'deploy/nixidy/env/local.nix',
+    'deploy/nixidy/env/traefik.nix',
+    'scripts/gen-manifests.sh',
+] + nix_files
 
 local_resource(
     'gen-manifests',
     cmd='bash scripts/gen-manifests.sh',
-    deps=[
-        'flake.nix',
-        'deploy/nixidy/env/local.nix',
-        'deploy/nixidy/env/traefik.nix',
-        'deploy/k8s/greeter.nix',
-        'deploy/k8s/caller.nix',
-        'deploy/k8s/gateway.nix',
-        'deploy/k8s/custom-lang-service.nix',
-        'deploy/k8s/auth-service.nix',
-        'deploy/k8s/frontend.nix',
-        'scripts/gen-manifests.sh',
-    ],
+    deps=gen_manifest_deps,
     resource_deps=cluster_bootstrap_deps,
     trigger_mode=TRIGGER_MODE_AUTO,
     labels=['bootstrap'],
@@ -61,19 +67,16 @@ local_resource(
     labels=['codegen'],
 )
 
+# --- Dynamic manifest discovery (exclude apps/ which contains ArgoCD Applications) ---
+watch_file('deploy/manifests')
+_manifest_dirs = str(local(
+    'find deploy/manifests -mindepth 1 -maxdepth 1 -type d ! -name apps 2>/dev/null | sort',
+    quiet=True,
+)).strip()
 manifests = []
-
-# Edge routing and middleware.
-manifests += find_yaml('deploy/manifests/traefik')
-
-# Application services.
-manifests += find_yaml('deploy/manifests/greeter-service')
-manifests += find_yaml('deploy/manifests/caller-service')
-manifests += find_yaml('deploy/manifests/gateway-service')
-manifests += find_yaml('deploy/manifests/custom-lang-service')
-manifests += find_yaml('deploy/manifests/auth-service')
-manifests += find_yaml('deploy/manifests/frontend')
-manifests += find_yaml('deploy/manifests/microservices-secrets')
+for d in _manifest_dirs.split('\n'):
+    if d:
+        manifests += find_yaml(d)
 
 namespaces = [m for m in manifests if '/Namespace-' in m]
 # Gateway API CRDs are pre-installed at v1.5.0+; skip the older ones bundled in the Traefik chart.
@@ -87,11 +90,14 @@ else:
     print('No Kubernetes manifests found yet. Wait for gen-manifests to finish.')
 
 
+# --- Go service builder (narrowed compile_deps per service) ---
 def go_service(name, cmd_path):
+    snake_name = name.replace('-', '_')
     compile_deps = [
         'services/go.mod',
         'services/go.sum',
-        'services/internal/',
+        'services/internal/platform/',
+        'services/internal/%s/' % snake_name,
         'services/gen/go/',
         'services/%s/' % cmd_path,
     ]
@@ -121,44 +127,57 @@ def go_service(name, cmd_path):
         )
 
 
-go_service('caller', 'cmd/caller')
-go_service('greeter', 'cmd/greeter')
-go_service('gateway', 'cmd/gateway')
-docker_build(
-    'custom-lang-service',
-    context='.',
-    dockerfile='deploy/docker/custom-lang-service/Dockerfile',
-)
+# --- Build services from config ---
+for name, cfg in go_svcs.items():
+    go_service(name, cfg['cmd_path'])
 
-docker_build(
-    'auth-service',
-    context='.',
-    dockerfile='deploy/docker/auth-service/Dockerfile',
-)
+for name, cfg in custom_svcs.items():
+    docker_build(
+        name,
+        context='.',
+        dockerfile='deploy/docker/%s/Dockerfile' % name,
+    )
 
-docker_build(
-    'frontend',
-    context='.',
-    dockerfile='deploy/docker/frontend/Dockerfile',
-    build_args={'VITE_API_BASE_URL': 'http://localhost:30081'},
-)
+for name, cfg in special_svcs.items():
+    build_args = cfg.get('build_args', {})
+    if build_args:
+        docker_build(
+            name,
+            context='.',
+            dockerfile='deploy/docker/%s/Dockerfile' % name,
+            build_args=build_args,
+        )
+    else:
+        docker_build(
+            name,
+            context='.',
+            dockerfile='deploy/docker/%s/Dockerfile' % name,
+        )
 
+# --- k8s resources (resource_deps derived from service type, not JSON) ---
 if manifests:
-    caller_deps = cluster_bootstrap_deps + ['gen-manifests', 'buf-generate']
-    greeter_deps = cluster_bootstrap_deps + ['gen-manifests', 'buf-generate']
-    gateway_deps = cluster_bootstrap_deps + ['gen-manifests', 'buf-generate']
-    if not use_nix:
-        caller_deps += ['caller-compile']
-        greeter_deps += ['greeter-compile']
-        gateway_deps += ['gateway-compile']
-
     k8s_resource('traefik', resource_deps=cluster_bootstrap_deps + ['gen-manifests'])
-    k8s_resource('caller-service', port_forwards=8081, resource_deps=caller_deps)
-    k8s_resource('greeter-service', port_forwards=8080, resource_deps=greeter_deps)
-    k8s_resource('gateway', port_forwards=8082, resource_deps=gateway_deps)
-    k8s_resource('custom-lang-service', port_forwards=3000, resource_deps=cluster_bootstrap_deps + ['gen-manifests'])
-    k8s_resource('auth-service', port_forwards=8090, resource_deps=cluster_bootstrap_deps + ['gen-manifests'])
-    k8s_resource('frontend', port_forwards=5173, resource_deps=cluster_bootstrap_deps + ['gen-manifests', 'buf-generate'])
+
+    for name, cfg in go_svcs.items():
+        k8s_name = cfg.get('k8s_resource', '%s-service' % name)
+        port = cfg.get('port', 8080)
+        deps = cluster_bootstrap_deps + ['gen-manifests', 'buf-generate']
+        if not use_nix:
+            deps += ['%s-compile' % name]
+        k8s_resource(k8s_name, port_forwards=port, resource_deps=deps)
+
+    for name, cfg in custom_svcs.items():
+        k8s_name = cfg.get('k8s_resource', name)
+        port = cfg.get('port', 8080)
+        k8s_resource(k8s_name, port_forwards=port,
+                     resource_deps=cluster_bootstrap_deps + ['gen-manifests'])
+
+    for name, cfg in special_svcs.items():
+        k8s_name = cfg.get('k8s_resource', name)
+        port = cfg.get('port', 8080)
+        extra_deps = cfg.get('extra_resource_deps', [])
+        k8s_resource(k8s_name, port_forwards=port,
+                     resource_deps=cluster_bootstrap_deps + ['gen-manifests'] + extra_deps)
 
 local_resource(
     'health-check',

@@ -43,6 +43,7 @@
 ├── docs/               # スタイルガイド
 ├── docker-compose.yml  # ローカル開発用
 ├── Tiltfile            # Tilt (Kubernetes ローカル開発) 設定
+├── tilt-services.json  # Tilt サービス登録 (new-service が自動管理)
 ├── buf.yaml            # buf 設定
 └── devenv.nix          # 開発環境定義
 ```
@@ -156,17 +157,44 @@ docker compose up
 
 フロントエンドは React 19 + TypeScript + Vite で構成されている。バックエンドとの通信は connect-rpc (connect-query + TanStack Query) を使い、Protocol Buffers で定義された型安全な API 呼び出しを行う。
 
-### 開発サーバーの起動
+### 開発の流れ
+
+`tilt up` するだけでフロントエンドもバックエンドもまとめて起動される。個別に `npm install` や `npm run dev` を実行する必要はない。
 
 ```zsh
-cd frontend
-npm install
-npm run dev
+tilt up
 ```
 
-http://localhost:5173 で開発サーバーが起動する。ホットリロード対応。
+- フロントエンド: http://localhost:30081 （Traefik 経由）
+- Tilt ダッシュボード: http://localhost:10350
 
-> バックエンドが必要な場合は、先に Docker Compose か Tilt でバックエンドを起動しておくこと。
+`frontend/` 配下のコードを変更すると、Tilt が自動でイメージを再ビルド・再デプロイする。
+
+### Docker Compose で開発する場合
+
+```zsh
+docker compose up --build
+```
+
+フロントエンドは Traefik 経由で http://localhost:30081 にアクセスできる。
+
+Docker Compose の場合、フロントエンドは本番と同じく nginx で静的ファイルを配信する構成になっている。コード変更後はイメージの再ビルドが必要:
+
+```zsh
+docker compose up --build frontend -d
+```
+
+> **Tips**: ホットリロードで開発したい場合は、バックエンドだけ Docker Compose で起動して、フロントエンドは Vite dev server をローカルで動かす方法もある:
+>
+> ```zsh
+> # バックエンドだけ起動
+> docker compose up --build -d --scale frontend=0
+>
+> # フロントエンドはローカルで起動
+> cd frontend && npm install && npm run dev
+> ```
+>
+> http://localhost:5173 でホットリロード対応の開発サーバーが起動する。
 
 ### モックモードで起動
 
@@ -197,7 +225,6 @@ frontend/src/
 
 | コマンド | 説明 |
 |---------|------|
-| `npm run dev` | 開発サーバー起動 (http://localhost:5173) |
 | `npm run build` | TypeScript 型チェック + Vite ビルド |
 | `npm run lint` | Biome でリントチェック |
 | `npm run lint:fix` | Biome でリント自動修正 |
@@ -206,7 +233,7 @@ frontend/src/
 
 ### API コード生成
 
-バックエンドの proto 定義を変更した場合、TypeScript のクライアントコードを再生成する。
+proto 定義を変更すると、Tilt が自動で `buf generate` を実行して TypeScript のクライアントコードを再生成する。手動で実行する場合は:
 
 ```zsh
 buf generate
@@ -254,7 +281,7 @@ buf-check
 - **devenv** が動作していること (`devenv shell` でシェルに入る)
 - **Docker** が起動していること
 
-devenv に入ると `buf`, `go`, `grpcurl` 等の必要なツールが全て揃う。
+devenv に入ると `buf`, `go`, `grpcurl`, `jq`, `tilt` 等の必要なツールが全て揃う。
 
 ### 新しいサービスを作る
 
@@ -264,7 +291,8 @@ new-service go <service-name> <port>
 
 例: `new-service go todo 9000`
 
-ソースコード、proto、Dockerfile、docker-compose エントリ、DB、Kafka トピックが全て自動生成される。
+ソースコード、proto、Dockerfile、docker-compose エントリ、DB、Kafka トピック、Tilt 設定が全て自動生成される。
+Tiltfile の編集は不要 -- `tilt-services.json` にエントリが自動追加され、`tilt up` が新サービスを自動検出する。
 
 ### データの流れ
 
@@ -412,6 +440,21 @@ func (s *Service) CompleteTodo(ctx context.Context, req *connect.Request[pb.Comp
 
 ### 起動方法
 
+#### Tilt（推奨）
+
+```bash
+tilt up
+```
+
+全サービスが起動し、コード変更時に自動でリビルド・リデプロイされる。
+`new-service` で追加したサービスも Tiltfile を編集せずに自動検出される。
+
+- フロントエンド: http://localhost:30081
+- Tilt UI: http://localhost:10350
+- 各サービスは `tilt-services.json` で定義されたポートでフォワードされる
+
+#### docker compose
+
 ```bash
 docker compose up
 ```
@@ -419,7 +462,7 @@ docker compose up
 全サービスが起動する。個別起動は `docker compose up <service-name>`。
 フロントエンドは http://localhost:30081 でアクセスできる。
 
-#### ビルドとデプロイ時の注意
+#### ビルドとデプロイ時の注意（docker compose の場合）
 
 コード変更後、Docker イメージを再構築する必要がある:
 
@@ -435,8 +478,27 @@ docker compose up <service-name> -d
 ```
 
 `docker compose up` だけでは古いイメージが使用される場合がある。
+Tilt を使っている場合はこの手順は不要（自動でビルド・デプロイされる）。
 
 ### curl でテストする
+
+#### Tilt の場合（ポートフォワードあり）
+
+Tilt がポートフォワードするので、localhost から直接アクセスできる:
+
+```bash
+# ヘルスチェック
+curl -sf http://localhost:9000/healthz
+# => ok
+
+# CreateTodo の例
+curl -s -X POST http://localhost:9000/todo.v1.TodoService/CreateTodo \
+  -H 'Content-Type: application/json' \
+  -d '{"title": "buy milk"}'
+# => {"id":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}
+```
+
+#### docker compose の場合
 
 サービスは Docker ネットワーク内で動作するため、`docker run` 経由で curl を実行する:
 
@@ -525,6 +587,8 @@ otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote()
 - `services/internal/<service>/embed.go` -- マイグレーション埋め込み
 - `services/internal/platform/` -- EventStore, Outbox, CircuitBreaker 等の共通基盤
 - `services/internal/<service>/migrations/` -- DDL マイグレーション
+- `tilt-services.json` -- Tilt のサービス登録（`new-service` / `delete-service` が自動管理）
+- `Tiltfile` -- Tilt の設定（`tilt-services.json` を読んで動的にサービスを登録するので直接編集不要）
 
 ## 開発コマンド一覧
 
@@ -576,8 +640,9 @@ test-smoke
 
 | コマンド | 説明 |
 |---------|------|
-| `new-service go <name> [port]` | Go サービスの雛形を生成 |
-| `new-service custom <name> [port]` | Node.js サービスの雛形を生成 |
+| `new-service go <name> [port]` | Go サービスの雛形を生成（Tilt 自動登録込み） |
+| `new-service custom <name> [port]` | Node.js サービスの雛形を生成（Tilt 自動登録込み） |
+| `delete-service <name>` | サービスの全ファイルと配線を削除（Tilt 登録解除込み） |
 
 ## Pre-commit フック
 

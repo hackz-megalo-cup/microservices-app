@@ -17,6 +17,13 @@ usage() {
   exit 1
 }
 
+# Preflight: required tools
+if ! command -v jq &>/dev/null; then
+  echo "Error: jq is required (used for tilt-services.json updates)" >&2
+  echo "Install: nix-shell -p jq  or  brew install jq" >&2
+  exit 1
+fi
+
 if [[ $# -lt 2 ]]; then
   usage
 fi
@@ -147,6 +154,31 @@ add_to_local_nix() {
   echo "  Updated deploy/nixidy/env/local.nix"
 }
 
+add_to_tilt_services() {
+  local config_file="${REPO_ROOT}/tilt-services.json"
+  local lang_type="$1"  # "go" or "custom"
+  local tmp_file
+  tmp_file=$(mktemp)
+
+  if [[ "$lang_type" == "go" ]]; then
+    jq --arg name "${SERVICE_NAME}" \
+       --arg cmd "cmd/${SERVICE_NAME}" \
+       --argjson port "${PORT}" \
+       --arg k8s "${SERVICE_NAME}-service" \
+       '.go_services[$name] = {cmd_path: $cmd, port: $port, k8s_resource: $k8s}' \
+       "$config_file" > "$tmp_file"
+  else
+    jq --arg name "${SERVICE_NAME}" \
+       --argjson port "${PORT}" \
+       --arg k8s "${SERVICE_NAME}" \
+       '.custom_services[$name] = {port: $port, k8s_resource: $k8s}' \
+       "$config_file" > "$tmp_file"
+  fi
+
+  mv "$tmp_file" "$config_file"
+  echo "  Updated tilt-services.json"
+}
+
 add_to_secrets() {
   local secrets_file="${REPO_ROOT}/deploy/k8s/secrets.nix"
   local secret_name="${SERVICE_NAME}-secrets"
@@ -180,6 +212,7 @@ case "$LANG" in
     mkdir -p "${REPO_ROOT}/services/internal/${SERVICE_NAME_SNAKE}/migrations"
     mkdir -p "${REPO_ROOT}/deploy/docker/${SERVICE_NAME}"
     mkdir -p "${REPO_ROOT}/deploy/k8s"
+    mkdir -p "${REPO_ROOT}/services/${SERVICE_NAME}/build"
 
     apply_template "${TEMPLATES_DIR}/go/main.go.tmpl" "${REPO_ROOT}/services/cmd/${SERVICE_NAME}/main.go"
     apply_template "${TEMPLATES_DIR}/go/embed.go.tmpl" "${REPO_ROOT}/services/internal/${SERVICE_NAME_SNAKE}/embed.go"
@@ -212,6 +245,7 @@ case "$LANG" in
     add_to_topics
     add_to_secrets
     add_to_local_nix
+    add_to_tilt_services "go"
 
     echo "==> Staging nix files for flake visibility..."
     (cd "${REPO_ROOT}" && git add \
@@ -239,6 +273,7 @@ case "$LANG" in
     echo "  services/internal/platform/topics.go  (topics added)"
     echo "  deploy/k8s/secrets.nix  (secrets added)"
     echo "  deploy/nixidy/env/local.nix  (nix import added)"
+    echo "  tilt-services.json  (Tilt service entry added)"
     echo ""
     echo "Next steps:"
     echo "  1. Edit proto/${SERVICE_NAME}/v1/${SERVICE_NAME}.proto (define your API)"
@@ -246,7 +281,7 @@ case "$LANG" in
     echo "  3. Edit services/internal/${SERVICE_NAME_SNAKE}/events.go (define your events)"
     echo "  4. Edit services/internal/${SERVICE_NAME_SNAKE}/aggregate.go (define state + Apply)"
     echo "  5. Edit services/internal/${SERVICE_NAME_SNAKE}/service.go (implement business logic)"
-    echo "  6. Run: docker compose up ${SERVICE_NAME}"
+    echo "  6. Run: tilt up  or  docker compose up ${SERVICE_NAME}"
     ;;
 
   custom)
@@ -279,6 +314,7 @@ case "$LANG" in
     add_to_init_db
     add_to_secrets
     add_to_local_nix
+    add_to_tilt_services "custom"
 
     echo "==> Staging nix files for flake visibility..."
     (cd "${REPO_ROOT}" && git add \
@@ -300,6 +336,7 @@ case "$LANG" in
     echo "  scripts/init-db.sh  (database added)"
     echo "  deploy/k8s/secrets.nix  (secrets added)"
     echo "  deploy/nixidy/env/local.nix  (nix import added)"
+    echo "  tilt-services.json  (Tilt service entry added)"
     ;;
 
   *)
