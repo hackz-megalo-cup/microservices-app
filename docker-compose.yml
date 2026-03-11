@@ -34,6 +34,18 @@ services:
       timeout: 3s
       retries: 5
 
+  postgres-db-sync:
+    image: postgres:17
+    command: ["bash", "/workspace/scripts/manage-service-db.sh", "sync-compose"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+    volumes:
+      - ./scripts/manage-service-db.sh:/workspace/scripts/manage-service-db.sh:ro
+      - ./docker-compose.yml:/workspace/docker-compose.yml:ro
+    networks:
+      - app
+
   greeter:
     build:
       context: .
@@ -64,8 +76,8 @@ services:
     depends_on:
       caller:
         condition: service_started
-      postgres:
-        condition: service_healthy
+      postgres-db-sync:
+        condition: service_completed_successfully
 
   caller:
     build:
@@ -81,8 +93,8 @@ services:
     networks:
       - app
     depends_on:
-      postgres:
-        condition: service_healthy
+      postgres-db-sync:
+        condition: service_completed_successfully
 
   gateway:
     build:
@@ -109,8 +121,8 @@ services:
     depends_on:
       custom-lang-service:
         condition: service_started
-      postgres:
-        condition: service_healthy
+      postgres-db-sync:
+        condition: service_completed_successfully
 
   custom-lang-service:
     build:
@@ -126,8 +138,8 @@ services:
     networks:
       - app
     depends_on:
-      postgres:
-        condition: service_healthy
+      postgres-db-sync:
+        condition: service_completed_successfully
 
   auth-service:
     build:
@@ -150,8 +162,8 @@ services:
     networks:
       - app
     depends_on:
-      postgres:
-        condition: service_healthy
+      postgres-db-sync:
+        condition: service_completed_successfully
 
   projector:
     build:
@@ -170,8 +182,8 @@ services:
     depends_on:
       redpanda:
         condition: service_healthy
-      postgres:
-        condition: service_healthy
+      postgres-db-sync:
+        condition: service_completed_successfully
     networks:
       - app
 

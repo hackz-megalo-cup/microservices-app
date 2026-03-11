@@ -31,6 +31,8 @@
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.0",
+    "@bufbuild/protoc-gen-es": "^2.11.0",
+    "@connectrpc/protoc-gen-connect-query": "^2.2.0",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^5.0.0",

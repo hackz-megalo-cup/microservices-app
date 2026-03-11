@@ -35,6 +35,8 @@ to_pascal() {
 
 SERVICE_NAME_PASCAL="$(to_pascal "$SERVICE_NAME")"
 SERVICE_NAME_SNAKE="$(echo "$SERVICE_NAME" | tr '-' '_')"
+DB_NAME="${SERVICE_NAME_SNAKE}_db"
+DB_DROP_WARNINGS=()
 
 # --- Remove files ---
 
@@ -194,6 +196,49 @@ remove_from_local_nix() {
   echo "  Updated deploy/nixidy/env/local.nix"
 }
 
+# --- Remove from traefik.nix ---
+
+remove_from_traefik() {
+  local traefik_file="${REPO_ROOT}/deploy/nixidy/env/traefik.nix"
+
+  if [[ ! -f "$traefik_file" ]]; then
+    return
+  fi
+
+  local route_name="${SERVICE_NAME}-route"
+
+  if ! grep -q "\"${route_name}\"" "$traefik_file"; then
+    return
+  fi
+
+  # Find the line with the route name
+  local name_line
+  name_line=$(grep -n "\"${route_name}\"" "$traefik_file" | head -1 | cut -d: -f1)
+
+  # Find the opening '{' of this IngressRoute block (last '          {' before name_line)
+  local block_start
+  block_start=$(awk -v target="$name_line" \
+    'NR < target && /^          \{/ { line = NR } END { print line }' "$traefik_file")
+
+  # Find the closing '}' of this block (next '          }' after block_start)
+  local block_end
+  block_end=$(awk -v start="$block_start" \
+    'NR > start && /^          \}/ { print NR; exit }' "$traefik_file")
+
+  if [[ -z "$block_start" || -z "$block_end" ]]; then
+    echo "  WARNING: Could not find ${route_name} block boundaries in traefik.nix"
+    return
+  fi
+
+  # Remove lines from block_start to block_end
+  local tmp_file
+  tmp_file=$(mktemp)
+  awk -v s="$block_start" -v e="$block_end" \
+    'NR < s || NR > e { print }' "$traefik_file" > "$tmp_file"
+  mv "$tmp_file" "$traefik_file"
+  echo "  Updated deploy/nixidy/env/traefik.nix"
+}
+
 # --- Remove from tilt-services.json ---
 
 remove_from_tilt_services() {
@@ -233,12 +278,34 @@ stop_docker() {
   fi
 }
 
+drop_database_best_effort() {
+  local target="$1"
+  local helper="${REPO_ROOT}/scripts/manage-service-db.sh"
+
+  if [[ ! -f "$helper" ]]; then
+    DB_DROP_WARNINGS+=("${target}: helper script missing")
+    return
+  fi
+
+  if bash "$helper" "drop-${target}" "$DB_NAME"; then
+    echo "  Dropped ${target} database ${DB_NAME}"
+    return
+  fi
+
+  DB_DROP_WARNINGS+=("${target}: ${DB_NAME} may still exist")
+  echo "  WARNING: Could not drop ${target} database ${DB_NAME}" >&2
+}
+
 # --- Main ---
 
 echo "==> Deleting service: ${SERVICE_NAME}"
 
 echo "==> Stopping Docker container..."
 stop_docker
+
+echo "==> Dropping databases (best effort)..."
+drop_database_best_effort "k8s"
+drop_database_best_effort "compose"
 
 echo "==> Removing files..."
 remove_dirs
@@ -249,12 +316,13 @@ remove_from_init_db
 remove_from_topics
 remove_from_secrets
 remove_from_local_nix
+remove_from_traefik
 remove_from_tilt_services
 
 echo "==> Staging nix changes..."
 (cd "${REPO_ROOT}" && \
   git rm -f --cached "deploy/k8s/${SERVICE_NAME}.nix" 2>/dev/null || true
-  git add "deploy/nixidy/env/local.nix" "deploy/k8s/secrets.nix" 2>/dev/null || true
+  git add "deploy/nixidy/env/local.nix" "deploy/k8s/secrets.nix" "deploy/nixidy/env/traefik.nix" 2>/dev/null || true
 )
 
 echo ""
@@ -276,4 +344,13 @@ echo "  scripts/init-db.sh  (database removed)"
 echo "  services/internal/platform/topics.go  (topics removed)"
 echo "  deploy/k8s/secrets.nix  (secrets removed)"
 echo "  deploy/nixidy/env/local.nix  (nix import removed)"
+echo "  deploy/nixidy/env/traefik.nix  (IngressRoute removed)"
 echo "  tilt-services.json  (Tilt service entry removed)"
+
+if [[ ${#DB_DROP_WARNINGS[@]} -gt 0 ]]; then
+  echo ""
+  echo "Database warnings:"
+  for warning in "${DB_DROP_WARNINGS[@]}"; do
+    echo "  ${warning}"
+  done
+fi

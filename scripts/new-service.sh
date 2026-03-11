@@ -179,6 +179,110 @@ add_to_tilt_services() {
   echo "  Updated tilt-services.json"
 }
 
+add_to_traefik() {
+  local traefik_file="${REPO_ROOT}/deploy/nixidy/env/traefik.nix"
+  local lang_type="$1"
+  local route_name="${SERVICE_NAME}-route"
+
+  # Skip if route already exists
+  if grep -q "\"${route_name}\"" "$traefik_file" 2>/dev/null; then
+    echo "  deploy/nixidy/env/traefik.nix already has ${route_name}, skipping"
+    return
+  fi
+
+  # Find frontend-route line number (catch-all, always last)
+  local frontend_line
+  frontend_line=$(grep -n 'name = "frontend-route"' "$traefik_file" | head -1 | cut -d: -f1)
+  if [[ -z "$frontend_line" ]]; then
+    echo "  WARNING: Could not find frontend-route in traefik.nix, skipping IngressRoute"
+    return
+  fi
+
+  # Find the opening '{' of the frontend-route block (last '          {' before that line)
+  local insert_before
+  insert_before=$(awk -v target="$frontend_line" \
+    'NR < target && /^          \{/ { line = NR } END { print line }' "$traefik_file")
+
+  # Generate IngressRoute block
+  local block_file
+  block_file=$(mktemp)
+  if [[ "$lang_type" == "go" ]]; then
+    cat > "$block_file" <<NIXEOF
+          {
+            apiVersion = "traefik.io/v1alpha1";
+            kind = "IngressRoute";
+            metadata = {
+              name = "${route_name}";
+              namespace = "microservices";
+            };
+            spec = {
+              entryPoints = [ "web" ];
+              routes = [
+                {
+                  match = "PathPrefix(\`/${SERVICE_NAME}.v1.${SERVICE_NAME_PASCAL}Service\`)";
+                  kind = "Rule";
+                  priority = 100;
+                  middlewares = [
+                    { name = "cors-middleware"; }
+                    { name = "rate-limit-middleware"; }
+                    { name = "retry-middleware"; }
+                  ];
+                  services = [
+                    {
+                      name = "${SERVICE_NAME}-service";
+                      port = ${PORT};
+                      scheme = "h2c";
+                    }
+                  ];
+                }
+              ];
+            };
+          }
+NIXEOF
+  else
+    cat > "$block_file" <<NIXEOF
+          {
+            apiVersion = "traefik.io/v1alpha1";
+            kind = "IngressRoute";
+            metadata = {
+              name = "${route_name}";
+              namespace = "microservices";
+            };
+            spec = {
+              entryPoints = [ "web" ];
+              routes = [
+                {
+                  match = "PathPrefix(\`/${SERVICE_NAME}\`)";
+                  kind = "Rule";
+                  priority = 90;
+                  middlewares = [
+                    { name = "cors-middleware"; }
+                    { name = "rate-limit-middleware"; }
+                  ];
+                  services = [
+                    {
+                      name = "${SERVICE_NAME}";
+                      port = ${PORT};
+                    }
+                  ];
+                }
+              ];
+            };
+          }
+NIXEOF
+  fi
+
+  # Splice: lines before insert point + block + lines from insert point onward
+  local tmp_file
+  tmp_file=$(mktemp)
+  head -n "$((insert_before - 1))" "$traefik_file" > "$tmp_file"
+  cat "$block_file" >> "$tmp_file"
+  tail -n "+${insert_before}" "$traefik_file" >> "$tmp_file"
+  mv "$tmp_file" "$traefik_file"
+  rm -f "$block_file"
+  echo "  Updated deploy/nixidy/env/traefik.nix"
+}
+
 add_to_secrets() {
   local secrets_file="${REPO_ROOT}/deploy/k8s/secrets.nix"
   local secret_name="${SERVICE_NAME}-secrets"
@@ -245,6 +349,7 @@ case "$LANG" in
     add_to_topics
     add_to_secrets
     add_to_local_nix
+    add_to_traefik "go"
     add_to_tilt_services "go"
 
     echo "==> Staging nix files for flake visibility..."
@@ -252,6 +357,7 @@ case "$LANG" in
       "deploy/k8s/${SERVICE_NAME}.nix" \
       "deploy/nixidy/env/local.nix" \
       "deploy/k8s/secrets.nix" \
+      "deploy/nixidy/env/traefik.nix" \
     2>/dev/null || true)
 
     echo ""
@@ -273,7 +379,10 @@ case "$LANG" in
     echo "  services/internal/platform/topics.go  (topics added)"
     echo "  deploy/k8s/secrets.nix  (secrets added)"
     echo "  deploy/nixidy/env/local.nix  (nix import added)"
+    echo "  deploy/nixidy/env/traefik.nix  (IngressRoute added)"
     echo "  tilt-services.json  (Tilt service entry added)"
+    echo "  tilt up で k8s Postgres に DB が自動同期される"
+    echo "  docker compose up で local Postgres に DB が自動同期される"
     echo ""
     echo "Next steps:"
     echo "  1. Edit proto/${SERVICE_NAME}/v1/${SERVICE_NAME}.proto (define your API)"
@@ -314,6 +423,7 @@ case "$LANG" in
     add_to_init_db
     add_to_secrets
     add_to_local_nix
+    add_to_traefik "custom"
     add_to_tilt_services "custom"
 
     echo "==> Staging nix files for flake visibility..."
@@ -321,6 +431,7 @@ case "$LANG" in
       "deploy/k8s/${SERVICE_NAME}.nix" \
       "deploy/nixidy/env/local.nix" \
       "deploy/k8s/secrets.nix" \
+      "deploy/nixidy/env/traefik.nix" \
     2>/dev/null || true)
 
     echo ""
@@ -336,7 +447,10 @@ case "$LANG" in
     echo "  scripts/init-db.sh  (database added)"
     echo "  deploy/k8s/secrets.nix  (secrets added)"
     echo "  deploy/nixidy/env/local.nix  (nix import added)"
+    echo "  deploy/nixidy/env/traefik.nix  (IngressRoute added)"
     echo "  tilt-services.json  (Tilt service entry added)"
+    echo "  tilt up で k8s Postgres に DB が自動同期される"
+    echo "  docker compose up で local Postgres に DB が自動同期される"
     ;;
 
   *)
