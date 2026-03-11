@@ -37,6 +37,9 @@
     # Container image operations
     pkgs.skopeo
 
+    # JSON manipulation (used by new-service.sh)
+    pkgs.jq
+
     # Nix tooling
     pkgs.nix-tree
     pkgs.nurl

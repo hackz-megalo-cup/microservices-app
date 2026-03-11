@@ -15,6 +15,13 @@ usage() {
   exit 1
 }
 
+# Preflight: required tools
+if ! command -v jq &>/dev/null; then
+  echo "Error: jq is required (used for tilt-services.json updates)" >&2
+  echo "Install: nix-shell -p jq  or  brew install jq" >&2
+  exit 1
+fi
+
 if [[ $# -lt 1 ]]; then
   usage
 fi
@@ -53,10 +60,15 @@ remove_dirs() {
     fi
   done
 
+  # Go service build context (created by new-service.sh for Tilt)
+  if [[ -d "${REPO_ROOT}/services/${SERVICE_NAME}" ]]; then
+    rm -rf "${REPO_ROOT}/services/${SERVICE_NAME}"
+    echo "  Removed ${REPO_ROOT}/services/${SERVICE_NAME}"
+  fi
+
   # Single files
   local files=(
     "${REPO_ROOT}/deploy/k8s/${SERVICE_NAME}.nix"
-    "${REPO_ROOT}/services/${SERVICE_NAME}"
   )
 
   for file in "${files[@]}"; do
@@ -182,6 +194,27 @@ remove_from_local_nix() {
   echo "  Updated deploy/nixidy/env/local.nix"
 }
 
+# --- Remove from tilt-services.json ---
+
+remove_from_tilt_services() {
+  local config_file="${REPO_ROOT}/tilt-services.json"
+
+  if [[ ! -f "$config_file" ]]; then
+    return
+  fi
+
+  local tmp_file
+  tmp_file=$(mktemp)
+
+  jq --arg name "${SERVICE_NAME}" '
+    .go_services |= del(.[$name]) |
+    .custom_services |= del(.[$name])
+  ' "$config_file" > "$tmp_file"
+
+  mv "$tmp_file" "$config_file"
+  echo "  Updated tilt-services.json"
+}
+
 # --- Stop and remove Docker container/image ---
 
 stop_docker() {
@@ -216,6 +249,7 @@ remove_from_init_db
 remove_from_topics
 remove_from_secrets
 remove_from_local_nix
+remove_from_tilt_services
 
 echo "==> Staging nix changes..."
 (cd "${REPO_ROOT}" && \
@@ -242,3 +276,4 @@ echo "  scripts/init-db.sh  (database removed)"
 echo "  services/internal/platform/topics.go  (topics removed)"
 echo "  deploy/k8s/secrets.nix  (secrets removed)"
 echo "  deploy/nixidy/env/local.nix  (nix import removed)"
+echo "  tilt-services.json  (Tilt service entry removed)"

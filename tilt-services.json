@@ -1,0 +1,41 @@
+{
+  "go_services": {
+    "greeter": {
+      "cmd_path": "cmd/greeter",
+      "port": 8080,
+      "k8s_resource": "greeter-service"
+    },
+    "caller": {
+      "cmd_path": "cmd/caller",
+      "port": 8081,
+      "k8s_resource": "caller-service"
+    },
+    "gateway": {
+      "cmd_path": "cmd/gateway",
+      "port": 8082,
+      "k8s_resource": "gateway"
+    }
+  },
+  "custom_services": {
+    "custom-lang-service": {
+      "port": 3000,
+      "k8s_resource": "custom-lang-service"
+    },
+    "auth-service": {
+      "port": 8090,
+      "k8s_resource": "auth-service"
+    }
+  },
+  "special": {
+    "frontend": {
+      "port": 5173,
+      "k8s_resource": "frontend",
+      "build_args": {
+        "VITE_API_BASE_URL": "http://localhost:30081"
+      },
+      "extra_resource_deps": [
+        "buf-generate"
+      ]
+    }
+  }
+}

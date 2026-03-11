@@ -5,7 +5,7 @@
 - **devenv** が動作していること (`devenv shell` でシェルに入る)
 - **Docker** が起動していること
 
-devenv に入ると `buf`, `go`, `grpcurl` 等の必要なツールが全て揃う。
+devenv に入ると `buf`, `go`, `grpcurl`, `jq`, `tilt` 等の必要なツールが全て揃う。
 
 ## 新しいサービスを作る
 
@@ -15,7 +15,8 @@ new-service go <service-name> <port>
 
 例: `new-service go todo 9000`
 
-ソースコード、proto、Dockerfile、docker-compose エントリ、DB、Kafka トピックが全て自動生成される。
+ソースコード、proto、Dockerfile、docker-compose エントリ、DB、Kafka トピック、Tilt 設定が全て自動生成される。
+Tiltfile の編集は不要 -- `tilt-services.json` にエントリが自動追加され、`tilt up` が新サービスを自動検出する。
 
 ## データの流れ
 
@@ -163,6 +164,21 @@ func (s *Service) CompleteTodo(ctx context.Context, req *connect.Request[pb.Comp
 
 ## 起動方法
 
+### Tilt（推奨）
+
+```bash
+tilt up
+```
+
+全サービスが起動し、コード変更時に自動でリビルド・リデプロイされる。
+`new-service` で追加したサービスも Tiltfile を編集せずに自動検出される。
+
+- フロントエンド: http://localhost:30081
+- Tilt UI: http://localhost:10350
+- 各サービスは `tilt-services.json` で定義されたポートでフォワードされる
+
+### docker compose
+
 ```bash
 docker compose up
 ```
@@ -170,7 +186,7 @@ docker compose up
 全サービスが起動する。個別起動は `docker compose up <service-name>`。
 フロントエンドは http://localhost:30081 でアクセスできる。
 
-### ビルドとデプロイ時の注意
+### ビルドとデプロイ時の注意（docker compose の場合）
 
 コード変更後、Docker イメージを再構築する必要があります:
 
@@ -186,8 +202,33 @@ docker compose up <service-name> -d
 ```
 
 `docker compose up` だけでは古いイメージが使用される場合があります。
+Tilt を使っている場合はこの手順は不要（自動でビルド・デプロイされる）。
 
 ## curl でテストする
+
+### Tilt の場合（ポートフォワードあり）
+
+Tilt がポートフォワードするので、localhost から直接アクセスできる:
+
+```bash
+# ヘルスチェック
+curl -sf http://localhost:9000/healthz
+# => ok
+
+# CreateTodo の例
+curl -s -X POST http://localhost:9000/todo.v1.TodoService/CreateTodo \
+  -H 'Content-Type: application/json' \
+  -d '{"title": "buy milk"}'
+# => {"id":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}
+
+# CompleteTodo の例
+curl -s -X POST http://localhost:9000/todo.v1.TodoService/CompleteTodo \
+  -H 'Content-Type: application/json' \
+  -d '{"id": "<返ってきたid>"}'
+# => {}
+```
+
+### docker compose の場合
 
 サービスは Docker ネットワーク内で動作するため、`docker run` 経由で curl を実行する:
 
@@ -276,3 +317,5 @@ otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote()
 - `services/internal/<service>/embed.go` -- マイグレーション埋め込み
 - `services/internal/platform/` -- EventStore, Outbox, CircuitBreaker 等の共通基盤
 - `services/internal/<service>/migrations/` -- DDL マイグレーション
+- `tilt-services.json` -- Tilt のサービス登録（`new-service` / `delete-service` が自動管理）
+- `Tiltfile` -- Tilt の設定（`tilt-services.json` を読んで動的にサービスを登録するので直接編集不要）

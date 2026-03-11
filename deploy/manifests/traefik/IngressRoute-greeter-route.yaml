@@ -18,14 +18,3 @@ spec:
         - name: greeter-service
           port: 80
           scheme: h2c
-    - kind: Rule
-      match: PathPrefix(`/greeter.v2.GreeterService`)
-      middlewares:
-        - name: cors-middleware
-        - name: rate-limit-middleware
-        - name: retry-middleware
-      priority: 100
-      services:
-        - name: greeter-service
-          port: 80
-          scheme: h2c
