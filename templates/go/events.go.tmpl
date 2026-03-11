@@ -4,6 +4,7 @@ const (
 	Event__SERVICE_NAME_PASCAL__Created = "__SERVICE_NAME_SNAKE__.created"
 	// ↓ ドメインイベントを追加する
 	// 例: Event__SERVICE_NAME_PASCAL__Completed = "__SERVICE_NAME_SNAKE__.completed"
+	// ⚠ 新しいイベントを追加したら platform/topics.go にもトピック定数と DefaultTopics() を追加すること
 
 	Event__SERVICE_NAME_PASCAL__Failed      = "__SERVICE_NAME_SNAKE__.failed"      // main.go が参照 — 削除禁止
 	Event__SERVICE_NAME_PASCAL__Compensated = "__SERVICE_NAME_SNAKE__.compensated" // main.go が参照 — 削除禁止

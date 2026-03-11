@@ -18,6 +18,9 @@ const (
 	TopicGreetingCompensated   = "greeting.compensated"
 	TopicInvocationCompensated = "invocation.compensated"
 
+	TopicTodoTitleUpdated = "todo.title_updated"
+	TopicTodoDeleted      = "todo.deleted"
+
 	// Dead Letter Queue topics.
 	TopicGreetingCreatedDLQ       = "greeting.created.dlq"
 	TopicCallCompletedDLQ         = "call.completed.dlq"
@@ -55,6 +58,8 @@ func DefaultTopics() map[string]int32 {
 		TopicInvocationCreatedDLQ:     1,
 		TopicUserRegisteredDLQ:        1,
 		TopicInvocationCompensatedDLQ: 1,
+		TopicTodoTitleUpdated:         1,
+		TopicTodoDeleted:              1,
 	}
 }
 
