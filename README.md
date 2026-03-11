@@ -9,10 +9,11 @@
 
 | カテゴリ | 技術 |
 |---------|------|
-| Go サービス | connect-go / gRPC (greeter, caller, gateway) |
+| Go サービス | connect-go / gRPC (greeter, caller, gateway, projector) |
 | Node.js サービス | Express (auth-service, custom-lang-service) |
 | フロントエンド | React 19 + TypeScript + Vite + connect-query + React Query |
 | データベース | PostgreSQL 17 |
+| イベントストリーミング | Redpanda (Kafka 互換) |
 | リバースプロキシ | Traefik v3 |
 | ローカル開発 | Docker Compose / Tilt (Kubernetes) |
 | スキーマ管理 | Protocol Buffers (buf) |
@@ -23,11 +24,11 @@
 
 ```
 .
-├── services/           # Go マイクロサービス (greeter, caller, gateway)
+├── services/           # Go マイクロサービス (greeter, caller, gateway, projector)
 │   ├── cmd/            # エントリーポイント
 │   ├── internal/       # サービス実装
 │   └── gen/            # buf generate で生成されたコード
-├── node-services/      # Node.js マイクロサービス (auth-service, custom-lang-service)
+├── node-services/      # Node.js マイクロサービス (auth-service, custom-lang-service, shared)
 ├── frontend/           # React フロントエンド
 │   ├── src/app/        # ルートコンポーネント・プロバイダ
 │   ├── src/features/   # 機能モジュール (auth, greeter, gateway)
@@ -144,7 +145,10 @@ docker compose up
 | URL | サービス |
 |-----|----------|
 | http://localhost:30081 | Traefik (API ゲートウェイ) |
+| http://localhost:5173 | フロントエンド (Vite dev server) |
 | http://localhost:5432 | PostgreSQL |
+| http://localhost:8888 | Redpanda Console (Kafka UI) |
+| http://localhost:19092 | Redpanda Kafka (外部アクセス) |
 
 ## フロントエンド開発
 
@@ -217,6 +221,7 @@ buf generate
 ```
 proto/
 ├── greeter/v1/greeter.proto
+├── greeter/v2/greeter.proto
 ├── caller/v1/caller.proto
 └── gateway/v1/gateway.proto
 ```
@@ -242,84 +247,284 @@ buf-check
 
 `buf lint` と `buf breaking --against main` を実行する。CI でも自動実行される。
 
-## 新しいマイクロサービスの追加
+## Getting Started
 
-### Go サービス
+### 前提条件
 
-```bash
-new-service go <service-name> [port]
-```
+- **devenv** が動作していること (`devenv shell` でシェルに入る)
+- **Docker** が起動していること
 
-生成されるファイル:
+devenv に入ると `buf`, `go`, `grpcurl` 等の必要なツールが全て揃う。
 
-- `services/cmd/<service-name>/main.go` -- エントリーポイント
-- `services/internal/<service-name>/` -- サービス実装ディレクトリ
-- `deploy/docker/<service-name>/Dockerfile.dev` -- 開発用 Dockerfile
-- `deploy/k8s/<service-name>.nix` -- nixidy モジュール
-- `proto/<service-name>/v1/<service-name>.proto` -- proto 定義
-
-追加手順:
-
-1. `services/internal/<service-name>/service.go` にサービス実装を追加
-2. `buf generate` で Go / TypeScript コードを再生成
-3. `docker-compose.yml` にサービスを追記 — 既存の Go サービス (greeter 等) を参考に以下を追加:
-
-    ```yaml
-    <service-name>:
-      build:
-        context: .
-        dockerfile: deploy/docker/<service-name>/Dockerfile.dev
-      environment:
-        PORT: "<port>"
-        OTEL_EXPORTER_OTLP_ENDPOINT: ""
-        OTEL_SERVICE_NAME: "<service-name>-service"
-      labels:
-        - "traefik.enable=true"
-        - "traefik.http.routers.<service-name>.rule=PathPrefix(`/<service-name>.v1.<ServiceName>Service`)"
-        - "traefik.http.routers.<service-name>.entrypoints=web"
-        - "traefik.http.routers.<service-name>.priority=100"
-        - "traefik.http.routers.<service-name>.middlewares=cors@file,rate-limit@file"
-        - "traefik.http.services.<service-name>.loadbalancer.server.port=<port>"
-        - "traefik.http.services.<service-name>.loadbalancer.server.scheme=h2c"
-      networks:
-        - app
-    ```
-
-4. `deploy/nixidy/env/local.nix` の `imports` に追加:
-
-    ```nix
-    ../../k8s/<service-name>.nix
-    ```
-
-5. `Tiltfile` に以下を追加:
-
-    - `gen-manifests` の `deps` に `'deploy/k8s/<service-name>.nix'` を追加
-    - `manifests` に `manifests += find_yaml('deploy/manifests/<service-name>-service')` を追加
-    - `go_service('<service-name>', 'cmd/<service-name>')` を追加
-    - `if manifests:` ブロック内に以下を追加:
-
-    ```python
-    <service-name>_deps = cluster_bootstrap_deps + ['gen-manifests', 'buf-generate']
-    # if not use_nix: ブロック内に追加
-    <service-name>_deps += ['<service-name>-compile']
-    # k8s_resource を追加
-    k8s_resource('<service-name>-service', port_forwards=<port>, resource_deps=<service-name>_deps)
-    ```
-
-6. **新規ファイルを `git add` する** — Nix は git tree に含まれるファイルしか参照できないため、`gen-manifests` を実行する前に新規ファイルを `git add` しておく必要がある
-
-### Node.js (カスタム) サービス
+### 新しいサービスを作る
 
 ```bash
-new-service custom <service-name> [port]
+new-service go <service-name> <port>
 ```
 
-生成されるファイル:
+例: `new-service go todo 9000`
 
-- `node-services/<service-name>/server.js` -- サーバー実装
-- `node-services/<service-name>/package.json` -- パッケージ定義
-- `deploy/docker/<service-name>/Dockerfile` -- Dockerfile
-- `deploy/k8s/<service-name>.nix` -- nixidy モジュール
+ソースコード、proto、Dockerfile、docker-compose エントリ、DB、Kafka トピックが全て自動生成される。
+
+### データの流れ
+
+リクエストがどう処理されるかの全体像:
+
+```
+クライアント
+  │
+  ▼
+proto (gRPC API 定義)
+  │  buf generate でコード生成
+  ▼
+service.go (gRPC ハンドラ)
+  │  aggregate を作り、コマンドを呼ぶ
+  ▼
+aggregate.go (コマンド → Raise でイベント発行)
+  │
+  ▼
+platform.SaveAggregate ── 1 トランザクションで処理 ──┐
+  │                                                  │
+  ├─→ event_store (イベント保存)                     │
+  └─→ outbox_events (Kafka 発行キュー)               │
+                │                                    │
+                ▼                                    │
+             Kafka (非同期イベント配信) ◄─────────────┘
+
+--- イベント再生（LoadAggregate）---
+
+event_store
+  │  保存済みイベントを順番に読み出す
+  ▼
+aggregate.ApplyEvent (イベントごとに状態を復元)
+  │
+  ▼
+aggregate の現在の状態が復元される
+```
+
+### 編集する 4 ファイル
+
+#### 1. `proto/<service>/v1/<service>.proto`
+
+gRPC の API 定義。編集後 `buf generate` でコードを再生成する。
+
+```protobuf
+service TodoService {
+  rpc CreateTodo(CreateTodoRequest) returns (CreateTodoResponse) {}
+  rpc CompleteTodo(CompleteTodoRequest) returns (CompleteTodoResponse) {}
+}
+```
+
+#### 2. `services/internal/<service>/events.go`
+
+イベント型とペイロードを定義する。イベントは「起きた事実」を表す。
+
+> **注意:** テンプレートが生成する `Failed` / `Compensated` イベントは `main.go` の補償ハンドラが参照している。**削除すると `main.go` がコンパイルエラーになる**ので残すこと。自分のドメインイベントはこれらに追加する形で定義する。
+
+```go
+const (
+    EventTodoCreated   = "todo.created"
+    EventTodoCompleted = "todo.completed"                // ← 追加
+    EventTodoFailed    = "todo.failed"                    // 削除禁止
+    EventTodoCompensated = "todo.compensated"             // 削除禁止
+)
+
+type TodoCreatedData struct {
+    Title string `json:"title"`
+}
+
+type TodoCompletedData struct{}
+```
+
+#### 3. `services/internal/<service>/aggregate.go`
+
+集約の状態と、イベント適用ロジック。
+
+- `ApplyEvent` -- 保存済みイベントから状態を復元する
+- コマンドメソッド -- `Raise()` でイベントを発行し、状態を更新する
+- `Fail` / `Compensate` -- main.go が参照するので削除しない
+
+```go
+type TodoAggregate struct {
+    platform.AggregateBase
+    Title  string                     // ← ドメインのフィールド
+    Status string
+}
+
+func (a *TodoAggregate) ApplyEvent(eventType string, data json.RawMessage) {
+    switch eventType {
+    case EventTodoCreated:
+        var d TodoCreatedData
+        json.Unmarshal(data, &d)
+        a.Title = d.Title
+        a.Status = "created"
+    case EventTodoCompleted:          // ← 追加イベント
+        a.Status = "completed"
+    }
+}
+
+func (a *TodoAggregate) Create(title string) {
+    a.Raise(EventTodoCreated, TodoCreatedData{Title: title})
+    a.Title = title
+    a.Status = "created"
+}
+
+func (a *TodoAggregate) Complete() {  // ← 追加コマンド
+    a.Raise(EventTodoCompleted, TodoCompletedData{})
+    a.Status = "completed"
+}
+```
+
+#### 4. `services/internal/<service>/service.go`
+
+ビジネスロジックの本体。gRPC ハンドラを実装する。
+
+**新規作成パターン** -- 集約を作り、コマンドを呼び、`SaveAggregate` で永続化する。`AggregateID()` で採番された ID を取得できる:
+
+```go
+func (s *Service) CreateTodo(ctx context.Context, req *connect.Request[pb.CreateTodoRequest]) (*connect.Response[pb.CreateTodoResponse], error) {
+    title := req.Msg.GetTitle()
+
+    agg := NewTodoAggregate(uuid.NewString())
+    agg.Create(title)
+    platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, TodoTopicMapper)
+
+    return connect.NewResponse(&pb.CreateTodoResponse{
+        Id: agg.AggregateID(),
+    }), nil
+}
+```
+
+**既存更新パターン** -- `LoadAggregate` でイベントを再生して状態を復元し、コマンドを呼ぶ:
+
+```go
+func (s *Service) CompleteTodo(ctx context.Context, req *connect.Request[pb.CompleteTodoRequest]) (*connect.Response[pb.CompleteTodoResponse], error) {
+    id := req.Msg.GetId()
+
+    agg := NewTodoAggregate(id)
+    platform.LoadAggregate(ctx, s.eventStore, agg)
+    agg.Complete()
+    platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, TodoTopicMapper)
+
+    return connect.NewResponse(&pb.CompleteTodoResponse{}), nil
+}
+```
+
+### 起動方法
+
+```bash
+docker compose up
+```
+
+全サービスが起動する。個別起動は `docker compose up <service-name>`。
+フロントエンドは http://localhost:30081 でアクセスできる。
+
+#### ビルドとデプロイ時の注意
+
+コード変更後、Docker イメージを再構築する必要がある:
+
+```bash
+# 1. サービスをビルド（Go コマンドは services/ ディレクトリで実行）
+cd services && go build ./cmd/<service-name>
+
+# 2. Docker イメージを再構築（古いキャッシュを使わないため必須）
+docker compose build <service-name>
+
+# 3. サービスを起動
+docker compose up <service-name> -d
+```
+
+`docker compose up` だけでは古いイメージが使用される場合がある。
+
+### curl でテストする
+
+サービスは Docker ネットワーク内で動作するため、`docker run` 経由で curl を実行する:
+
+```bash
+# ネットワーク名を確認
+docker network ls | grep micro
+# => microservices-app_app
+
+# CreateTodo の例
+docker run --rm --network microservices-app_app curlimages/curl:latest \
+  -s -X POST http://todo:9000/todo.v1.TodoService/CreateTodo \
+  -H 'Content-Type: application/json' \
+  -d '{"title": "buy milk"}'
+# => {"id":"xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}
+
+# CompleteTodo の例
+docker run --rm --network microservices-app_app curlimages/curl:latest \
+  -s -X POST http://todo:9000/todo.v1.TodoService/CompleteTodo \
+  -H 'Content-Type: application/json' \
+  -d '{"id": "<返ってきたid>"}'
+# => {}
+```
+
+URL のパターンは `http://<service>:<port>/<proto package>.<Service>/<RPC>` になる。
+
+### DB を確認する
+
+各サービスは `<service>_db` という専用データベースを持つ。`docker compose exec` で psql に入れる:
+
+```bash
+# DB 一覧
+docker compose exec postgres psql -U devuser -d postgres -c '\l'
+
+# テーブル一覧
+docker compose exec postgres psql -U devuser -d <service>_db -c '\dt'
+
+# イベントストアの中身（保存されたイベント列）
+docker compose exec postgres psql -U devuser -d <service>_db \
+  -c 'SELECT stream_id, event_type, version, data, created_at FROM event_store ORDER BY created_at;'
+
+# Outbox（Kafka への発行状況）
+docker compose exec postgres psql -U devuser -d <service>_db \
+  -c 'SELECT id, topic, published, created_at FROM outbox_events ORDER BY created_at;'
+```
+
+### Event Sourcing 30秒解説
+
+1. **イベントは事実** -- 「Todo が作成された」「Todo が完了した」等、起きたことをそのまま記録する
+2. **Aggregate はイベントを再生して状態を復元する** -- DB に現在の状態は保存しない。イベント列が真実
+3. **`SaveAggregate` が残りを全部やる** -- イベント保存、楽観的ロック、Outbox 発行を 1 トランザクションで処理
+
+開発者がやることは「イベントを定義し、Aggregate に Apply を書き、コマンドで Raise する」だけ。
+
+### 他サービスへの HTTP 呼び出しを追加する場合
+
+サービスが他のサービスへ HTTP リクエストを送る場合、分散トレーシングを正しく動作させるために以下の 2 点が必要:
+
+#### 1. HTTP Client を `otelhttp.NewTransport` でラップする
+
+```go
+import "go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
+
+client := &http.Client{
+    Timeout:   3 * time.Second,
+    Transport: otelhttp.NewTransport(http.DefaultTransport),
+}
+```
+
+これにより、送信 HTTP リクエストに W3C `traceparent` ヘッダが自動付与される。素の `http.Client` を使うとトレースが途切れる。
+
+#### 2. `otelconnect.WithTrustRemote()` を確認する
+
+テンプレートが生成する `main.go` には設定済みだが、Connect RPC ハンドラの `otelconnect.NewInterceptor()` に `WithTrustRemote()` が付いていることを確認する:
+
+```go
+otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
+```
+
+これがないと、受信側が incoming trace context を無視して新しいトレースを開始してしまう。
+
+### 触らないファイル
+
+以下はインフラ層のボイラープレート。スクリプトが自動生成するので編集不要:
+
+- `services/cmd/<service>/main.go` -- サーバー起動、DB接続、gRPC登録、補償ハンドラ
+- `services/internal/<service>/embed.go` -- マイグレーション埋め込み
+- `services/internal/platform/` -- EventStore, Outbox, CircuitBreaker 等の共通基盤
+- `services/internal/<service>/migrations/` -- DDL マイグレーション
 
 ## 開発コマンド一覧
 
@@ -392,14 +597,11 @@ PR と main への push で以下が自動実行される:
 
 | ジョブ | 内容 |
 |--------|------|
-| `contract` | buf lint + breaking change チェック |
-| `go-lint` | golangci-lint |
-| `go-test` | `go test ./...` |
-| `frontend-lint` | Biome check |
-| `frontend-build` | TypeScript 型チェック + Vite ビルド |
-| `node-lint` | Node.js サービスの Biome check |
-| `node-test` | Node.js サービスの Vitest |
-| `nix-build` | Nix でバイナリ + コンテナイメージをビルド |
+| `contract` | buf lint + breaking change チェック (PR のみ) |
+| `go-check` | golangci-lint + `go test ./...` |
+| `frontend-check` | Biome check + TypeScript 型チェック + Vite ビルド |
+| `node-check` | Node.js サービスの Biome check + Vitest |
+| `nix-build` | Nix でバイナリ + コンテナイメージをビルド、main push 時は ghcr.io へ push |
 | `render-manifests` | nixidy マニフェスト再生成 (main push 時のみ) |
 
 ## スタイルガイド
