@@ -381,6 +381,8 @@ case "$LANG" in
     echo "  deploy/nixidy/env/local.nix  (nix import added)"
     echo "  deploy/nixidy/env/traefik.nix  (IngressRoute added)"
     echo "  tilt-services.json  (Tilt service entry added)"
+    echo "  tilt up で k8s Postgres に DB が自動同期される"
+    echo "  docker compose up で local Postgres に DB が自動同期される"
     echo ""
     echo "Next steps:"
     echo "  1. Edit proto/${SERVICE_NAME}/v1/${SERVICE_NAME}.proto (define your API)"
@@ -447,6 +449,8 @@ case "$LANG" in
     echo "  deploy/nixidy/env/local.nix  (nix import added)"
     echo "  deploy/nixidy/env/traefik.nix  (IngressRoute added)"
     echo "  tilt-services.json  (Tilt service entry added)"
+    echo "  tilt up で k8s Postgres に DB が自動同期される"
+    echo "  docker compose up で local Postgres に DB が自動同期される"
     ;;
 
   *)

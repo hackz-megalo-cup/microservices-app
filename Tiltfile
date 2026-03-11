@@ -67,6 +67,15 @@ local_resource(
     labels=['codegen'],
 )
 
+local_resource(
+    'ensure-service-databases',
+    cmd='bash scripts/manage-service-db.sh sync-k8s',
+    deps=['scripts/manage-service-db.sh', 'deploy/k8s/secrets.nix'],
+    resource_deps=cluster_bootstrap_deps,
+    trigger_mode=TRIGGER_MODE_AUTO,
+    labels=['bootstrap'],
+)
+
 # --- Dynamic manifest discovery (exclude apps/ which contains ArgoCD Applications) ---
 watch_file('deploy/manifests')
 _manifest_dirs = str(local(
@@ -161,7 +170,7 @@ if manifests:
     for name, cfg in go_svcs.items():
         k8s_name = cfg.get('k8s_resource', '%s-service' % name)
         port = cfg.get('port', 8080)
-        deps = cluster_bootstrap_deps + ['gen-manifests', 'buf-generate']
+        deps = cluster_bootstrap_deps + ['gen-manifests', 'buf-generate', 'ensure-service-databases']
         if not use_nix:
             deps += ['%s-compile' % name]
         k8s_resource(k8s_name, port_forwards=port, resource_deps=deps)
@@ -170,7 +179,7 @@ if manifests:
         k8s_name = cfg.get('k8s_resource', name)
         port = cfg.get('port', 8080)
         k8s_resource(k8s_name, port_forwards=port,
-                     resource_deps=cluster_bootstrap_deps + ['gen-manifests'])
+                     resource_deps=cluster_bootstrap_deps + ['gen-manifests', 'ensure-service-databases'])
 
     for name, cfg in special_svcs.items():
         k8s_name = cfg.get('k8s_resource', name)

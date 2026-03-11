@@ -35,6 +35,8 @@ to_pascal() {
 
 SERVICE_NAME_PASCAL="$(to_pascal "$SERVICE_NAME")"
 SERVICE_NAME_SNAKE="$(echo "$SERVICE_NAME" | tr '-' '_')"
+DB_NAME="${SERVICE_NAME_SNAKE}_db"
+DB_DROP_WARNINGS=()
 
 # --- Remove files ---
 
@@ -276,12 +278,34 @@ stop_docker() {
   fi
 }
 
+drop_database_best_effort() {
+  local target="$1"
+  local helper="${REPO_ROOT}/scripts/manage-service-db.sh"
+
+  if [[ ! -f "$helper" ]]; then
+    DB_DROP_WARNINGS+=("${target}: helper script missing")
+    return
+  fi
+
+  if bash "$helper" "drop-${target}" "$DB_NAME"; then
+    echo "  Dropped ${target} database ${DB_NAME}"
+    return
+  fi
+
+  DB_DROP_WARNINGS+=("${target}: ${DB_NAME} may still exist")
+  echo "  WARNING: Could not drop ${target} database ${DB_NAME}" >&2
+}
+
 # --- Main ---
 
 echo "==> Deleting service: ${SERVICE_NAME}"
 
 echo "==> Stopping Docker container..."
 stop_docker
+
+echo "==> Dropping databases (best effort)..."
+drop_database_best_effort "k8s"
+drop_database_best_effort "compose"
 
 echo "==> Removing files..."
 remove_dirs
@@ -322,3 +346,11 @@ echo "  deploy/k8s/secrets.nix  (secrets removed)"
 echo "  deploy/nixidy/env/local.nix  (nix import removed)"
 echo "  deploy/nixidy/env/traefik.nix  (IngressRoute removed)"
 echo "  tilt-services.json  (Tilt service entry removed)"
+
+if [[ ${#DB_DROP_WARNINGS[@]} -gt 0 ]]; then
+  echo ""
+  echo "Database warnings:"
+  for warning in "${DB_DROP_WARNINGS[@]}"; do
+    echo "  ${warning}"
+  done
+fi

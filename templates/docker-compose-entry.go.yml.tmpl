@@ -12,7 +12,7 @@
     networks:
       - app
     depends_on:
-      postgres:
-        condition: service_healthy
+      postgres-db-sync:
+        condition: service_completed_successfully
       redpanda:
         condition: service_healthy

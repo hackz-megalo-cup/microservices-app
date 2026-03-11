@@ -203,6 +203,24 @@
       go install golang.org/x/tools/cmd/goimports@latest 2>/dev/null
     fi
 
+    # protoc-gen-go: protobuf Go code generator
+    if [ ! -x "$GOBIN/protoc-gen-go" ]; then
+      echo "Installing protoc-gen-go..."
+      go install google.golang.org/protobuf/cmd/protoc-gen-go@latest 2>/dev/null
+    fi
+
+    # protoc-gen-connect-go: Connect RPC Go code generator
+    if [ ! -x "$GOBIN/protoc-gen-connect-go" ]; then
+      echo "Installing protoc-gen-connect-go..."
+      go install connectrpc.com/connect/cmd/protoc-gen-connect-go@latest 2>/dev/null
+    fi
+
+    # frontend: install npm deps (includes protoc-gen-es, protoc-gen-connect-query)
+    if [ ! -x "$DEVENV_ROOT/frontend/node_modules/.bin/protoc-gen-es" ]; then
+      echo "Installing frontend npm dependencies..."
+      (cd "$DEVENV_ROOT/frontend" && npm install --no-audit --no-fund 2>/dev/null)
+    fi
+
     echo "microservice-app dev environment loaded"
     echo ""
     echo "Available commands:"
