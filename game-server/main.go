@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"crypto/tls"
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -25,6 +26,95 @@ import (
 func main() {
 	log.Println("game-server starting...")
 
+	localDev := os.Getenv("LOCAL_DEV") == "true"
+
+	if localDev {
+		runLocalDev()
+	} else {
+		runProduction()
+	}
+}
+
+func runLocalDev() {
+	log.Println("=== LOCAL DEV MODE ===")
+
+	portStr := os.Getenv("PORT")
+	if portStr == "" {
+		portStr = "7777"
+	}
+	port := int32(0)
+	fmt.Sscanf(portStr, "%d", &port)
+
+	// Generate ephemeral cert (used for both WT and WS)
+	wtCert, certHash, err := cert.GenerateEphemeral()
+	if err != nil {
+		log.Fatalf("cert gen: %v", err)
+	}
+	log.Printf("port: %d", port)
+	log.Printf("cert hash: %s", certHash)
+	log.Println("======================")
+
+	// Create session immediately
+	session := battle.NewSession(uuid.New(), uuid.New(), 50000, battle.TypeMatchup{}, 300*time.Second)
+	hub := transport.NewHub()
+	handler := transport.NewHandler(hub, session)
+
+	log.Println("battle session created (local dev)")
+
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	onWT := func(wtSession *webtransport.Session) {
+		userID := uuid.New()
+		conn := transport.NewWTConn(wtSession)
+		hub.Register(userID, conn)
+		log.Printf("wt client connected: %s", userID)
+
+		messages := transport.ReadWT(ctx, wtSession)
+		for msg := range messages {
+			handler.HandleMessage(userID, msg)
+		}
+		hub.Unregister(userID)
+		log.Printf("wt client disconnected: %s", userID)
+	}
+
+	onWS := func(w http.ResponseWriter, r *http.Request) {
+		wsConn, err := websocket.Accept(w, r, &websocket.AcceptOptions{
+			InsecureSkipVerify: true,
+		})
+		if err != nil {
+			log.Printf("ws accept error: %v", err)
+			return
+		}
+		userID := uuid.New()
+		conn := transport.NewWSConn(wsConn)
+		hub.Register(userID, conn)
+		log.Printf("ws client connected: %s", userID)
+
+		messages := transport.ReadWS(ctx, wsConn)
+		for msg := range messages {
+			handler.HandleMessage(userID, msg)
+		}
+		hub.Unregister(userID)
+		log.Printf("ws client disconnected: %s", userID)
+	}
+
+	srv := transport.NewDualServer(port, wtCert, wtCert, onWT, onWS)
+	go func() {
+		if err := srv.Start(); err != nil {
+			log.Printf("server error: %v", err)
+		}
+	}()
+
+	log.Printf("game-server listening on :%d (WebTransport + WebSocket)", port)
+
+	<-session.Done()
+	log.Printf("battle finished: result=%s", session.Result())
+	cancel()
+	log.Println("game-server shut down")
+}
+
+func runProduction() {
 	// 1. Agones SDK init
 	lc, err := agones.NewLifecycle()
 	if err != nil {

@@ -46,6 +46,11 @@ interface LogEntry {
   data: string;
 }
 
+interface RttRecord {
+  protocol: "wt" | "ws";
+  rtt: number;
+}
+
 let logSeqCounter = 0;
 
 // ---------------------------------------------------------------------------
@@ -92,6 +97,11 @@ export function RaidTestPage() {
   // --- Log ---
   const [messages, setMessages] = useState<LogEntry[]>([]);
 
+  // --- RTT measurement ---
+  const [lastRtt, setLastRtt] = useState<number | null>(null);
+  const [rttHistory, setRttHistory] = useState<RttRecord[]>([]);
+  const tapSentAtRef = useRef<number>(0);
+
   // --- Refs for mutable connection handles ---
   const transportRef = useRef<WebTransport | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
@@ -122,6 +132,15 @@ export function RaidTestPage() {
             if (msg.hp != null) {
               setBossHp(msg.hp);
             }
+            if (tapSentAtRef.current > 0) {
+              const rtt = performance.now() - tapSentAtRef.current;
+              tapSentAtRef.current = 0;
+              setLastRtt(rtt);
+              setRttHistory((prev) => {
+                const record: RttRecord = { protocol, rtt };
+                return [...prev, record].slice(-100);
+              });
+            }
             break;
           case "special_used":
             if (msg.bossHp != null) {
@@ -136,7 +155,7 @@ export function RaidTestPage() {
         // not JSON, just log
       }
     },
-    [addLog],
+    [addLog, protocol],
   );
 
   // --- Send helpers ---
@@ -321,6 +340,7 @@ export function RaidTestPage() {
   };
 
   const handleTap = () => {
+    tapSentAtRef.current = performance.now();
     sendUnreliable(JSON.stringify({ t: "tap" }));
     setTapCount((c) => c + 1);
   };
@@ -341,6 +361,22 @@ export function RaidTestPage() {
         : connectionState === "error"
           ? "\uD83D\uDD34"
           : "\u26AA";
+
+  const calcStats = (proto: "wt" | "ws") => {
+    const records = rttHistory.filter((r) => r.protocol === proto);
+    if (records.length === 0) {
+      return null;
+    }
+    const rtts = records.map((r) => r.rtt);
+    return {
+      count: rtts.length,
+      avg: rtts.reduce((a, b) => a + b, 0) / rtts.length,
+      min: Math.min(...rtts),
+      max: Math.max(...rtts),
+    };
+  };
+  const wtStats = calcStats("wt");
+  const wsStats = calcStats("ws");
 
   return (
     <main className="min-h-dvh bg-bg-primary text-text-primary font-sans p-6">
@@ -469,6 +505,88 @@ export function RaidTestPage() {
             {bossHp.toLocaleString()} / {bossMaxHp.toLocaleString()}
           </p>
         </section>
+
+        {/* RTT Stats */}
+        {(wtStats || wsStats || lastRtt !== null) && (
+          <section className="rounded-xl bg-bg-card p-5 shadow-card space-y-3">
+            <h2 className="text-sm font-semibold text-text-secondary">Tap RTT (ms)</h2>
+
+            {lastRtt !== null && (
+              <p className="text-center text-2xl font-bold font-mono text-accent">
+                {lastRtt.toFixed(1)} ms
+                <span className="text-sm font-normal text-text-secondary ml-2">
+                  ({protocol === "wt" ? "WebTransport" : "WebSocket"})
+                </span>
+              </p>
+            )}
+
+            {(wtStats || wsStats) && (
+              <div className="grid grid-cols-2 gap-4 mt-3">
+                {/* WT column */}
+                <div
+                  className={`rounded-lg p-3 ${wtStats ? "bg-bg-primary" : "bg-bg-primary/50 opacity-50"}`}
+                >
+                  <h3 className="text-xs font-semibold text-accent mb-2">WebTransport (UDP)</h3>
+                  {wtStats ? (
+                    <div className="space-y-1 font-mono text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">Avg</span>
+                        <span className="text-text-primary font-bold">
+                          {wtStats.avg.toFixed(1)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">Min</span>
+                        <span className="text-green">{wtStats.min.toFixed(1)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">Max</span>
+                        <span className="text-text-primary">{wtStats.max.toFixed(1)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">Count</span>
+                        <span className="text-text-primary">{wtStats.count}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-text-secondary">No data</p>
+                  )}
+                </div>
+
+                {/* WS column */}
+                <div
+                  className={`rounded-lg p-3 ${wsStats ? "bg-bg-primary" : "bg-bg-primary/50 opacity-50"}`}
+                >
+                  <h3 className="text-xs font-semibold text-accent mb-2">WebSocket (TCP)</h3>
+                  {wsStats ? (
+                    <div className="space-y-1 font-mono text-sm">
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">Avg</span>
+                        <span className="text-text-primary font-bold">
+                          {wsStats.avg.toFixed(1)}
+                        </span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">Min</span>
+                        <span className="text-green">{wsStats.min.toFixed(1)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">Max</span>
+                        <span className="text-text-primary">{wsStats.max.toFixed(1)}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-text-secondary">Count</span>
+                        <span className="text-text-primary">{wsStats.count}</span>
+                      </div>
+                    </div>
+                  ) : (
+                    <p className="text-xs text-text-secondary">No data</p>
+                  )}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
 
         {/* Attack buttons */}
         <section className="rounded-xl bg-bg-card p-5 shadow-card space-y-3">
