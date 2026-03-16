@@ -46,7 +46,7 @@ interface LogEntry {
   data: string;
 }
 
-let logSeq = 0;
+let logSeqCounter = 0;
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -100,7 +100,8 @@ export function RaidTestPage() {
 
   // --- Logging helper ---
   const addLog = useCallback((direction: "\u2192" | "\u2190", data: string) => {
-    setMessages((prev) => [{ id: ++logSeq, time: timestamp(), direction, data }, ...prev]);
+    const entry: LogEntry = { id: ++logSeqCounter, time: timestamp(), direction, data };
+    setMessages((prev) => [entry, ...prev]);
   }, []);
 
   // --- Message handler ---
