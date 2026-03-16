@@ -3,6 +3,6 @@
  * This layer provides the public API and prevents direct cross-feature imports.
  */
 
-export { AuthPanel } from "../features/auth/components/AuthPanel";
-export { GatewayDemo } from "../features/gateway/components/GatewayDemo";
-export { GreeterDemo } from "../features/greeter/components/GreeterDemo";
+export { AuthPanel } from "../features/auth/components/auth-panel";
+export { GatewayDemo } from "../features/gateway/components/gateway-demo";
+export { GreeterDemo } from "../features/greeter/components/greeter-demo";
