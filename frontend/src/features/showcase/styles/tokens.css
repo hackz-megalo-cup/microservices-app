@@ -1,13 +1,13 @@
 :root {
-  --bg-primary: #0F172A;
-  --bg-card: #1E293B;
+  --bg-primary: #0f172a;
+  --bg-card: #1e293b;
   --bg-hover: #334155;
-  --accent: #06B6D4;
-  --accent-dark: #0891B2;
-  --accent-glow: #06B6D420;
-  --text-primary: #F1F5F9;
-  --text-secondary: #94A3B8;
-  --font-family: 'Inter', sans-serif;
+  --accent: #06b6d4;
+  --accent-dark: #0891b2;
+  --accent-glow: #06b6d420;
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --font-family: "Inter", sans-serif;
   --radius-sm: 8px;
   --radius-md: 16px;
   --radius-lg: 24px;
