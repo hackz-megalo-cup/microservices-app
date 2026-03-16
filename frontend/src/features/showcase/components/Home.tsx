@@ -9,25 +9,25 @@ const mockRaids: Raid[] = [
     id: "raid-1",
     name: "JavaScript",
     type: "Dynamic / JIT Compiled",
-    difficulty: "5/10",
+    players: "5/10",
     timer: "12:34",
-    image: "",
+    image: "/images/raid-javascript.png",
   },
   {
     id: "raid-2",
     name: "Rust",
     type: "Static / Compiled",
-    difficulty: "8/10",
+    players: "8/10",
     timer: "05:12",
-    image: "",
+    image: "/images/raid-rust.png",
   },
   {
     id: "raid-3",
     name: "Go",
     type: "Static / Compiled",
-    difficulty: "3/10",
+    players: "3/10",
     timer: "23:45",
-    image: "",
+    image: "/images/raid-go.png",
   },
 ];
 
@@ -51,7 +51,11 @@ export function Home() {
         className="flex flex-col items-center justify-center gap-3 h-[280px]"
         style={{ background: "radial-gradient(circle, var(--color-accent-glow), transparent)" }}
       >
-        <div className="w-[200px] h-[200px] rounded-full bg-bg-card" />
+        <img
+          src="/images/hero-python.png"
+          alt="Python"
+          className="w-[200px] h-[200px] rounded-full object-cover"
+        />
         <h1 className="text-2xl font-bold text-text-primary m-0">Python</h1>
         <p className="text-sm text-text-secondary m-0">Dynamic / Interpreted</p>
       </section>
@@ -64,7 +68,7 @@ export function Home() {
             id={raid.id}
             name={raid.name}
             type={raid.type}
-            difficulty={raid.difficulty}
+            players={raid.players}
             timer={raid.timer}
             image={raid.image}
           />

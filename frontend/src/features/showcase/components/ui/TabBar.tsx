@@ -1,18 +1,33 @@
 import { useNavigate } from "react-router";
 
-interface TabBarProps {
-  active: string;
+interface Tab {
+  label: string;
+  icon: string;
+  path: string;
 }
 
-const tabs = [
+const defaultTabs: Tab[] = [
   { label: "HOME", icon: "🏠", path: "/" },
   { label: "BATTLE", icon: "⚔️", path: "/battle/demo" },
   { label: "TEAM", icon: "📋", path: "/collection" },
   { label: "PROFILE", icon: "👤", path: "/api-test" },
-] as const;
+];
 
-export function TabBar({ active }: TabBarProps) {
+const collectionTabs: Tab[] = [
+  { label: "HOME", icon: "🏠", path: "/" },
+  { label: "COLLECTION", icon: "📋", path: "/collection" },
+  { label: "TEAM", icon: "📋", path: "/collection" },
+  { label: "PROFILE", icon: "👤", path: "/api-test" },
+];
+
+interface TabBarProps {
+  active: string;
+  variant?: "default" | "collection";
+}
+
+export function TabBar({ active, variant = "default" }: TabBarProps) {
   const navigate = useNavigate();
+  const tabs = variant === "collection" ? collectionTabs : defaultTabs;
 
   return (
     <nav className="px-4 pt-2 pb-4">

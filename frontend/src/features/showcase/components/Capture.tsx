@@ -7,7 +7,11 @@ export function Capture() {
       <NavBar title="CAPTURE" />
 
       <div className="flex-1 flex flex-col items-center justify-center gap-6 px-6">
-        <div className="w-[200px] h-[200px] rounded-full bg-bg-card" />
+        <img
+          src="/images/capture-python.png"
+          alt="Python"
+          className="w-[200px] h-[200px] rounded-full object-cover"
+        />
         <div className="flex flex-col items-center gap-1">
           <span className="text-2xl font-bold text-text-primary">Python</span>
           <span className="text-5xl font-bold text-accent">42%</span>

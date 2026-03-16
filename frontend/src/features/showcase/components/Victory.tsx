@@ -2,9 +2,9 @@ import { useNavigate } from "react-router";
 import "../styles/global.css";
 
 const rewards = [
-  { icon: "\u26A1", value: "+500", label: "XP" },
-  { icon: "\uD83D\uDC8E", value: "+3", label: "Gems" },
-  { icon: "\uD83C\uDF9F\uFE0F", value: "+1", label: "Ticket" },
+  { value: "+350", label: "EXP" },
+  { value: "x2", label: "Red Bull" },
+  { value: "x1", label: "Cushion" },
 ] as const;
 
 export function Victory() {
@@ -12,7 +12,11 @@ export function Victory() {
 
   return (
     <div className="showcase-screen items-center gap-8 pt-12 px-6 pb-6">
-      <div className="w-[120px] h-[120px] rounded-full bg-bg-card" />
+      <img
+        src="/images/victory-trophy.png"
+        alt="Trophy"
+        className="w-[120px] h-[120px] rounded-full object-cover"
+      />
       <span className="text-xs font-bold tracking-widest text-accent">RAID CLEAR</span>
       <h1 className="text-4xl font-bold text-text-primary m-0">Victory</h1>
       <p className="text-sm text-text-secondary m-0">Python defeated in 2:31</p>
@@ -25,8 +29,7 @@ export function Victory() {
               key={reward.label}
               className="flex-1 flex flex-col items-center gap-1 bg-bg-primary rounded-lg p-4"
             >
-              <span className="text-2xl">{reward.icon}</span>
-              <span className="text-sm font-bold text-accent">{reward.value}</span>
+              <span className="text-xl font-bold text-accent">{reward.value}</span>
               <span className="text-xs text-text-secondary">{reward.label}</span>
             </div>
           ))}

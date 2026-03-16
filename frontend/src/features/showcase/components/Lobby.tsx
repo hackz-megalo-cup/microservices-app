@@ -16,7 +16,11 @@ export function Lobby() {
 
       <div className="flex flex-col gap-3 px-4 pb-4 flex-1">
         <section className="flex flex-col items-center gap-3 py-2">
-          <div className="w-40 h-40 rounded-full bg-bg-card" />
+          <img
+            src="/images/lobby-python.png"
+            alt="Python"
+            className="w-[160px] h-[160px] rounded-full object-cover"
+          />
           <div className="flex items-center gap-2">
             <span className="text-xl font-bold text-text-primary">Python</span>
             <span className="text-xs text-accent bg-bg-card px-3 py-1 rounded-lg">Dynamic</span>

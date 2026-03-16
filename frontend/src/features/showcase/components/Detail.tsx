@@ -8,7 +8,7 @@ const mockPokemonMap: Record<string, Pokemon> = {
     id: "1",
     name: "TypeScript",
     number: "#001",
-    image: "",
+    image: "/images/detail-typescript.png",
     types: ["Static", "Class-Based"],
     stats: [
       { label: "HP", value: 85 },
@@ -18,9 +18,9 @@ const mockPokemonMap: Record<string, Pokemon> = {
     about:
       "A statically typed superset of JavaScript that compiles to clean, readable code. Known for its powerful type system and class-based architecture.",
     moves: [
-      { name: "Type Check", type: "Normal", power: 45 },
-      { name: "Compile", type: "Normal", power: 60 },
-      { name: "Refactor", type: "Normal", power: 80 },
+      { name: "Type Guard", type: "Normal", power: 65 },
+      { name: "Compile Strike", type: "Normal", power: 80 },
+      { name: "Interface Shield", type: "Normal", power: 45 },
     ],
     captured: true,
   },
@@ -127,7 +127,15 @@ export function Detail() {
         className="flex items-center justify-center h-[200px]"
         style={{ background: "radial-gradient(circle, var(--color-accent-glow), transparent)" }}
       >
-        <div className="w-[200px] h-[200px] rounded-full bg-bg-card" />
+        {pokemon.image ? (
+          <img
+            src={pokemon.image}
+            alt={pokemon.name}
+            className="w-[200px] h-[200px] rounded-full object-cover"
+          />
+        ) : (
+          <div className="w-[200px] h-[200px] rounded-full bg-bg-card" />
+        )}
       </div>
 
       <div className="flex flex-col items-center gap-3 px-6">
@@ -171,8 +179,10 @@ export function Detail() {
               key={move.name}
               className="flex justify-between items-center bg-bg-card rounded-2xl px-4 py-3"
             >
-              <span className="text-sm">{move.name}</span>
-              <span className="text-sm font-bold text-accent">{move.power}</span>
+              <span className="text-sm font-semibold">{move.name}</span>
+              <span className="text-xs font-bold text-accent bg-bg-primary px-3 py-1 rounded-full">
+                PWR {move.power}
+              </span>
             </div>
           ))}
         </div>

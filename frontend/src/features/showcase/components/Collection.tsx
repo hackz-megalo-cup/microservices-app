@@ -9,7 +9,7 @@ const mockCollection: Pokemon[] = [
     id: "1",
     name: "TypeScript",
     number: "#001",
-    image: "",
+    image: "/images/collection-typescript.png",
     types: ["Static", "Class-Based"],
     stats: [
       { label: "HP", value: 85 },
@@ -28,7 +28,7 @@ const mockCollection: Pokemon[] = [
     id: "2",
     name: "Rust",
     number: "#002",
-    image: "",
+    image: "/images/collection-rust.png",
     types: ["Static", "Systems"],
     stats: [
       { label: "HP", value: 95 },
@@ -47,7 +47,7 @@ const mockCollection: Pokemon[] = [
     id: "3",
     name: "Python",
     number: "#003",
-    image: "",
+    image: "/images/collection-python.png",
     types: ["Dynamic", "Interpreted"],
     stats: [
       { label: "HP", value: 80 },
@@ -66,7 +66,7 @@ const mockCollection: Pokemon[] = [
     id: "4",
     name: "Go",
     number: "#004",
-    image: "",
+    image: "/images/collection-go.png",
     types: ["Static", "Compiled"],
     stats: [
       { label: "HP", value: 88 },
@@ -85,7 +85,7 @@ const mockCollection: Pokemon[] = [
     id: "5",
     name: "C",
     number: "#005",
-    image: "",
+    image: "/images/collection-c.png",
     types: ["Static", "Low-Level"],
     stats: [
       { label: "HP", value: 70 },
@@ -102,8 +102,82 @@ const mockCollection: Pokemon[] = [
   },
   {
     id: "6",
-    name: "???",
+    name: "Java",
     number: "#006",
+    image: "",
+    types: ["Static", "OOP"],
+    stats: [
+      { label: "HP", value: 90 },
+      { label: "ATK", value: 60 },
+      { label: "SPD", value: 50 },
+    ],
+    about: "A widely-used object-oriented language.",
+    moves: [
+      { name: "Garbage Collect", type: "Normal", power: 55 },
+      { name: "Abstract Factory", type: "Normal", power: 65 },
+      { name: "NullPointer", type: "Normal", power: 75 },
+    ],
+    captured: true,
+  },
+  {
+    id: "7",
+    name: "???",
+    number: "#007",
+    image: "",
+    types: [],
+    stats: [],
+    about: "",
+    moves: [],
+    captured: false,
+  },
+  {
+    id: "8",
+    name: "???",
+    number: "#008",
+    image: "",
+    types: [],
+    stats: [],
+    about: "",
+    moves: [],
+    captured: false,
+  },
+  {
+    id: "9",
+    name: "???",
+    number: "#009",
+    image: "",
+    types: [],
+    stats: [],
+    about: "",
+    moves: [],
+    captured: false,
+  },
+  {
+    id: "10",
+    name: "???",
+    number: "#010",
+    image: "",
+    types: [],
+    stats: [],
+    about: "",
+    moves: [],
+    captured: false,
+  },
+  {
+    id: "11",
+    name: "???",
+    number: "#011",
+    image: "",
+    types: [],
+    stats: [],
+    about: "",
+    moves: [],
+    captured: false,
+  },
+  {
+    id: "12",
+    name: "???",
+    number: "#012",
     image: "",
     types: [],
     stats: [],
@@ -137,7 +211,15 @@ export function Collection() {
               className="flex flex-col items-center justify-end gap-1 bg-bg-card rounded-2xl h-32 pb-3 cursor-pointer overflow-hidden border-none text-text-primary hover:bg-bg-hover"
               onClick={() => void navigate(`/collection/${pokemon.id}`)}
             >
-              <div className="flex-1 flex items-center justify-center text-[40px]" />
+              <div className="flex-1 flex items-center justify-center w-full overflow-hidden">
+                {pokemon.image ? (
+                  <img
+                    src={pokemon.image}
+                    alt={pokemon.name}
+                    className="w-full h-20 object-cover"
+                  />
+                ) : null}
+              </div>
               <span className="text-xs font-semibold">{pokemon.name}</span>
             </button>
           ) : (
@@ -154,7 +236,7 @@ export function Collection() {
 
       <div className="flex-1" />
 
-      <TabBar active="TEAM" />
+      <TabBar active="COLLECTION" variant="collection" />
     </div>
   );
 }

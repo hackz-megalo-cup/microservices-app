@@ -4,12 +4,12 @@ interface RaidCardProps {
   id: string;
   name: string;
   type: string;
-  difficulty: string;
+  players: string;
   timer: string;
   image: string;
 }
 
-export function RaidCard({ id, name, type, difficulty, timer, image }: RaidCardProps) {
+export function RaidCard({ id, name, type, players, timer, image }: RaidCardProps) {
   const navigate = useNavigate();
 
   return (
@@ -28,9 +28,39 @@ export function RaidCard({ id, name, type, difficulty, timer, image }: RaidCardP
       <div className="flex flex-col gap-0.5 flex-1 min-w-0">
         <span className="text-base font-bold text-text-primary">{name}</span>
         <span className="text-xs text-text-secondary">{type}</span>
-        <div className="flex gap-2 items-center">
-          <span className="text-xs text-text-secondary">{difficulty}</span>
-          <span className="text-xs text-accent font-semibold">{timer}</span>
+        <div className="flex gap-3 items-center">
+          <span className="flex items-center gap-1 text-xs text-text-secondary">
+            <svg
+              className="w-3 h-3"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-label="Players"
+              role="img"
+            >
+              <path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2" />
+              <circle cx="9" cy="7" r="4" />
+              <path d="M22 21v-2a4 4 0 0 0-3-3.87" />
+              <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+            </svg>
+            {players}
+          </span>
+          <span className="flex items-center gap-1 text-xs text-text-secondary">
+            <svg
+              className="w-3 h-3"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              aria-label="Timer"
+              role="img"
+            >
+              <circle cx="12" cy="12" r="10" />
+              <polyline points="12 6 12 12 16 14" />
+            </svg>
+            {timer}
+          </span>
         </div>
       </div>
       <div className="shrink-0 bg-accent text-bg-primary text-xs font-bold rounded-3xl px-4 py-2">

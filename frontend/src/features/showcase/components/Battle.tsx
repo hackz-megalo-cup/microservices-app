@@ -25,7 +25,11 @@ export function Battle() {
       </section>
 
       <div className="flex-1 relative flex items-center justify-center">
-        <div className="w-[280px] h-[280px] bg-bg-card rounded-2xl" />
+        <img
+          src="/images/battle-python.png"
+          alt="Python"
+          className="w-[280px] h-[280px] object-cover rounded-2xl"
+        />
         <span className="absolute top-10 right-10 text-2xl font-bold text-accent">-342</span>
         <span className="absolute top-20 left-10 text-xl font-bold text-text-secondary opacity-60">
           -128

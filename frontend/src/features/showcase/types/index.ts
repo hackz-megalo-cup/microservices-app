@@ -2,7 +2,7 @@ export interface Raid {
   id: string;
   name: string;
   type: string;
-  difficulty: string;
+  players: string;
   timer: string;
   image: string;
 }
