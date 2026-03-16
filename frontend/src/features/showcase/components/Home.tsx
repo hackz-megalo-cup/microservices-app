@@ -1,7 +1,7 @@
 import type { Raid } from "../types";
 import "../styles/global.css";
 import { RaidCard } from "./ui/RaidCard";
-import { StatusBar } from "./ui/StatusBar";
+
 import { TabBar } from "./ui/TabBar";
 
 const mockRaids: Raid[] = [
@@ -34,8 +34,6 @@ const mockRaids: Raid[] = [
 export function Home() {
   return (
     <div className="showcase-screen">
-      <StatusBar />
-
       <header className="flex items-center justify-between px-6 py-3">
         <span className="text-xs font-bold tracking-widest text-text-secondary">POKÉMON</span>
         <button

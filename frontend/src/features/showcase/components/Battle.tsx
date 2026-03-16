@@ -1,11 +1,7 @@
 import "../styles/global.css";
-import { StatusBar } from "./ui/StatusBar";
-
 export function Battle() {
   return (
     <div className="showcase-screen">
-      <StatusBar />
-
       <section className="flex flex-col gap-3 px-6">
         <div className="flex items-center justify-center gap-3">
           <span className="text-lg font-bold text-text-primary">Python</span>
