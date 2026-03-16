@@ -95,7 +95,6 @@ export function RaidTestPage() {
   // --- Refs for mutable connection handles ---
   const transportRef = useRef<WebTransport | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
-  const streamWriterRef = useRef<WritableStreamDefaultWriter | null>(null);
   const dgWriterRef = useRef<WritableStreamDefaultWriter | null>(null);
 
   // --- Logging helper ---
@@ -125,8 +124,8 @@ export function RaidTestPage() {
             }
             break;
           case "special_used":
-            if (msg.hp != null) {
-              setBossHp(msg.hp);
+            if (msg.bossHp != null) {
+              setBossHp(msg.bossHp);
             }
             break;
           case "finished":
@@ -144,9 +143,21 @@ export function RaidTestPage() {
   const sendReliable = useCallback(
     async (payload: string) => {
       addLog("\u2192", payload);
-      if (protocol === "wt" && streamWriterRef.current) {
-        const encoded = new TextEncoder().encode(`${payload}\n`);
-        await streamWriterRef.current.write(encoded);
+      if (protocol === "wt" && transportRef.current) {
+        const stream = await transportRef.current.createBidirectionalStream();
+        const writer = stream.writable.getWriter();
+        const encoder = new TextEncoder();
+        await writer.write(encoder.encode(payload));
+        await writer.close();
+        // Drain and close the readable side
+        const reader = stream.readable.getReader();
+        try {
+          while (!(await reader.read()).done) {
+            // discard server response on this stream
+          }
+        } catch {
+          // stream closed
+        }
       } else if (protocol === "ws" && wsRef.current) {
         wsRef.current.send(payload);
       }
@@ -252,15 +263,9 @@ export function RaidTestPage() {
         await transport.ready;
         transportRef.current = transport;
 
-        const stream = await transport.createBidirectionalStream();
-        const writer = stream.writable.getWriter();
-        streamWriterRef.current = writer;
-
         const dgWriter = transport.datagrams.writable.getWriter();
         dgWriterRef.current = dgWriter;
 
-        const reader = stream.readable.getReader();
-        readStream(reader);
         readDatagrams(transport);
         readIncomingUniStreams(transport);
 
@@ -292,7 +297,6 @@ export function RaidTestPage() {
     certHash,
     handleMessage,
     addLog,
-    readStream,
     readDatagrams,
     readIncomingUniStreams,
   ]);
@@ -302,7 +306,6 @@ export function RaidTestPage() {
     if (transportRef.current) {
       transportRef.current.close();
       transportRef.current = null;
-      streamWriterRef.current = null;
       dgWriterRef.current = null;
     }
     if (wsRef.current) {
