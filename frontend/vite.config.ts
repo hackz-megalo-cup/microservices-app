@@ -7,5 +7,13 @@ export default defineConfig({
   server: {
     host: "0.0.0.0",
     port: 5173
-  }
+  },
+  build: {
+    rolldownOptions: {
+      onLog(level, log, defaultHandler) {
+        if (log.code === "EVAL") return;
+        defaultHandler(level, log);
+      },
+    },
+  },
 });
