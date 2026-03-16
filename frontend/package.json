@@ -34,10 +34,10 @@
   },
   "overrides": {
     "@tailwindcss/vite": {
-      "vite": "8.0.0"
+      "vite": "$vite"
     },
     "@vitejs/plugin-react": {
-      "vite": "8.0.0"
+      "vite": "$vite"
     }
   },
   "devDependencies": {
