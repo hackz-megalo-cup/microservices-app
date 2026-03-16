@@ -1,12 +1,12 @@
 import { BrowserRouter, Route, Routes } from "react-router";
-import { ApiTestPage } from "../features/api-test/components/ApiTestPage";
-import { Battle } from "../features/showcase/components/Battle";
-import { Capture } from "../features/showcase/components/Capture";
-import { Collection } from "../features/showcase/components/Collection";
-import { Detail } from "../features/showcase/components/Detail";
-import { Home } from "../features/showcase/components/Home";
-import { Lobby } from "../features/showcase/components/Lobby";
-import { Victory } from "../features/showcase/components/Victory";
+import { ApiTestPage } from "../features/api-test/components/api-test-page";
+import { Battle } from "../features/showcase/components/battle";
+import { Capture } from "../features/showcase/components/capture";
+import { Collection } from "../features/showcase/components/collection";
+import { Detail } from "../features/showcase/components/detail";
+import { Home } from "../features/showcase/components/home";
+import { Lobby } from "../features/showcase/components/lobby";
+import { Victory } from "../features/showcase/components/victory";
 
 export function App() {
   return (
