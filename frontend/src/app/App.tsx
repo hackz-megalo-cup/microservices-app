@@ -1,5 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { ApiTestPage } from "../features/api-test/components/ApiTestPage";
+import { RaidTestPage } from "../features/raid-test/components/RaidTestPage";
 import { Battle } from "../features/showcase/components/Battle";
 import { Capture } from "../features/showcase/components/Capture";
 import { Collection } from "../features/showcase/components/Collection";
@@ -20,6 +21,7 @@ export function App() {
         <Route path="/collection" element={<Collection />} />
         <Route path="/collection/:id" element={<Detail />} />
         <Route path="/api-test" element={<ApiTestPage />} />
+        <Route path="/raid-test" element={<RaidTestPage />} />
       </Routes>
     </BrowserRouter>
   );
