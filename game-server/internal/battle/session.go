@@ -39,6 +39,24 @@ func NewSession(lobbyID, bossPokemonID uuid.UUID, bossHP int32, matchups TypeMat
 	}
 }
 
+type SessionInfo struct {
+	SessionID       uuid.UUID
+	BossHP          int32
+	BossMaxHP       int32
+	TimeoutDuration time.Duration
+}
+
+func (s *Session) Info() SessionInfo {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return SessionInfo{
+		SessionID:       s.SessionID,
+		BossHP:          s.BossHP,
+		BossMaxHP:       s.BossMaxHP,
+		TimeoutDuration: s.TimeoutDuration,
+	}
+}
+
 func (s *Session) AddParticipant(userID uuid.UUID, p *Participant) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
@@ -52,17 +70,17 @@ func (s *Session) HasParticipant(userID uuid.UUID) bool {
 	return ok
 }
 
-func (s *Session) ApplyTap(userID uuid.UUID) int32 {
+func (s *Session) ApplyTap(userID uuid.UUID) (int32, int32, int32) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if s.finished {
-		return 0
+		return 0, s.BossHP, s.BossMaxHP
 	}
 
 	p, ok := s.Participants[userID]
 	if !ok {
-		return 0
+		return 0, s.BossHP, s.BossMaxHP
 	}
 
 	p.TapCount++
@@ -74,24 +92,24 @@ func (s *Session) ApplyTap(userID uuid.UUID) int32 {
 		s.result = "win"
 		close(s.doneCh)
 	}
-	return dmg
+	return dmg, s.BossHP, s.BossMaxHP
 }
 
-func (s *Session) ApplySpecial(userID uuid.UUID) (int32, bool) {
+func (s *Session) ApplySpecial(userID uuid.UUID) (int32, int32, int32, bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if s.finished {
-		return 0, false
+		return 0, s.BossHP, s.BossMaxHP, false
 	}
 
 	p, ok := s.Participants[userID]
 	if !ok {
-		return 0, false
+		return 0, s.BossHP, s.BossMaxHP, false
 	}
 
 	if p.TapCount < p.RequiredForSpecial {
-		return 0, false
+		return 0, s.BossHP, s.BossMaxHP, false
 	}
 
 	p.TapCount = 0
@@ -103,7 +121,7 @@ func (s *Session) ApplySpecial(userID uuid.UUID) (int32, bool) {
 		s.result = "win"
 		close(s.doneCh)
 	}
-	return dmg, true
+	return dmg, s.BossHP, s.BossMaxHP, true
 }
 
 func (s *Session) Timeout() {

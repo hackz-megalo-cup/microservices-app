@@ -51,7 +51,7 @@ func TestHandleMessage_Tap(t *testing.T) {
 		t.Error("expected hp message via unreliable broadcast")
 	}
 
-	if session.BossHP >= 50000 {
+	if session.Info().BossHP >= 50000 {
 		t.Error("boss HP should have decreased after tap")
 	}
 }

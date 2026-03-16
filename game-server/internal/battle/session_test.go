@@ -34,12 +34,12 @@ func TestSession_ApplyTap(t *testing.T) {
 		PokemonType:   "static_typing",
 	})
 
-	dmg := s.ApplyTap(userID)
+	dmg, currentHP, _ := s.ApplyTap(userID)
 	if dmg <= 0 {
 		t.Errorf("expected positive damage, got %d", dmg)
 	}
-	if s.BossHP != 50000-dmg {
-		t.Errorf("BossHP = %d, want %d", s.BossHP, 50000-dmg)
+	if currentHP != 50000-dmg {
+		t.Errorf("BossHP = %d, want %d", currentHP, 50000-dmg)
 	}
 }
 
@@ -52,7 +52,7 @@ func TestSession_BossDefeated(t *testing.T) {
 		PokemonType:   "static_typing",
 	})
 
-	s.ApplyTap(userID)
+	s.ApplyTap(userID) // returns are unused here
 
 	if !s.IsFinished() {
 		t.Error("session should be finished when boss HP <= 0")
@@ -66,7 +66,7 @@ func TestSession_UnknownParticipant(t *testing.T) {
 	s := newTestSession(50000)
 	unknownID := uuid.New()
 
-	dmg := s.ApplyTap(unknownID)
+	dmg, _, _ := s.ApplyTap(unknownID)
 	if dmg != 0 {
 		t.Errorf("expected 0 damage for unknown participant, got %d", dmg)
 	}

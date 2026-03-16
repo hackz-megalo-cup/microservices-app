@@ -58,13 +58,14 @@ func (h *Handler) handleJoin(userID uuid.UUID) {
 		participants = append(participants, uid.String())
 	}
 
+	info := h.session.Info()
 	joined := JoinedMessage{
 		T:            "joined",
-		SessionID:    h.session.SessionID.String(),
-		BossHP:       h.session.BossHP,
-		BossMaxHP:    h.session.BossMaxHP,
+		SessionID:    info.SessionID.String(),
+		BossHP:       info.BossHP,
+		BossMaxHP:    info.BossMaxHP,
 		Participants: participants,
-		TimeoutSec:   int(h.session.TimeoutDuration / time.Second),
+		TimeoutSec:   int(info.TimeoutDuration / time.Second),
 	}
 
 	data, err := MarshalJSON(joined)
@@ -74,7 +75,7 @@ func (h *Handler) handleJoin(userID uuid.UUID) {
 	}
 	h.hub.BroadcastReliable(data)
 
-	log.Printf("player %s joined session %s", userID, h.session.SessionID)
+	log.Printf("player %s joined session %s", userID, info.SessionID)
 }
 
 func (h *Handler) handleTap(userID uuid.UUID) {
@@ -82,15 +83,15 @@ func (h *Handler) handleTap(userID uuid.UUID) {
 		return
 	}
 
-	dmg := h.session.ApplyTap(userID)
+	dmg, currentHP, maxHP := h.session.ApplyTap(userID)
 	if dmg == 0 {
 		return
 	}
 
 	hp := HPMessage{
 		T:       "hp",
-		HP:      h.session.BossHP,
-		MaxHP:   h.session.BossMaxHP,
+		HP:      currentHP,
+		MaxHP:   maxHP,
 		LastDmg: dmg,
 		By:      userID.String(),
 	}
@@ -111,7 +112,7 @@ func (h *Handler) handleSpecial(userID uuid.UUID) {
 		return
 	}
 
-	dmg, ok := h.session.ApplySpecial(userID)
+	dmg, currentHP, maxHP, ok := h.session.ApplySpecial(userID)
 	if !ok {
 		return
 	}
@@ -121,7 +122,7 @@ func (h *Handler) handleSpecial(userID uuid.UUID) {
 		UserID:   userID.String(),
 		MoveName: "Debug Blast",
 		Dmg:      dmg,
-		BossHP:   h.session.BossHP,
+		BossHP:   currentHP,
 	}
 
 	data, err := MarshalJSON(special)
@@ -133,12 +134,16 @@ func (h *Handler) handleSpecial(userID uuid.UUID) {
 	// Also send HP update
 	hp := HPMessage{
 		T:       "hp",
-		HP:      h.session.BossHP,
-		MaxHP:   h.session.BossMaxHP,
+		HP:      currentHP,
+		MaxHP:   maxHP,
 		LastDmg: dmg,
 		By:      userID.String(),
 	}
-	hpData, _ := MarshalJSON(hp)
+	hpData, err := MarshalJSON(hp)
+	if err != nil {
+		log.Printf("marshal hp error: %v", err)
+		return
+	}
 	h.hub.Broadcast(hpData)
 
 	if h.session.IsFinished() {
@@ -147,12 +152,12 @@ func (h *Handler) handleSpecial(userID uuid.UUID) {
 }
 
 func (h *Handler) broadcastFinished() {
-	elapsed := int(time.Since(h.session.StartedAt).Seconds())
+	info := h.session.Info()
 	finished := FinishedMessage{
 		T:       "finished",
 		Result:  h.session.Result(),
-		BossHP:  h.session.BossHP,
-		Elapsed: elapsed,
+		BossHP:  info.BossHP,
+		Elapsed: int(time.Since(h.session.StartedAt).Seconds()),
 	}
 
 	data, err := MarshalJSON(finished)

@@ -7,6 +7,7 @@ import (
 	"net/http"
 	"os"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/coder/websocket"
@@ -55,9 +56,15 @@ func main() {
 		wsCert = wtCert
 	}
 
-	// Hub and handler (created when session starts)
-	var hub *transport.Hub
-	var handler *transport.Handler
+	// Hub and handler (created when session starts), protected by mu
+	var (
+		mu      sync.RWMutex
+		hub     *transport.Hub
+		handler *transport.Handler
+		session *battle.Session
+	)
+
+	sessionReady := make(chan struct{})
 
 	kafkaBrokers := os.Getenv("KAFKA_BROKERS")
 	if kafkaBrokers == "" {
@@ -69,27 +76,33 @@ func main() {
 
 	// 5. WebTransport handler
 	onWT := func(wtSession *webtransport.Session) {
-		if hub == nil || handler == nil {
+		mu.RLock()
+		h, hdl := hub, handler
+		mu.RUnlock()
+		if h == nil || hdl == nil {
 			log.Println("wt connection rejected: no active session")
 			wtSession.CloseWithError(0, "no session")
 			return
 		}
 		userID := uuid.New()
 		conn := transport.NewWTConn(wtSession)
-		hub.Register(userID, conn)
+		h.Register(userID, conn)
 		log.Printf("wt client connected: %s", userID)
 
 		messages := transport.ReadWT(ctx, wtSession)
 		for msg := range messages {
-			handler.HandleMessage(userID, msg)
+			hdl.HandleMessage(userID, msg)
 		}
-		hub.Unregister(userID)
+		h.Unregister(userID)
 		log.Printf("wt client disconnected: %s", userID)
 	}
 
 	// 6. WebSocket handler
 	onWS := func(w http.ResponseWriter, r *http.Request) {
-		if hub == nil || handler == nil {
+		mu.RLock()
+		h, hdl := hub, handler
+		mu.RUnlock()
+		if h == nil || hdl == nil {
 			http.Error(w, "no active session", http.StatusServiceUnavailable)
 			return
 		}
@@ -102,14 +115,14 @@ func main() {
 		}
 		userID := uuid.New()
 		conn := transport.NewWSConn(wsConn)
-		hub.Register(userID, conn)
+		h.Register(userID, conn)
 		log.Printf("ws client connected: %s", userID)
 
 		messages := transport.ReadWS(ctx, wsConn)
 		for msg := range messages {
-			handler.HandleMessage(userID, msg)
+			hdl.HandleMessage(userID, msg)
 		}
-		hub.Unregister(userID)
+		h.Unregister(userID)
 		log.Printf("ws client disconnected: %s", userID)
 	}
 
@@ -122,7 +135,6 @@ func main() {
 	}()
 
 	// 8. Watch for Allocation
-	var session *battle.Session
 	if err := lc.WatchAllocated(func(annotations map[string]string) {
 		lobbyIDStr := annotations["raid.lobby-id"]
 		bossPokemonIDStr := annotations["raid.boss-pokemon-id"]
@@ -131,10 +143,14 @@ func main() {
 		bossPokemonID, _ := uuid.Parse(bossPokemonIDStr)
 
 		matchups := battle.TypeMatchup{}
-		session = battle.NewSession(lobbyID, bossPokemonID, 50000, matchups, 300*time.Second)
 
+		mu.Lock()
+		session = battle.NewSession(lobbyID, bossPokemonID, 50000, matchups, 300*time.Second)
 		hub = transport.NewHub()
 		handler = transport.NewHandler(hub, session)
+		mu.Unlock()
+
+		close(sessionReady)
 
 		log.Printf("battle session created: lobby=%s boss=%s", lobbyIDStr, bossPokemonIDStr)
 	}); err != nil {
@@ -153,23 +169,24 @@ func main() {
 	log.Println("game-server ready, waiting for allocation...")
 
 	// Wait for session then battle completion
-	for session == nil {
-		time.Sleep(100 * time.Millisecond)
-	}
-	<-session.Done()
-	log.Printf("battle finished: result=%s", session.Result())
+	<-sessionReady
+	mu.RLock()
+	s := session
+	mu.RUnlock()
+	<-s.Done()
+	log.Printf("battle finished: result=%s", s.Result())
 
 	// Kafka publish
 	kClient, err := kgo.NewClient(kgo.SeedBrokers(strings.Split(kafkaBrokers, ",")...))
 	if err != nil {
 		log.Printf("kafka client error: %v", err)
 	} else {
-		participantIDs := session.ParticipantIDs()
+		participantIDs := s.ParticipantIDs()
 		event := gamekafka.BattleFinishedEvent{
-			SessionID:      session.SessionID,
-			LobbyID:        session.LobbyID,
-			BossPokemonID:  session.BossPokemonID,
-			Result:         session.Result(),
+			SessionID:      s.SessionID,
+			LobbyID:        s.LobbyID,
+			BossPokemonID:  s.BossPokemonID,
+			Result:         s.Result(),
 			ParticipantIDs: participantIDs,
 		}
 		record := gamekafka.BuildBattleFinishedRecord(event)

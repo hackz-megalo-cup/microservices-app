@@ -5,6 +5,7 @@ import (
 	"context"
 	"io"
 	"log"
+	"sync"
 
 	"github.com/coder/websocket"
 	webtransport "github.com/quic-go/webtransport-go"
@@ -14,9 +15,12 @@ import (
 // and sends them all to the returned channel.
 func ReadWT(ctx context.Context, session *webtransport.Session) <-chan []byte {
 	ch := make(chan []byte, 64)
+	var wg sync.WaitGroup
+	wg.Add(2)
 
 	// Read from bidirectional streams (join, special)
 	go func() {
+		defer wg.Done()
 		for {
 			stream, err := session.AcceptStream(ctx)
 			if err != nil {
@@ -39,6 +43,7 @@ func ReadWT(ctx context.Context, session *webtransport.Session) <-chan []byte {
 
 	// Read datagrams (tap)
 	go func() {
+		defer wg.Done()
 		for {
 			data, err := session.ReceiveDatagram(ctx)
 			if err != nil {
@@ -51,9 +56,9 @@ func ReadWT(ctx context.Context, session *webtransport.Session) <-chan []byte {
 		}
 	}()
 
-	// Close channel when context is done
+	// Close channel after both readers exit
 	go func() {
-		<-ctx.Done()
+		wg.Wait()
 		close(ch)
 	}()
 
