@@ -1,10 +1,16 @@
-@import "./tokens.css";
+@import "tailwindcss";
 
-.showcase-screen {
-  background: var(--bg-primary);
-  color: var(--text-primary);
-  font-family: var(--font-family);
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
+@theme {
+  --color-bg-primary: #0f172a;
+  --color-bg-card: #1e293b;
+  --color-bg-hover: #334155;
+  --color-accent: #06b6d4;
+  --color-accent-dark: #0891b2;
+  --color-accent-glow: #06b6d420;
+  --color-text-primary: #f1f5f9;
+  --color-text-secondary: #94a3b8;
+  --color-locked: #151d2e;
+  --color-green: #22c55e;
+  --font-sans: "Inter", sans-serif;
+  --shadow-card: 0 4px 16px #00000040;
 }

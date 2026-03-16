@@ -1,7 +1,6 @@
 import { useNavigate } from "react-router";
 import type { Pokemon } from "../types";
 import "../styles/global.css";
-import styles from "./Collection.module.css";
 import { NavBar } from "./ui/NavBar";
 import { TabBar } from "./ui/TabBar";
 
@@ -122,33 +121,38 @@ export function Collection() {
     <div className="showcase-screen">
       <NavBar title="COLLECTION" rightIcon="search" />
 
-      <div className={styles.hero}>
-        <span className={styles.count}>{capturedCount}</span>
-        <span className={styles.total}>/ {mockCollection.length} captured</span>
+      <div className="flex items-end gap-2 py-2 px-6">
+        <span className="text-5xl font-bold leading-none text-text-primary">{capturedCount}</span>
+        <span className="text-base text-text-secondary pb-1">
+          / {mockCollection.length} captured
+        </span>
       </div>
 
-      <div className={styles.grid}>
+      <div className="grid grid-cols-2 gap-3 px-4 py-1 flex-1">
         {mockCollection.map((pokemon) =>
           pokemon.captured ? (
             <button
               type="button"
               key={pokemon.id}
-              className={styles.card}
+              className="flex flex-col items-center justify-end gap-1 bg-bg-card rounded-2xl h-32 pb-3 cursor-pointer overflow-hidden border-none text-text-primary hover:bg-bg-hover"
               onClick={() => void navigate(`/collection/${pokemon.id}`)}
             >
-              <div className={styles.cardImage} />
-              <span className={styles.cardName}>{pokemon.name}</span>
+              <div className="flex-1 flex items-center justify-center text-[40px]" />
+              <span className="text-xs font-semibold">{pokemon.name}</span>
             </button>
           ) : (
-            <div key={pokemon.id} className={`${styles.card} ${styles.locked}`}>
-              <span className={styles.lockIcon}>🔒</span>
-              <span className={styles.cardName}>{pokemon.name}</span>
+            <div
+              key={pokemon.id}
+              className="flex flex-col items-center justify-center gap-1 bg-locked rounded-2xl h-32 pb-3 overflow-hidden border-none text-text-primary cursor-default hover:bg-locked"
+            >
+              <span className="text-2xl opacity-50">🔒</span>
+              <span className="text-xs font-semibold">{pokemon.name}</span>
             </div>
           ),
         )}
       </div>
 
-      <div className={styles.spacer} />
+      <div className="flex-1" />
 
       <TabBar active="TEAM" />
     </div>

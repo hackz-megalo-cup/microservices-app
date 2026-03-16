@@ -1,43 +1,45 @@
 import { useNavigate } from "react-router";
 import "../styles/global.css";
-import styles from "./Victory.module.css";
 
 const rewards = [
-  { icon: "⚡", value: "+500", label: "XP" },
-  { icon: "💎", value: "+3", label: "Gems" },
-  { icon: "🎟️", value: "+1", label: "Ticket" },
+  { icon: "\u26A1", value: "+500", label: "XP" },
+  { icon: "\uD83D\uDC8E", value: "+3", label: "Gems" },
+  { icon: "\uD83C\uDF9F\uFE0F", value: "+1", label: "Ticket" },
 ] as const;
 
 export function Victory() {
   const navigate = useNavigate();
 
   return (
-    <div className={`showcase-screen ${styles.screen}`}>
-      <div className={styles.trophyFrame} />
-      <span className={styles.clearLabel}>RAID CLEAR</span>
-      <h1 className={styles.title}>Victory</h1>
-      <p className={styles.subtitle}>Python defeated in 2:31</p>
+    <div className="showcase-screen items-center gap-8 pt-12 px-6 pb-6">
+      <div className="w-[120px] h-[120px] rounded-full bg-bg-card" />
+      <span className="text-xs font-bold tracking-widest text-accent">RAID CLEAR</span>
+      <h1 className="text-4xl font-bold text-text-primary m-0">Victory</h1>
+      <p className="text-sm text-text-secondary m-0">Python defeated in 2:31</p>
 
-      <div className={styles.rewardsCard}>
-        <span className={styles.rewardsTitle}>Rewards</span>
-        <div className={styles.rewardsRow}>
+      <div className="flex flex-col gap-4 bg-bg-card rounded-2xl p-5 w-full">
+        <span className="text-sm font-bold text-text-primary">Rewards</span>
+        <div className="flex gap-3">
           {rewards.map((reward) => (
-            <div key={reward.label} className={styles.rewardItem}>
-              <span className={styles.rewardIcon}>{reward.icon}</span>
-              <span className={styles.rewardValue}>{reward.value}</span>
-              <span className={styles.rewardLabel}>{reward.label}</span>
+            <div
+              key={reward.label}
+              className="flex-1 flex flex-col items-center gap-1 bg-bg-primary rounded-lg p-4"
+            >
+              <span className="text-2xl">{reward.icon}</span>
+              <span className="text-sm font-bold text-accent">{reward.value}</span>
+              <span className="text-xs text-text-secondary">{reward.label}</span>
             </div>
           ))}
         </div>
       </div>
 
-      <div className={styles.mvpRow}>
-        <span className={styles.mvpText}>MVP — RustLover42</span>
+      <div className="flex items-center px-5 py-4 bg-bg-card rounded-2xl border-l-4 border-accent w-full">
+        <span className="text-sm font-bold text-text-primary">MVP — RustLover42</span>
       </div>
 
       <button
         type="button"
-        className={styles.captureButton}
+        className="w-full h-14 bg-accent rounded-3xl text-base font-bold text-bg-primary cursor-pointer border-none hover:opacity-90"
         onClick={() => void navigate("/capture/1")}
       >
         CAPTURE

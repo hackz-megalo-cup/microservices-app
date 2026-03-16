@@ -1,7 +1,6 @@
 import { useParams } from "react-router";
 import type { Pokemon } from "../types";
 import "../styles/global.css";
-import styles from "./Detail.module.css";
 import { NavBar } from "./ui/NavBar";
 
 const mockPokemonMap: Record<string, Pokemon> = {
@@ -115,7 +114,7 @@ export function Detail() {
     return (
       <div className="showcase-screen">
         <NavBar title="NOT FOUND" />
-        <p style={{ textAlign: "center", padding: 24 }}>Pokemon not found</p>
+        <p className="text-center p-6">Pokemon not found</p>
       </div>
     );
   }
@@ -124,42 +123,56 @@ export function Detail() {
     <div className="showcase-screen">
       <NavBar title={pokemon.number} rightIcon="heart" />
 
-      <div className={styles.heroArea}>
-        <div className={styles.heroModel} />
+      <div
+        className="flex items-center justify-center h-[200px]"
+        style={{ background: "radial-gradient(circle, var(--color-accent-glow), transparent)" }}
+      >
+        <div className="w-[200px] h-[200px] rounded-full bg-bg-card" />
       </div>
 
-      <div className={styles.nameSection}>
-        <h1 className={styles.name}>{pokemon.name}</h1>
-        <div className={styles.badges}>
+      <div className="flex flex-col items-center gap-3 px-6">
+        <h1 className="text-2xl font-bold m-0">{pokemon.name}</h1>
+        <div className="flex gap-2">
           {pokemon.types.map((type) => (
-            <span key={type} className={styles.badge}>
+            <span
+              key={type}
+              className="text-xs text-text-secondary bg-bg-card px-4 py-2 rounded-full"
+            >
               {type}
             </span>
           ))}
         </div>
       </div>
 
-      <div className={styles.statsRow}>
+      <div className="flex gap-3 pt-4 px-6">
         {pokemon.stats.map((stat) => (
-          <div key={stat.label} className={styles.statCard}>
-            <span className={styles.statValue}>{stat.value}</span>
-            <span className={styles.statLabel}>{stat.label}</span>
+          <div
+            key={stat.label}
+            className="flex-1 flex flex-col items-center gap-1 bg-bg-card rounded-2xl p-4"
+          >
+            <span className="text-2xl font-bold text-accent">{stat.value}</span>
+            <span className="text-xs font-semibold tracking-wide text-text-secondary">
+              {stat.label}
+            </span>
           </div>
         ))}
       </div>
 
-      <div className={styles.aboutWrapper}>
-        <div className={styles.aboutCard}>
-          <span className={styles.sectionTitle}>About</span>
-          <p className={styles.aboutText}>{pokemon.about}</p>
+      <div className="flex flex-col gap-3 px-6">
+        <div className="flex flex-col gap-2 bg-bg-card rounded-2xl p-4">
+          <span className="text-sm font-bold">About</span>
+          <p className="text-xs text-text-secondary leading-relaxed m-0">{pokemon.about}</p>
         </div>
 
-        <div className={styles.movesSection}>
-          <span className={styles.sectionTitle}>Moves</span>
+        <div className="flex flex-col gap-2">
+          <span className="text-sm font-bold">Moves</span>
           {pokemon.moves.map((move) => (
-            <div key={move.name} className={styles.moveRow}>
-              <span className={styles.moveName}>{move.name}</span>
-              <span className={styles.movePower}>{move.power}</span>
+            <div
+              key={move.name}
+              className="flex justify-between items-center bg-bg-card rounded-2xl px-4 py-3"
+            >
+              <span className="text-sm">{move.name}</span>
+              <span className="text-sm font-bold text-accent">{move.power}</span>
             </div>
           ))}
         </div>

@@ -1,5 +1,4 @@
 import { useNavigate } from "react-router";
-import styles from "./NavBar.module.css";
 
 interface NavBarProps {
   title: string;
@@ -16,22 +15,28 @@ export function NavBar({ title, rightIcon = "none" }: NavBarProps) {
   const navigate = useNavigate();
 
   return (
-    <nav className={styles.bar}>
+    <nav className="flex items-center justify-between h-14 px-4">
       <button
         type="button"
-        className={styles.iconButton}
+        className="flex items-center justify-center w-11 h-11 bg-transparent text-text-secondary text-lg cursor-pointer rounded-lg hover:bg-bg-hover"
         onClick={() => void navigate(-1)}
         aria-label="Go back"
       >
         ←
       </button>
-      <span className={styles.title}>{title}</span>
+      <span className="text-xs font-bold tracking-widest text-text-secondary uppercase">
+        {title}
+      </span>
       {rightIcon !== "none" ? (
-        <button type="button" className={styles.iconButton} aria-label={rightIcon}>
+        <button
+          type="button"
+          className="flex items-center justify-center w-11 h-11 bg-transparent text-text-secondary text-lg cursor-pointer rounded-lg hover:bg-bg-hover"
+          aria-label={rightIcon}
+        >
           {iconMap[rightIcon]}
         </button>
       ) : (
-        <div className={styles.spacer} />
+        <div className="w-11 h-11" />
       )}
     </nav>
   );

@@ -1,6 +1,5 @@
 import type { Raid } from "../types";
 import "../styles/global.css";
-import styles from "./Home.module.css";
 import { RaidCard } from "./ui/RaidCard";
 import { StatusBar } from "./ui/StatusBar";
 import { TabBar } from "./ui/TabBar";
@@ -37,21 +36,28 @@ export function Home() {
     <div className="showcase-screen">
       <StatusBar />
 
-      <header className={styles.header}>
-        <span className={styles.headerLabel}>POKÉMON</span>
-        <button type="button" className={styles.bellButton} aria-label="Notifications">
+      <header className="flex items-center justify-between px-6 py-3">
+        <span className="text-xs font-bold tracking-widest text-text-secondary">POKÉMON</span>
+        <button
+          type="button"
+          className="flex items-center justify-center w-11 h-11 bg-transparent text-xl cursor-pointer rounded-lg hover:bg-bg-hover"
+          aria-label="Notifications"
+        >
           🔔
         </button>
       </header>
 
-      <section className={styles.hero}>
-        <div className={styles.bossImage} />
-        <h1 className={styles.heroTitle}>Python</h1>
-        <p className={styles.heroSubtitle}>Dynamic / Interpreted</p>
+      <section
+        className="flex flex-col items-center justify-center gap-3 h-[280px]"
+        style={{ background: "radial-gradient(circle, var(--color-accent-glow), transparent)" }}
+      >
+        <div className="w-[200px] h-[200px] rounded-full bg-bg-card" />
+        <h1 className="text-2xl font-bold text-text-primary m-0">Python</h1>
+        <p className="text-sm text-text-secondary m-0">Dynamic / Interpreted</p>
       </section>
 
-      <section className={styles.raidSection}>
-        <span className={styles.raidLabel}>ACTIVE RAIDS</span>
+      <section className="flex flex-col gap-3 px-6">
+        <span className="text-xs font-bold tracking-widest text-text-secondary">ACTIVE RAIDS</span>
         {mockRaids.map((raid) => (
           <RaidCard
             key={raid.id}
@@ -65,7 +71,7 @@ export function Home() {
         ))}
       </section>
 
-      <div className={styles.spacer} />
+      <div className="flex-1" />
 
       <TabBar active="HOME" />
     </div>
