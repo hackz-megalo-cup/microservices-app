@@ -45,11 +45,23 @@ func runLocalDev() {
 	port := int32(0)
 	fmt.Sscanf(portStr, "%d", &port)
 
-	// Generate ephemeral cert (used for both WT and WS)
+	// Generate ephemeral cert for WebTransport
 	wtCert, certHash, err := cert.GenerateEphemeral()
 	if err != nil {
 		log.Fatalf("cert gen: %v", err)
 	}
+
+	// Load mkcert certificate for WebSocket (browser needs trusted CA)
+	wsCertPath := os.Getenv("WS_CERT_PATH")
+	if wsCertPath == "" {
+		wsCertPath = "/tmp"
+	}
+	wsCert, err := tls.LoadX509KeyPair(wsCertPath+"/tls.crt", wsCertPath+"/tls.key")
+	if err != nil {
+		log.Printf("mkcert load failed (WS will use ephemeral cert — browser may reject): %v", err)
+		wsCert = wtCert
+	}
+
 	log.Printf("port: %d", port)
 	log.Printf("cert hash: %s", certHash)
 	log.Println("======================")
@@ -99,7 +111,7 @@ func runLocalDev() {
 		log.Printf("ws client disconnected: %s", userID)
 	}
 
-	srv := transport.NewDualServer(port, wtCert, wtCert, onWT, onWS)
+	srv := transport.NewDualServer(port, wtCert, wsCert, onWT, onWS)
 	go func() {
 		if err := srv.Start(); err != nil {
 			log.Printf("server error: %v", err)
