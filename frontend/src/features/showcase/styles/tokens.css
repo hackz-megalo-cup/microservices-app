@@ -1,0 +1,16 @@
+:root {
+  --bg-primary: #0F172A;
+  --bg-card: #1E293B;
+  --bg-hover: #334155;
+  --accent: #06B6D4;
+  --accent-dark: #0891B2;
+  --accent-glow: #06B6D420;
+  --text-primary: #F1F5F9;
+  --text-secondary: #94A3B8;
+  --font-family: 'Inter', sans-serif;
+  --radius-sm: 8px;
+  --radius-md: 16px;
+  --radius-lg: 24px;
+  --radius-full: 100px;
+  --shadow-card: 0 4px 16px #00000040;
+}
