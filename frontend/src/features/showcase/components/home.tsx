@@ -1,8 +1,8 @@
 import type { Raid } from "../types";
 import "../styles/global.css";
-import { RaidCard } from "./ui/RaidCard";
+import { RaidCard } from "./ui/raid-card";
 
-import { TabBar } from "./ui/TabBar";
+import { TabBar } from "./ui/tab-bar";
 
 const mockRaids: Raid[] = [
   {

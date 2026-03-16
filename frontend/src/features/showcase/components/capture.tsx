@@ -1,5 +1,5 @@
 import "../styles/global.css";
-import { NavBar } from "./ui/NavBar";
+import { NavBar } from "./ui/nav-bar";
 
 export function Capture() {
   return (

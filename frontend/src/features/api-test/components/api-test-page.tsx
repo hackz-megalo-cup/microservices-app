@@ -1,6 +1,4 @@
-import { AuthPanel } from "../../auth/components/AuthPanel";
-import { GatewayDemo } from "../../gateway/components/GatewayDemo";
-import { GreeterDemo } from "../../greeter/components/GreeterDemo";
+import { AuthPanel, GatewayDemo, GreeterDemo } from "../../../lib/demo-components";
 
 export function ApiTestPage() {
   return (
