@@ -2,8 +2,6 @@ import { initTracing } from "../lib/tracing";
 
 initTracing();
 
-import "../features/showcase/styles/global.css";
-
 import React from "react";
 import { createRoot } from "react-dom/client";
 import { App } from "./App";
