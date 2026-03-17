@@ -136,7 +136,10 @@ jobs:
   nix-build:
     needs: [changes]
     if: >-
-      needs.changes.outputs.go == 'true'
+      github.event_name == 'workflow_dispatch'
+      || needs.changes.outputs.go == 'true'
+      || needs.changes.outputs.node == 'true'
+      || needs.changes.outputs.frontend == 'true'
       || needs.changes.outputs.nix == 'true'
     runs-on: ${{ github.event_name == 'workflow_dispatch' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     permissions:
@@ -156,11 +159,19 @@ jobs:
           name: hackz-megalo-cup
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
-      - name: Build service binaries
-        run: nix build .#caller .#greeter .#gateway
+      - name: Build Go service binaries
+        run: >
+          nix build
+          .#caller .#gateway .#greeter
+          .#item .#masterdata .#projector .#raid-lobby
 
       - name: Build service images
-        run: nix build .#caller-image .#greeter-image .#gateway-image
+        run: >
+          nix build
+          .#auth-service-image .#custom-lang-service-image
+          .#caller-image .#gateway-image .#greeter-image
+          .#frontend-image
+          .#item-image .#masterdata-image .#projector-image .#raid-lobby-image
 
       - name: Push images to ghcr.io
         if: >-
@@ -169,11 +180,20 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin
-          for svc in caller greeter gateway; do
-            nix run .#${svc}-image.copyToRegistry -- docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }}
+          services=(
+            auth-service custom-lang-service
+            caller gateway greeter
+            frontend
+            item masterdata projector raid-lobby
+          )
+          export REGISTRY_AUTH_FILE="$RUNNER_TEMP/containers-auth.json"
+          echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin --authfile "$REGISTRY_AUTH_FILE"
+          for svc in "${services[@]}"; do
+            nix run .#${svc}-image.copyTo -- \
+              --authfile "$REGISTRY_AUTH_FILE" \
+              docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }}
             if [ "$GITHUB_REF" = "refs/heads/main" ]; then
-              skopeo copy \
+              skopeo copy --authfile "$REGISTRY_AUTH_FILE" \
                 docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }} \
                 docker://ghcr.io/hackz-megalo-cup/${svc}:latest
             fi
