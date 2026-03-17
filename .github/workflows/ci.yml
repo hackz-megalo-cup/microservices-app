@@ -163,18 +163,17 @@ jobs:
         run: nix build .#caller-image .#greeter-image .#gateway-image
 
       - name: Push images to ghcr.io
-        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        if: >-
+          (github.ref == 'refs/heads/main' && github.event_name == 'push')
+          || github.event_name == 'workflow_dispatch'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          AUTH_FILE="$(mktemp)"
-          echo '{}' > "$AUTH_FILE"
-          echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin --authfile "$AUTH_FILE"
+          echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin
           for svc in caller greeter gateway; do
             nix build .#${svc}-image
-            bash ./result | skopeo copy --authfile "$AUTH_FILE" docker-archive:/dev/stdin \
-              docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }}
-            skopeo copy --authfile "$AUTH_FILE" \
+            ./result/copyTo docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }}
+            skopeo copy \
               docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }} \
               docker://ghcr.io/hackz-megalo-cup/${svc}:latest
           done
