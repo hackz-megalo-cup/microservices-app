@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/auth/v1;authv1";
+
+// AuthService は認証とユーザー管理を提供します
+service AuthService {
+  // ユーザー登録
+  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse) {}
+
+  // ログイン
+  rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {}
+
+  // ユーザープロフィール取得
+  rpc GetUserProfile(GetUserProfileRequest) returns (GetUserProfileResponse) {}
+}
+
+// ユーザー登録リクエスト
+message RegisterUserRequest {
+  string email = 1;
+  string password = 2;
+}
+
+// ログインリクエスト
+message LoginUserRequest {
+  string email = 1;
+  string password = 2;
+}
+
+// ユーザープロフィール取得リクエスト
+message GetUserProfileRequest {
+  string user_id = 1;
+}
+
+// ユーザー情報（共通メッセージ）
+message User {
+  string id = 1;
+  string email = 2;
+  string role = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp last_login_at = 5;
+}
+
+// ユーザー登録レスポンス
+message RegisterUserResponse {
+  string id = 1;
+  string email = 2;
+  string role = 3;
+  google.protobuf.Timestamp created_at = 4;
+}
+
+// ログインレスポンス
+message LoginUserResponse {
+  string token = 1;
+  User user = 2;
+}
+
+// ユーザープロフィール取得レスポンス
+message GetUserProfileResponse {
+  string id = 1;
+  string email = 2;
+  string role = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp last_login_at = 5;
+}
