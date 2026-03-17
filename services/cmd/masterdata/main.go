@@ -108,7 +108,7 @@ func run() error {
 	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
 
 	// --- Service ---
-	svc := masterdata.NewService(eventStore, outbox)
+	svc := masterdata.NewService(eventStore, outbox, dbPool)
 
 	// --- Connect-RPC Handler with interceptors ---
 	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
