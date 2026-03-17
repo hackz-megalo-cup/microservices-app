@@ -29,8 +29,11 @@ const (
 	TopicMasterdataCompensated = "masterdata.compensated"
 
 	TopicRaidLobbyCreated     = "raid_lobby.created"
+	TopicRaidLobbyFinished    = "raid_lobby.finished"
 	TopicRaidLobbyFailed      = "raid_lobby.failed"
 	TopicRaidLobbyCompensated = "raid_lobby.compensated"
+
+	TopicBattleFinished = "battle.finished"
 
 	// Dead Letter Queue topics.
 	TopicGreetingCreatedDLQ       = "greeting.created.dlq"
@@ -86,9 +89,11 @@ func DefaultTopics() map[string]int32 {
 		TopicMasterdataCompensated:    1,
 		TopicMasterdataCreatedDLQ:     1,
 		TopicRaidLobbyCreated:         3,
+		TopicRaidLobbyFinished:        3,
 		TopicRaidLobbyFailed:          1,
 		TopicRaidLobbyCompensated:     1,
 		TopicRaidLobbyCreatedDLQ:      1,
+		TopicBattleFinished:           3,
 	}
 }
 

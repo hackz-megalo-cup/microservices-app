@@ -34,12 +34,9 @@ func (a *RaidLobbyAggregate) ApplyEvent(eventType string, data json.RawMessage) 
 		if err := json.Unmarshal(data, &d); err != nil {
 			slog.Warn("failed to unmarshal created data", "error", err)
 		}
-		// ↓ フィールドの復元を書く（例: a.Title = d.Title）
-		a.Status = "created"
-	// ↓ 追加イベントの case をここに足す
-	// 例:
-	// case EventRaidLobbyCompleted:
-	//     a.Status = "completed"
+		a.Status = "waiting"
+	case EventRaidLobbyFinished:
+		a.Status = "finished"
 	case EventRaidLobbyFailed:
 		a.Status = "failed"
 	case EventRaidLobbyCompensated:
@@ -55,21 +52,22 @@ func (a *RaidLobbyAggregate) ApplyEvent(eventType string, data json.RawMessage) 
 // 既存集約のロード: platform.LoadAggregate(ctx, eventStore, agg)
 // ==========================================================.
 
-// Create — 引数をドメインに合わせて変更する（例: Create(title string)）
-func (a *RaidLobbyAggregate) Create() {
+func (a *RaidLobbyAggregate) Create(bossPokemonID string) {
 	a.Raise(EventRaidLobbyCreated, RaidLobbyCreatedData{
-		// ↓ フィールドを渡す（例: Title: title）
+		BossPokemonID: bossPokemonID,
 	})
-	// ↓ 状態を更新する（例: a.Title = title）
-	a.Status = "created"
+	a.Status = "waiting"
 }
 
-// ↓ 追加コマンドをここに定義する
-// 例:
-// func (a *RaidLobbyAggregate) Complete() {
-//     a.Raise(EventRaidLobbyCompleted, RaidLobbyCompletedData{})
-//     a.Status = "completed"
-// }
+// Finish marks the lobby as finished after battle completion.
+func (a *RaidLobbyAggregate) Finish(sessionID, result string) {
+	a.Raise(EventRaidLobbyFinished, RaidLobbyFinishedData{
+		LobbyID:   a.AggregateID(),
+		SessionID: sessionID,
+		Result:    result,
+	})
+	a.Status = "finished"
+}
 
 // Fail records a failed operation — main.go が参照、削除禁止。
 func (a *RaidLobbyAggregate) Fail(input string, reason string) {
@@ -96,6 +94,8 @@ func RaidLobbyTopicMapper(eventType string) string {
 	switch eventType {
 	case EventRaidLobbyCreated:
 		return platform.TopicRaidLobbyCreated
+	case EventRaidLobbyFinished:
+		return platform.TopicRaidLobbyFinished
 	case EventRaidLobbyFailed:
 		return platform.TopicRaidLobbyFailed
 	default:
