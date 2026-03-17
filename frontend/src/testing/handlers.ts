@@ -1,6 +1,8 @@
 import { HttpResponse, http } from "msw";
 
-const baseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:8080";
+const baseUrl =
+  import.meta.env.VITE_API_BASE_URL ||
+  (typeof window !== "undefined" ? window.location.origin : "http://localhost:8080");
 
 export const handlers = [
   http.post(`${baseUrl}/greeter.v1.GreeterService/Greet`, async ({ request }) => {

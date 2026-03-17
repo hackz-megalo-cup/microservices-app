@@ -1,9 +1,8 @@
 import { createConnectTransport } from "@connectrpc/connect-web";
 import { authInterceptor } from "../interceptors/auth";
+import { apiBaseUrl } from "./runtime-config";
 
-export const apiBaseUrl =
-  import.meta.env.VITE_API_BASE_URL ||
-  (typeof window !== "undefined" ? window.location.origin : "http://localhost:30081");
+export { apiBaseUrl } from "./runtime-config";
 
 export const transport = createConnectTransport({
   baseUrl: apiBaseUrl,

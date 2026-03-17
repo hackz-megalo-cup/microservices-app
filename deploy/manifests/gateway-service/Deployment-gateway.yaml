@@ -4,7 +4,7 @@ metadata:
   name: gateway
   namespace: microservices
 spec:
-  replicas: 2
+  replicas: 3
   selector:
     matchLabels:
       app.kubernetes.io/name: gateway
@@ -35,7 +35,7 @@ spec:
               value: gateway-service
             - name: PORT
               value: "8082"
-          image: ghcr.io/hackz-megalo-cup/gateway:latest
+          image: ghcr.io/hackz-megalo-cup/gateway:a0aceca6629d0868e267746dcf0ea3a391e4a5c3
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
@@ -55,8 +55,8 @@ spec:
             periodSeconds: 5
           resources:
             limits:
-              cpu: 200m
-              memory: 256Mi
+              cpu: 500m
+              memory: 512Mi
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 100m
+              memory: 128Mi

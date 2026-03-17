@@ -1,5 +1,6 @@
 _:
 let
+  images = import ./images.nix;
   labels = {
     "app.kubernetes.io/name" = "frontend";
     "app.kubernetes.io/version" = "0.1.0";
@@ -17,7 +18,7 @@ in
         template = {
           metadata.labels = labels;
           spec.containers.frontend = {
-            image = "ghcr.io/hackz-megalo-cup/frontend:latest";
+            image = images.ghcrImage "frontend";
             imagePullPolicy = "Always";
             ports.http.containerPort = 80;
 

@@ -4,7 +4,7 @@ metadata:
   name: custom-lang-service
   namespace: microservices
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app.kubernetes.io/name: custom-lang-service
@@ -33,7 +33,7 @@ spec:
               value: custom-lang-service
             - name: PORT
               value: "3000"
-          image: ghcr.io/hackz-megalo-cup/custom-lang-service:latest
+          image: ghcr.io/hackz-megalo-cup/custom-lang-service:a0aceca6629d0868e267746dcf0ea3a391e4a5c3
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
@@ -53,8 +53,8 @@ spec:
             periodSeconds: 5
           resources:
             limits:
-              cpu: 100m
-              memory: 192Mi
+              cpu: 200m
+              memory: 384Mi
             requests:
-              cpu: 25m
-              memory: 64Mi
+              cpu: 50m
+              memory: 128Mi

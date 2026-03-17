@@ -223,7 +223,9 @@ jobs:
           skipPush: true
 
       - name: Render nixidy manifests
-        run: bash scripts/gen-manifests.sh
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+        run: bash scripts/gen-manifests.sh prod
 
       - uses: peter-evans/create-pull-request@v7
         id: cpr

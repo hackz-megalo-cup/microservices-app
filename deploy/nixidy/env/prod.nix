@@ -9,7 +9,9 @@
     ../../k8s/frontend.nix
     ../../k8s/item.nix
     ../../k8s/masterdata.nix
-    # No secrets.nix — prod secrets managed by SOPS
+    ../../k8s/raid-lobby.nix
+    # Keep secrets.nix until the existing app path is migrated off repo-managed secrets.
+    ../../k8s/secrets.nix
     # No traefik.nix — prod ingress managed by infra repo
   ];
 
@@ -17,7 +19,7 @@
     target = {
       repository = "https://github.com/hackz-megalo-cup/microservices-app";
       branch = "main";
-      rootPath = "./deploy/manifests/prod";
+      rootPath = "./deploy/manifests";
     };
 
     defaults = {
