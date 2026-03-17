@@ -13,7 +13,10 @@ const (
 // ItemCreatedData — 作成イベントのペイロード。
 // ドメインに合わせてフィールドを書き換える。
 type ItemCreatedData struct {
-	// 例: Title string `json:"title"`
+	UserID   string `json:"user_id"`
+	ItemID   string `json:"item_id"`
+	Quantity int32  `json:"quantity"`
+	Reason   string `json:"reason"`
 }
 
 // ↓ 追加イベントのペイロードをここに定義する

@@ -50,7 +50,7 @@ func (s *Service) GrantItem(ctx context.Context, req *connect.Request[pb.GrantIt
 	}
 
 	agg := NewItemAggregate(uuid.NewString())
-	agg.Create()
+	agg.Create(userID, itemID, quantity, req.Msg.GetReason())
 	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, ItemTopicMapper); err != nil {
 		slog.Error("failed to save aggregate", "error", err)
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save"))

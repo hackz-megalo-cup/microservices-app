@@ -56,11 +56,13 @@ func (a *ItemAggregate) ApplyEvent(eventType string, data json.RawMessage) {
 // ==========================================================.
 
 // Create — 引数をドメインに合わせて変更する（例: Create(title string)）。
-func (a *ItemAggregate) Create() {
+func (a *ItemAggregate) Create(userID, itemID string, quantity int32, reason string) {
 	a.Raise(EventItemCreated, ItemCreatedData{
-		// ↓ フィールドを渡す（例: Title: title）。
+		UserID:   userID,
+		ItemID:   itemID,
+		Quantity: quantity,
+		Reason:   reason,
 	})
-	// ↓ 状態を更新する（例: a.Title = title）。
 	a.Status = "created"
 }
 

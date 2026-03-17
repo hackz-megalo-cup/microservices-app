@@ -255,6 +255,16 @@ services:
       OTEL_SERVICE_NAME: "item-service"
       KAFKA_BROKERS: "redpanda:9092"
       JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.item.rule=PathPrefix(`/item.v1.ItemService`)"
+      - "traefik.http.routers.item.entrypoints=web"
+      - "traefik.http.routers.item.priority=100"
+      - "traefik.http.routers.item.middlewares=cors@file,auth@file,rate-limit@file,retry@file"
+      - "traefik.http.services.item.loadbalancer.server.port=8080"
+      - "traefik.http.services.item.loadbalancer.server.scheme=h2c"
+    networks:
+      - app
     networks:
       - app
     depends_on:
