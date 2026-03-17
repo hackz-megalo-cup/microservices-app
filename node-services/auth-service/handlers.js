@@ -1,3 +1,4 @@
+import { Code, ConnectError } from "@connectrpc/connect";
 import { retryWithBackoff } from "@microservices/shared";
 import pool from "@microservices/shared/db.js";
 import bcrypt from "bcrypt";
@@ -24,11 +25,11 @@ export async function registerUser(req, context) {
   const { email, password } = req;
 
   if (!email || !password) {
-    throw new Error("email and password are required");
+    throw new ConnectError("email and password are required", Code.InvalidArgument);
   }
 
   if (!pool) {
-    throw new Error("database not configured");
+    throw new ConnectError("database not configured", Code.Unavailable);
   }
 
   try {
@@ -71,10 +72,13 @@ export async function registerUser(req, context) {
     }
   } catch (err) {
     if (err.code === "23505") {
-      throw new Error("email already exists");
+      throw new ConnectError("email already exists", Code.AlreadyExists);
+    }
+    if (err instanceof ConnectError) {
+      throw err;
     }
     console.error("registerUser error:", err);
-    throw new Error("internal server error");
+    throw new ConnectError("internal server error", Code.Internal);
   }
 }
 
@@ -86,11 +90,11 @@ export async function loginUser(req, context) {
   const { email, password } = req;
 
   if (!email || !password) {
-    throw new Error("email and password are required");
+    throw new ConnectError("email and password are required", Code.InvalidArgument);
   }
 
   if (!pool) {
-    throw new Error("database not configured");
+    throw new ConnectError("database not configured", Code.Unavailable);
   }
 
   try {
@@ -100,7 +104,7 @@ export async function loginUser(req, context) {
 
     const user = result.rows[0];
     if (!user || !(await bcrypt.compare(password, user.password_hash))) {
-      throw new Error("invalid email or password");
+      throw new ConnectError("invalid email or password", Code.Unauthenticated);
     }
 
     // Determine is_first_today before updating last_login_at
@@ -164,11 +168,11 @@ export async function loginUser(req, context) {
       },
     };
   } catch (err) {
-    if (err instanceof Error && err.message === "invalid email or password") {
+    if (err instanceof ConnectError) {
       throw err;
     }
     console.error("loginUser error:", err);
-    throw new Error("authentication failed");
+    throw new ConnectError("authentication failed", Code.Internal);
   }
 }
 
@@ -179,11 +183,11 @@ export async function getUserProfile(req, _context) {
   const { userId } = req;
 
   if (!userId) {
-    throw new Error("user_id is required");
+    throw new ConnectError("user_id is required", Code.InvalidArgument);
   }
 
   if (!pool) {
-    throw new Error("database not configured");
+    throw new ConnectError("database not configured", Code.Unavailable);
   }
 
   try {
@@ -193,7 +197,7 @@ export async function getUserProfile(req, _context) {
     );
 
     if (result.rows.length === 0) {
-      throw new Error("user not found");
+      throw new ConnectError("user not found", Code.NotFound);
     }
 
     const user = result.rows[0];
@@ -205,10 +209,10 @@ export async function getUserProfile(req, _context) {
       lastLoginAt: user.last_login_at ? toTimestamp(user.last_login_at) : null,
     };
   } catch (err) {
-    if (err instanceof Error && err.message === "user not found") {
+    if (err instanceof ConnectError) {
       throw err;
     }
     console.error("getUserProfile error:", err);
-    throw new Error("internal server error");
+    throw new ConnectError("internal server error", Code.Internal);
   }
 }
