@@ -173,3 +173,4 @@ app.get("/verify", verifyHandler);
 app.get("/auth/verify", verifyHandler);
 
 export default app;
+export { privateKey, kid };
