@@ -103,12 +103,30 @@ export async function loginUser(req, context) {
       throw new Error("invalid email or password");
     }
 
+    // Determine is_first_today before updating last_login_at
+    const lastLoginAtDate = user.last_login_at ? new Date(user.last_login_at) : null;
+    const today = new Date();
+    const isFirstToday =
+      !lastLoginAtDate ||
+      lastLoginAtDate.getDate() !== today.getDate() ||
+      lastLoginAtDate.getMonth() !== today.getMonth() ||
+      lastLoginAtDate.getFullYear() !== today.getFullYear();
+
     // Update last_login_at and get the updated value
     const updateResult = await pool.query(
       "UPDATE users SET last_login_at = NOW() WHERE id = $1 RETURNING last_login_at",
       [user.id],
     );
     const lastLoginAt = updateResult.rows[0].last_login_at;
+
+    // Emit user.logged_in event via Outbox pattern
+    await context.outbox.insertEvent(null, "user.logged_in", {
+      payload: {
+        userId: user.id,
+        isFirstToday,
+        timestamp: new Date().toISOString(),
+      },
+    });
 
     const token = jwt.sign(
       {
