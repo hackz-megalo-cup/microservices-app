@@ -19,6 +19,11 @@
       "cmd_path": "cmd/item",
       "port": 8080,
       "k8s_resource": "item-service"
+    },
+    "masterdata": {
+      "cmd_path": "cmd/masterdata",
+      "port": 8084,
+      "k8s_resource": "masterdata-service"
     }
   },
   "custom_services": {

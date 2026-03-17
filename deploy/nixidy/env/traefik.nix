@@ -205,6 +205,7 @@
             kind = "IngressRoute";
             metadata = {
               name = "item-route";
+              name = "masterdata-route";
               namespace = "microservices";
             };
             spec = {
@@ -212,6 +213,7 @@
               routes = [
                 {
                   match = "PathPrefix(`/item.v1.ItemService`)";
+                  match = "PathPrefix(`/masterdata.v1.MasterdataService`)";
                   kind = "Rule";
                   priority = 100;
                   middlewares = [
@@ -223,6 +225,8 @@
                     {
                       name = "item-service";
                       port = 8080;
+                      name = "masterdata-service";
+                      port = 8084;
                       scheme = "h2c";
                     }
                   ];
