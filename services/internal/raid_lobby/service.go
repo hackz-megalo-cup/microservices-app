@@ -3,6 +3,7 @@ package raidlobby
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/ThreeDotsLabs/watermill/message"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	masterdatav1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1"
@@ -104,7 +106,11 @@ func (s *Service) JoinRaid(ctx context.Context, req *connect.Request[pb.JoinRaid
 		var status string
 		err := s.db.QueryRow(ctx, `SELECT status FROM raid_lobby WHERE id = $1`, lobbyID).Scan(&status)
 		if err != nil {
-			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("lobby not found: %s", lobbyID))
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("lobby not found: %s", lobbyID))
+			}
+			slog.Error("failed to query lobby", "lobby_id", lobbyID, "error", err)
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to query lobby"))
 		}
 		if status != "waiting" {
 			return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("lobby is not accepting participants (status: %s)", status))
