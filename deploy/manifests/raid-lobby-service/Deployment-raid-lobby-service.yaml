@@ -1,0 +1,60 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: raid-lobby-service
+  namespace: microservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: raid-lobby
+      app.kubernetes.io/version: 0.1.0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: raid-lobby
+        app.kubernetes.io/version: 0.1.0
+    spec:
+      containers:
+        - env:
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_URL
+                  name: raid-lobby-secrets
+            - name: KAFKA_BROKERS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_BROKERS
+                  name: raid-lobby-secrets
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.observability:4317
+            - name: OTEL_SERVICE_NAME
+              value: raid-lobby-service
+            - name: PORT
+              value: "8086"
+          image: raid-lobby:latest
+          imagePullPolicy: Never
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8086
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          name: raid-lobby-service
+          ports:
+            - containerPort: 8086
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8086
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: 200m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi
