@@ -1,0 +1,3 @@
+FROM alpine:3.19
+COPY build/raid-lobby /raid-lobby
+ENTRYPOINT ["/raid-lobby"]
