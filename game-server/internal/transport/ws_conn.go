@@ -9,18 +9,19 @@ import (
 )
 
 type WSConn struct {
-	conn *websocket.Conn
-	mu   sync.Mutex
+	conn    *websocket.Conn
+	parentCtx context.Context
+	mu      sync.Mutex
 }
 
-func NewWSConn(conn *websocket.Conn) *WSConn {
-	return &WSConn{conn: conn}
+func NewWSConn(ctx context.Context, conn *websocket.Conn) *WSConn {
+	return &WSConn{conn: conn, parentCtx: ctx}
 }
 
 func (c *WSConn) SendReliable(data []byte) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(c.parentCtx, 5*time.Second)
 	defer cancel()
 	return c.conn.Write(ctx, websocket.MessageText, data)
 }

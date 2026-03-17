@@ -101,7 +101,7 @@ func runLocalDev() {
 			return
 		}
 		userID := uuid.New()
-		conn := transport.NewWSConn(wsConn)
+		conn := transport.NewWSConn(ctx, wsConn)
 		hub.Register(userID, conn)
 		log.Printf("ws client connected: %s", userID)
 
@@ -218,7 +218,7 @@ func runProduction() {
 			return
 		}
 		userID := uuid.New()
-		conn := transport.NewWSConn(wsConn)
+		conn := transport.NewWSConn(ctx, wsConn)
 		h.Register(userID, conn)
 		log.Printf("ws client connected: %s", userID)
 
@@ -247,13 +247,11 @@ func runProduction() {
 
 			lobbyID, err := uuid.Parse(lobbyIDStr)
 			if err != nil {
-				log.Printf("invalid lobby-id annotation %q: %v", lobbyIDStr, err)
-				return
+				log.Fatalf("invalid lobby-id annotation %q: %v", lobbyIDStr, err)
 			}
 			bossPokemonID, err := uuid.Parse(bossPokemonIDStr)
 			if err != nil {
-				log.Printf("invalid boss-pokemon-id annotation %q: %v", bossPokemonIDStr, err)
-				return
+				log.Fatalf("invalid boss-pokemon-id annotation %q: %v", bossPokemonIDStr, err)
 			}
 
 			matchups := battle.TypeMatchup{}
