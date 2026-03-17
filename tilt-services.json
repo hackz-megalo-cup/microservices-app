@@ -24,6 +24,11 @@
       "cmd_path": "cmd/masterdata",
       "port": 8084,
       "k8s_resource": "masterdata-service"
+    },
+    "raid-lobby": {
+      "cmd_path": "cmd/raid-lobby",
+      "port": 8086,
+      "k8s_resource": "raid-lobby-service"
     }
   },
   "custom_services": {
