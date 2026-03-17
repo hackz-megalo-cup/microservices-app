@@ -8,6 +8,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE gateway_db;
     CREATE DATABASE item_db;
     CREATE DATABASE masterdata_db;
+    CREATE DATABASE raid_lobby_db;
 EOSQL
 
 # CQRS projector: event_log table in gateway_db
