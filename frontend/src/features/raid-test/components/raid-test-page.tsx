@@ -90,7 +90,8 @@ export function RaidTestPage() {
   // --- Battle state ---
   const [bossHp, setBossHp] = useState(0);
   const [bossMaxHp, setBossMaxHp] = useState(0);
-  const [tapCount, setTapCount] = useState(0);
+  const [wtTapCount, setWtTapCount] = useState(0);
+  const [wsTapCount, setWsTapCount] = useState(0);
   const [requiredForSpecial] = useState(10);
   const [result, setResult] = useState<string | null>(null);
 
@@ -266,7 +267,11 @@ export function RaidTestPage() {
   const connect = useCallback(async () => {
     setConnectionState("connecting");
     setResult(null);
-    setTapCount(0);
+    if (protocol === "wt") {
+      setWtTapCount(0);
+    } else {
+      setWsTapCount(0);
+    }
 
     try {
       if (protocol === "wt") {
@@ -342,15 +347,24 @@ export function RaidTestPage() {
   const handleTap = () => {
     tapSentAtRef.current = performance.now();
     sendUnreliable(JSON.stringify({ t: "tap" }));
-    setTapCount((c) => c + 1);
+    if (protocol === "wt") {
+      setWtTapCount((c) => c + 1);
+    } else {
+      setWsTapCount((c) => c + 1);
+    }
   };
 
   const handleSpecial = () => {
     sendReliable(JSON.stringify({ t: "special", userId }));
-    setTapCount(0);
+    if (protocol === "wt") {
+      setWtTapCount(0);
+    } else {
+      setWsTapCount(0);
+    }
   };
 
   // --- Derived ---
+  const tapCount = protocol === "wt" ? wtTapCount : wsTapCount;
   const isConnected = connectionState === "connected";
   const hpPercent = bossMaxHp > 0 ? (bossHp / bossMaxHp) * 100 : 0;
   const statusIndicator =

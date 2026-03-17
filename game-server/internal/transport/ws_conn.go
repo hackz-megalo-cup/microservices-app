@@ -3,6 +3,7 @@ package transport
 import (
 	"context"
 	"sync"
+	"time"
 
 	"github.com/coder/websocket"
 )
@@ -19,7 +20,9 @@ func NewWSConn(conn *websocket.Conn) *WSConn {
 func (c *WSConn) SendReliable(data []byte) error {
 	c.mu.Lock()
 	defer c.mu.Unlock()
-	return c.conn.Write(context.Background(), websocket.MessageText, data)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+	return c.conn.Write(ctx, websocket.MessageText, data)
 }
 
 func (c *WSConn) SendUnreliable(data []byte) error {

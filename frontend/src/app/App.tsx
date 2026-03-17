@@ -1,6 +1,6 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { ApiTestPage } from "../features/api-test/components/api-test-page";
-import { RaidTestPage } from "../features/raid-test/components/RaidTestPage";
+import { RaidTestPage } from "../features/raid-test/components/raid-test-page";
 import { Battle } from "../features/showcase/components/battle";
 import { Capture } from "../features/showcase/components/capture";
 import { Collection } from "../features/showcase/components/collection";

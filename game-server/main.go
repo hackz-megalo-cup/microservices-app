@@ -43,7 +43,9 @@ func runLocalDev() {
 		portStr = "7777"
 	}
 	port := int32(0)
-	fmt.Sscanf(portStr, "%d", &port)
+	if _, err := fmt.Sscanf(portStr, "%d", &port); err != nil {
+		log.Fatalf("invalid PORT %q: %v", portStr, err)
+	}
 
 	// Generate ephemeral cert for WebTransport
 	wtCert, certHash, err := cert.GenerateEphemeral()
@@ -237,24 +239,35 @@ func runProduction() {
 	}()
 
 	// 8. Watch for Allocation
+	var allocateOnce sync.Once
 	if err := lc.WatchAllocated(func(annotations map[string]string) {
-		lobbyIDStr := annotations["raid.lobby-id"]
-		bossPokemonIDStr := annotations["raid.boss-pokemon-id"]
+		allocateOnce.Do(func() {
+			lobbyIDStr := annotations["raid.lobby-id"]
+			bossPokemonIDStr := annotations["raid.boss-pokemon-id"]
 
-		lobbyID, _ := uuid.Parse(lobbyIDStr)
-		bossPokemonID, _ := uuid.Parse(bossPokemonIDStr)
+			lobbyID, err := uuid.Parse(lobbyIDStr)
+			if err != nil {
+				log.Printf("invalid lobby-id annotation %q: %v", lobbyIDStr, err)
+				return
+			}
+			bossPokemonID, err := uuid.Parse(bossPokemonIDStr)
+			if err != nil {
+				log.Printf("invalid boss-pokemon-id annotation %q: %v", bossPokemonIDStr, err)
+				return
+			}
 
-		matchups := battle.TypeMatchup{}
+			matchups := battle.TypeMatchup{}
 
-		mu.Lock()
-		session = battle.NewSession(lobbyID, bossPokemonID, 50000, matchups, 300*time.Second)
-		hub = transport.NewHub()
-		handler = transport.NewHandler(hub, session)
-		mu.Unlock()
+			mu.Lock()
+			session = battle.NewSession(lobbyID, bossPokemonID, 50000, matchups, 300*time.Second)
+			hub = transport.NewHub()
+			handler = transport.NewHandler(hub, session)
+			mu.Unlock()
 
-		close(sessionReady)
+			close(sessionReady)
 
-		log.Printf("battle session created: lobby=%s boss=%s", lobbyIDStr, bossPokemonIDStr)
+			log.Printf("battle session created: lobby=%s boss=%s", lobbyIDStr, bossPokemonIDStr)
+		})
 	}); err != nil {
 		log.Fatalf("watch allocated: %v", err)
 	}
