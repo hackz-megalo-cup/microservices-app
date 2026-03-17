@@ -298,6 +298,7 @@ services:
       OTEL_SERVICE_NAME: "raid-lobby-service"
       KAFKA_BROKERS: "redpanda:9092"
       JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
+      MASTERDATA_URL: "http://masterdata:8084"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.raid-lobby.rule=PathPrefix(`/raid_lobby.v1.RaidLobbyService`)"
