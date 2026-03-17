@@ -136,7 +136,8 @@ jobs:
   nix-build:
     needs: [changes]
     if: >-
-      needs.changes.outputs.go == 'true'
+      github.event_name == 'workflow_dispatch'
+      || needs.changes.outputs.go == 'true'
       || needs.changes.outputs.nix == 'true'
     runs-on: ${{ github.event_name == 'workflow_dispatch' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     permissions:
