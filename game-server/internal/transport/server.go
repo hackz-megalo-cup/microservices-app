@@ -65,7 +65,7 @@ func (ds *DualServer) Start() error {
 			return
 		}
 		w.Header().Set("Content-Type", "text/plain")
-		w.Write([]byte(ds.certHash))
+		_, _ = w.Write([]byte(ds.certHash)) // best-effort; client may have disconnected
 	})
 
 	h3s.Handler = mux

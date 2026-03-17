@@ -397,7 +397,14 @@ export function RaidTestPage() {
 
     autoConnect();
 
-    return () => abort.abort();
+    return () => {
+      abort.abort();
+      if (transportRef.current) {
+        transportRef.current.close();
+        transportRef.current = null;
+        dgWriterRef.current = null;
+      }
+    };
   }, [addLog, readDatagrams, readIncomingUniStreams, userId]);
 
   // --- Disconnect ---
