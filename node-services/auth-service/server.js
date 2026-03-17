@@ -1,6 +1,7 @@
 import { connectNodeAdapter } from "@connectrpc/connect-node";
 import { createKafkaClient, createOutbox } from "@microservices/shared";
 import pool from "@microservices/shared/db.js";
+import express from "express";
 import { AuthService } from "../gen/auth/v1/auth_pb.js";
 import app, { kid, privateKey } from "./app.js";
 import { getUserProfile, loginUser, registerUser } from "./handlers.js";
@@ -35,10 +36,22 @@ function routes(router) {
   });
 }
 
-// gRPC ハンドラーを Express に統合
-app.use(connectNodeAdapter({ routes }));
+// メインサーバー：gRPCとRESTを統合
+const server = express();
+const grpcHandler = connectNodeAdapter({ routes });
 
-app.listen(port, () => {
+// 1. gRPCパス（/auth.v1.*）の処理
+server.use((req, res, next) => {
+  if (req.path.startsWith("/auth.v1.")) {
+    return grpcHandler(req, res, next);
+  }
+  next();
+});
+
+// 2. RESTエンドポイント（app.jsで定義）
+server.use(app);
+
+server.listen(port, () => {
   console.log(`auth-service listening on :${port}`);
   console.log(`  gRPC API: grpc://localhost:${port} (auth.v1.AuthService)`);
   console.log(`  REST API (limited): /verify, /jwks.json, /healthz`);
