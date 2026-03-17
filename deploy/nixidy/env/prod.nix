@@ -7,6 +7,8 @@
     ../../k8s/custom-lang-service.nix
     ../../k8s/auth-service.nix
     ../../k8s/frontend.nix
+    ../../k8s/item.nix
+    ../../k8s/masterdata.nix
     # No secrets.nix — prod secrets managed by SOPS
     # No traefik.nix — prod ingress managed by infra repo
   ];
@@ -40,7 +42,6 @@
     greeter-service.resources.deployments.greeter-service.spec = {
       replicas = lib.mkForce 2;
       template.spec.containers.greeter-service = {
-        imagePullPolicy = lib.mkForce "IfNotPresent";
         resources = lib.mkForce {
           requests = {
             cpu = "100m";
@@ -57,7 +58,6 @@
     caller-service.resources.deployments.caller-service.spec = {
       replicas = lib.mkForce 2;
       template.spec.containers.caller-service = {
-        imagePullPolicy = lib.mkForce "IfNotPresent";
         resources = lib.mkForce {
           requests = {
             cpu = "100m";
@@ -74,7 +74,6 @@
     gateway-service.resources.deployments.gateway.spec = {
       replicas = lib.mkForce 3;
       template.spec.containers.gateway = {
-        imagePullPolicy = lib.mkForce "IfNotPresent";
         resources = lib.mkForce {
           requests = {
             cpu = "100m";
@@ -91,7 +90,6 @@
     custom-lang-service.resources.deployments.custom-lang-service.spec = {
       replicas = lib.mkForce 2;
       template.spec.containers.custom-lang-service = {
-        imagePullPolicy = lib.mkForce "IfNotPresent";
         resources = lib.mkForce {
           requests = {
             cpu = "50m";
@@ -108,7 +106,6 @@
     auth-service.resources.deployments.auth-service.spec = {
       replicas = lib.mkForce 2;
       template.spec.containers.auth-service = {
-        imagePullPolicy = lib.mkForce "IfNotPresent";
         resources = lib.mkForce {
           requests = {
             cpu = "50m";

@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: custom-lang-service
+  name: item-service
   namespace: microservices
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: custom-lang-service
+      app.kubernetes.io/name: item
       app.kubernetes.io/version: 0.1.0
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: custom-lang-service
+        app.kubernetes.io/name: item
         app.kubernetes.io/version: 0.1.0
     spec:
       containers:
@@ -21,40 +21,40 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: DATABASE_URL
-                  name: custom-lang-secrets
+                  name: item-secrets
             - name: KAFKA_BROKERS
               valueFrom:
                 secretKeyRef:
                   key: KAFKA_BROKERS
-                  name: custom-lang-secrets
+                  name: item-secrets
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: http://otel-collector.observability:4317
             - name: OTEL_SERVICE_NAME
-              value: custom-lang-service
+              value: item-service
             - name: PORT
-              value: "3000"
-          image: ghcr.io/hackz-megalo-cup/custom-lang-service:latest
+              value: "8080"
+          image: ghcr.io/hackz-megalo-cup/item:latest
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
               path: /healthz
-              port: 3000
+              port: 8080
             initialDelaySeconds: 5
             periodSeconds: 10
-          name: custom-lang-service
+          name: item-service
           ports:
-            - containerPort: 3000
+            - containerPort: 8080
               name: http
           readinessProbe:
             httpGet:
               path: /healthz
-              port: 3000
+              port: 8080
             initialDelaySeconds: 3
             periodSeconds: 5
           resources:
             limits:
-              cpu: 100m
-              memory: 192Mi
+              cpu: 200m
+              memory: 128Mi
             requests:
-              cpu: 25m
+              cpu: 50m
               memory: 64Mi

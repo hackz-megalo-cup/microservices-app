@@ -17,8 +17,8 @@ in
         template = {
           metadata.labels = labels;
           spec.containers.caller-service = {
-            image = "caller:latest";
-            imagePullPolicy = "Never";
+            image = "ghcr.io/hackz-megalo-cup/caller:latest";
+            imagePullPolicy = "Always";
             ports.http.containerPort = 8081;
 
             env = {
