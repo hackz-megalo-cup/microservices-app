@@ -52,8 +52,8 @@ server.use((req, res, next) => {
 server.use(app);
 
 server.listen(port, () => {
-  console.log(`auth-service listening on :${port}`);
-  console.log(`  gRPC API: grpc://localhost:${port} (auth.v1.AuthService)`);
-  console.log(`  REST API (limited): /verify, /jwks.json, /healthz`);
+  console.log(
+    `auth-service listening on :${port} (gRPC: auth.v1.AuthService, REST: /verify, /jwks.json, /healthz)`,
+  );
   outbox.startPoller();
 });
