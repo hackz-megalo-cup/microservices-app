@@ -1,5 +1,6 @@
 _:
 let
+  images = import ./images.nix;
   labels = {
     "app.kubernetes.io/name" = "raid-lobby";
     "app.kubernetes.io/version" = "0.1.0";
@@ -17,8 +18,8 @@ in
         template = {
           metadata.labels = labels;
           spec.containers.raid-lobby-service = {
-            image = "raid-lobby:latest";
-            imagePullPolicy = "Never";
+            image = images.ghcrImage "raid-lobby";
+            imagePullPolicy = "Always";
             ports.http.containerPort = 8086;
 
             env = {

@@ -1,5 +1,6 @@
 _:
 let
+  images = import ./images.nix;
   labels = {
     "app.kubernetes.io/name" = "auth-service";
     "app.kubernetes.io/version" = "0.1.0";
@@ -17,7 +18,7 @@ in
         template = {
           metadata.labels = labels;
           spec.containers.auth-service = {
-            image = "ghcr.io/hackz-megalo-cup/auth-service:latest";
+            image = images.ghcrImage "auth-service";
             imagePullPolicy = "Always";
             ports.http.containerPort = 8090;
 

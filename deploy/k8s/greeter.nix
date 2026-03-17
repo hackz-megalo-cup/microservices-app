@@ -1,5 +1,6 @@
 _:
 let
+  images = import ./images.nix;
   labels = {
     "app.kubernetes.io/name" = "greeter";
     "app.kubernetes.io/version" = "0.1.0";
@@ -17,7 +18,7 @@ in
         template = {
           metadata.labels = labels;
           spec.containers.greeter-service = {
-            image = "ghcr.io/hackz-megalo-cup/greeter:latest";
+            image = images.ghcrImage "greeter";
             imagePullPolicy = "Always";
             ports.http.containerPort = 8080;
 

@@ -33,8 +33,8 @@ spec:
               value: raid-lobby-service
             - name: PORT
               value: "8086"
-          image: raid-lobby:latest
-          imagePullPolicy: Never
+          image: ghcr.io/hackz-megalo-cup/raid-lobby:a0aceca6629d0868e267746dcf0ea3a391e4a5c3
+          imagePullPolicy: Always
           livenessProbe:
             httpGet:
               path: /healthz

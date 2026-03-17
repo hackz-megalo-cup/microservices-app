@@ -5,6 +5,7 @@ import { resourceFromAttributes } from "@opentelemetry/resources";
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base";
 import { WebTracerProvider } from "@opentelemetry/sdk-trace-web";
 import { ATTR_SERVICE_NAME, ATTR_SERVICE_VERSION } from "@opentelemetry/semantic-conventions";
+import { buildApiCorsPattern } from "./runtime-config";
 
 export function initTracing() {
   const endpoint = import.meta.env.VITE_OTEL_ENDPOINT;
@@ -28,9 +29,7 @@ export function initTracing() {
   registerInstrumentations({
     instrumentations: [
       new FetchInstrumentation({
-        propagateTraceHeaderCorsUrls: [
-          new RegExp(import.meta.env.VITE_API_BASE_URL || "http://localhost:30081"),
-        ],
+        propagateTraceHeaderCorsUrls: buildApiCorsPattern(),
         clearTimingResources: true,
       }),
     ],

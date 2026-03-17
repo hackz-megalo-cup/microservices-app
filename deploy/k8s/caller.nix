@@ -1,5 +1,6 @@
 _:
 let
+  images = import ./images.nix;
   labels = {
     "app.kubernetes.io/name" = "caller";
     "app.kubernetes.io/version" = "0.1.0";
@@ -17,7 +18,7 @@ in
         template = {
           metadata.labels = labels;
           spec.containers.caller-service = {
-            image = "ghcr.io/hackz-megalo-cup/caller:latest";
+            image = images.ghcrImage "caller";
             imagePullPolicy = "Always";
             ports.http.containerPort = 8081;
 

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
+import { gameServerUrl, parsedGameServerUrl, resolveApiUrl } from "../../../lib/runtime-config";
 
 // ---------------------------------------------------------------------------
 // WebTransport type declarations (not yet in lib.dom.d.ts)
@@ -76,14 +77,12 @@ function timestamp(): string {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
-const gameServerUrl = import.meta.env.VITE_GAME_SERVER_URL || "https://localhost:7777";
-const parsedGameServer = new URL(gameServerUrl);
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:30081";
+const allocateApiUrl = resolveApiUrl("/api/raid/allocate");
 
 export function RaidTestPage() {
   // --- Form state ---
-  const [host, setHost] = useState(parsedGameServer.hostname);
-  const [port, setPort] = useState(parsedGameServer.port);
+  const [host, setHost] = useState(parsedGameServerUrl?.hostname ?? "");
+  const [port, setPort] = useState(parsedGameServerUrl?.port ?? "");
   const [certHash, setCertHash] = useState("");
   const [protocol, setProtocol] = useState<"wt" | "ws">("wt");
   const [userId] = useState(generateUuid);
@@ -345,7 +344,7 @@ export function RaidTestPage() {
       certHash: string;
     } | null> => {
       try {
-        const res = await fetch(`${API_BASE_URL}/api/raid/allocate`, {
+        const res = await fetch(allocateApiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -372,13 +371,20 @@ export function RaidTestPage() {
       port: string;
       certHash: string;
     } | null> => {
+      if (!gameServerUrl || !parsedGameServerUrl) {
+        return null;
+      }
       try {
         const res = await fetch(`${gameServerUrl}/cert-hash`, { signal: abort.signal });
         if (!res.ok) {
           return null;
         }
         const hash = (await res.text()).trim();
-        return { host: parsedGameServer.hostname, port: parsedGameServer.port, certHash: hash };
+        return {
+          host: parsedGameServerUrl.hostname,
+          port: parsedGameServerUrl.port,
+          certHash: hash,
+        };
       } catch {
         return null;
       }

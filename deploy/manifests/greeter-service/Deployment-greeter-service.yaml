@@ -4,7 +4,7 @@ metadata:
   name: greeter-service
   namespace: microservices
 spec:
-  replicas: 1
+  replicas: 2
   selector:
     matchLabels:
       app.kubernetes.io/name: greeter
@@ -37,7 +37,7 @@ spec:
               value: greeter-service
             - name: PORT
               value: "8080"
-          image: ghcr.io/hackz-megalo-cup/greeter:latest
+          image: ghcr.io/hackz-megalo-cup/greeter:a0aceca6629d0868e267746dcf0ea3a391e4a5c3
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
@@ -57,8 +57,8 @@ spec:
             periodSeconds: 5
           resources:
             limits:
-              cpu: 200m
-              memory: 192Mi
+              cpu: 500m
+              memory: 384Mi
             requests:
-              cpu: 50m
-              memory: 64Mi
+              cpu: 100m
+              memory: 128Mi

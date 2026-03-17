@@ -153,15 +153,18 @@ subjects:
 
 ```tsx
 // 変更前
-const gameServerUrl = import.meta.env.VITE_GAME_SERVER_URL || "https://localhost:7777";
+const gameServerUrl =
+  import.meta.env.VITE_GAME_SERVER_URL || (import.meta.env.DEV ? "https://localhost:7777" : "");
 
 // 変更後
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:30081";
+const allocateUrl = import.meta.env.VITE_API_BASE_URL
+  ? new URL("/api/raid/allocate", import.meta.env.VITE_API_BASE_URL).toString()
+  : "/api/raid/allocate";
 
 // auto-connect 部分
 const autoConnect = async () => {
   // 1. Gateway 経由で GameServer を allocate
-  const allocRes = await fetch(`${apiBaseUrl}/api/raid/allocate`, {
+  const allocRes = await fetch(allocateUrl, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify({
@@ -201,6 +204,7 @@ VITE_GAME_SERVER_URL=https://localhost:7777  # ローカルdev用のフォール
 **EKS** (Traefik経由なので `VITE_API_BASE_URL` はフロントエンドのオリジンと同じ):
 - `VITE_API_BASE_URL` は不要（相対パス `/api/raid/allocate` で動く）
 - または明示的に `VITE_API_BASE_URL=https://app.thirdlf03.com`
+- `VITE_GAME_SERVER_URL` は未設定のままにする（local-dev 専用）
 
 ## 作業順序
 
