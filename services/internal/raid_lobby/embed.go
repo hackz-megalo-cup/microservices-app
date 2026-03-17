@@ -1,4 +1,4 @@
-package raid_lobby
+package raidlobby
 
 import "embed"
 

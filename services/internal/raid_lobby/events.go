@@ -1,4 +1,4 @@
-package raid_lobby
+package raidlobby
 
 const (
 	EventRaidLobbyCreated = "raid_lobby.created"

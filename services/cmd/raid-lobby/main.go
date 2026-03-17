@@ -19,7 +19,7 @@ import (
 
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1/raid_lobbyv1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
-	"github.com/hackz-megalo-cup/microservices-app/services/internal/raid_lobby"
+	raidlobby "github.com/hackz-megalo-cup/microservices-app/services/internal/raid_lobby"
 )
 
 const (
@@ -49,7 +49,7 @@ func run() error {
 	}()
 
 	// --- Database ---
-	migrationsFS, _ := fs.Sub(raid_lobby.MigrationsFS, "migrations")
+	migrationsFS, _ := fs.Sub(raidlobby.MigrationsFS, "migrations")
 	dbPool := platform.InitDB(ctx, os.Getenv("DATABASE_URL"), migrationsFS, serviceName)
 	if dbPool != nil {
 		defer dbPool.Close()
@@ -85,12 +85,12 @@ func run() error {
 			slog.Warn("compensation: missing stream_id", "event_id", event.ID)
 			return nil
 		}
-		agg := raid_lobby.NewRaidLobbyAggregate(streamID)
+		agg := raidlobby.NewRaidLobbyAggregate(streamID)
 		if err := platform.LoadAggregate(ctx, eventStore, agg); err != nil {
 			return err
 		}
 		agg.Compensate("saga compensation")
-		if err := platform.SaveAggregate(ctx, eventStore, outbox, agg, raid_lobby.RaidLobbyTopicMapper); err != nil {
+		if err := platform.SaveAggregate(ctx, eventStore, outbox, agg, raidlobby.RaidLobbyTopicMapper); err != nil {
 			return err
 		}
 		slog.Info("compensation: aggregate compensated via ES", "stream_id", streamID)
@@ -108,7 +108,7 @@ func run() error {
 	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
 
 	// --- Service ---
-	svc := raid_lobby.NewService(eventStore, outbox)
+	svc := raidlobby.NewService(eventStore, outbox)
 
 	// --- Connect-RPC Handler with interceptors ---
 	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
