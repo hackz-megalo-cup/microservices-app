@@ -1,0 +1,3 @@
+FROM alpine:3.19
+COPY build/masterdata /masterdata
+ENTRYPOINT ["/masterdata"]

@@ -7,6 +7,7 @@
     ../../k8s/custom-lang-service.nix
     ../../k8s/auth-service.nix
     ../../k8s/frontend.nix
+    ../../k8s/masterdata.nix
     ../../k8s/secrets.nix
     ./traefik.nix
   ];

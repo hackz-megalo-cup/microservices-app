@@ -1,0 +1,108 @@
+syntax = "proto3";
+
+package masterdata.v1;
+
+option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1;masterdatav1";
+
+service MasterdataService {
+  rpc CreatePokemon(CreatePokemonRequest) returns (CreatePokemonResponse) {}
+  rpc GetPokemon(GetPokemonRequest)       returns (GetPokemonResponse)    {}
+  rpc ListPokemon(ListPokemonRequest)     returns (ListPokemonResponse)   {}
+
+  rpc CreateTypeMatchup(CreateTypeMatchupRequest) returns (CreateTypeMatchupResponse) {}
+  rpc ListTypeMatchups(ListTypeMatchupsRequest)   returns (ListTypeMatchupsResponse)  {}
+
+  rpc CreateItem(CreateItemRequest) returns (CreateItemResponse) {}
+  rpc GetItem(GetItemRequest)       returns (GetItemResponse)    {}
+  rpc ListItems(ListItemsRequest)   returns (ListItemsResponse)  {}
+}
+
+// ─── Pokemon ─────────────────────────────────────────────────
+
+message Pokemon {
+  string id                 = 1;
+  string name               = 2;
+  string type               = 3;
+  int32  hp                 = 4;
+  int32  attack             = 5;
+  int32  speed              = 6;
+  string special_move_name   = 7;
+  int32  special_move_damage = 8;
+}
+
+message CreatePokemonRequest {
+  string name               = 1;
+  string type               = 2;
+  int32  hp                 = 3;
+  int32  attack             = 4;
+  int32  speed              = 5;
+  string special_move_name   = 6;
+  int32  special_move_damage = 7;
+}
+message CreatePokemonResponse {
+  string id = 1;
+}
+
+message GetPokemonRequest {
+  string id = 1;
+}
+message GetPokemonResponse {
+  Pokemon pokemon = 1;
+}
+
+message ListPokemonRequest  {}
+message ListPokemonResponse {
+  repeated Pokemon pokemon = 1;
+}
+
+// ─── TypeMatchup ─────────────────────────────────────────────
+
+message TypeMatchup {
+  string attacking_type = 1;
+  string defending_type = 2;
+  double effectiveness  = 3;
+}
+
+message CreateTypeMatchupRequest {
+  string attacking_type = 1;
+  string defending_type = 2;
+  double effectiveness  = 3;
+}
+message CreateTypeMatchupResponse {}
+
+message ListTypeMatchupsRequest  {}
+message ListTypeMatchupsResponse {
+  repeated TypeMatchup matchups = 1;
+}
+
+// ─── Item ────────────────────────────────────────────────────
+
+message Item {
+  string id                  = 1;
+  string name                = 2;
+  string effect_type         = 3;
+  string target_type         = 4;
+  double capture_rate_bonus  = 5;
+}
+
+message CreateItemRequest {
+  string name               = 1;
+  string effect_type        = 2;
+  string target_type        = 3;
+  double capture_rate_bonus = 4;
+}
+message CreateItemResponse {
+  string id = 1;
+}
+
+message GetItemRequest {
+  string id = 1;
+}
+message GetItemResponse {
+  Item item = 1;
+}
+
+message ListItemsRequest  {}
+message ListItemsResponse {
+  repeated Item items = 1;
+}
