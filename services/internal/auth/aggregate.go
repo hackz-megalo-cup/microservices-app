@@ -40,40 +40,41 @@ func (a *UserAggregate) ApplyEvent(eventType string, data json.RawMessage) {
 		}
 		a.Email = d.Email
 		a.Role = d.Role
-		a.CreatedAt = time.Now()
+		a.CreatedAt = d.OccurredAt
 
 	case EventUserLoggedIn:
 		var d UserLoggedInData
 		if err := json.Unmarshal(data, &d); err != nil {
 			slog.Warn("failed to unmarshal UserLoggedInData", "error", err)
 		}
-		now := time.Now()
-		a.LastLoginAt = &now
+		occurredAt := d.OccurredAt
+		a.LastLoginAt = &occurredAt
 	}
 }
 
 // RegisterUser records a user registration
-func (a *UserAggregate) RegisterUser(email string, passwordHash string) {
+func (a *UserAggregate) RegisterUser(email string, passwordHash string, occurredAt time.Time) {
 	a.Raise(EventUserRegistered, UserRegisteredData{
-		UserID: a.AggregateID(),
-		Email:  email,
-		Role:   "user",
+		UserID:     a.AggregateID(),
+		Email:      email,
+		Role:       "user",
+		OccurredAt: occurredAt,
 	})
 	a.Email = email
 	a.PasswordHash = passwordHash
 	a.Role = "user"
-	a.CreatedAt = time.Now()
+	a.CreatedAt = occurredAt
 }
 
 // LoggedIn records a user login
-func (a *UserAggregate) LoggedIn() {
+func (a *UserAggregate) LoggedIn(occurredAt time.Time) {
 	isFirstToday := a.LastLoginAt == nil || isFirstToday(a.LastLoginAt)
 	a.Raise(EventUserLoggedIn, UserLoggedInData{
 		UserID:       a.AggregateID(),
 		IsFirstToday: isFirstToday,
+		OccurredAt:   occurredAt,
 	})
-	now := time.Now()
-	a.LastLoginAt = &now
+	a.LastLoginAt = &occurredAt
 }
 
 // Fail records a failed operation (for saga compensation)

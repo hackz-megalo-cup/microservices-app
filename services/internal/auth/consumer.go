@@ -50,7 +50,12 @@ func RunConsumer(ctx context.Context, cfg ConsumerConfig) error {
 			for _, record := range p.Records {
 				if err := handleCaughtPokemon(ctx, cfg.Repo, record.Value); err != nil {
 					slog.Error("failed to process capture.caught event", "error", err)
-					// Don't commit offset on error - let Kafka retry
+					// Do not commit offset on error so Kafka can retry this record.
+					return
+				}
+
+				if err := cfg.Client.CommitRecords(ctx, record); err != nil {
+					slog.Error("failed to commit kafka offset", "topic", record.Topic, "partition", record.Partition, "offset", record.Offset, "error", err)
 					return
 				}
 			}

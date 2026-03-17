@@ -3,6 +3,8 @@ package auth
 import (
 	"context"
 	"crypto/rsa"
+	"encoding/json"
+	"errors"
 	"fmt"
 	"log/slog"
 	"time"
@@ -10,6 +12,8 @@ import (
 	"connectrpc.com/connect"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
 	"google.golang.org/protobuf/types/known/timestamppb"
@@ -55,6 +59,9 @@ func (s *Service) RegisterUser(ctx context.Context, req *connect.Request[authv1.
 	if email == "" || password == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("email and password are required"))
 	}
+	if err := s.requireWriteDependencies(); err != nil {
+		return nil, connect.NewError(connect.CodeUnavailable, err)
+	}
 
 	// Hash password
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
@@ -63,26 +70,52 @@ func (s *Service) RegisterUser(ctx context.Context, req *connect.Request[authv1.
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to register"))
 	}
 
+	now := time.Now().UTC()
+
 	// Create aggregate
 	agg := NewUserAggregate(uuid.NewString())
-	agg.RegisterUser(email, string(passwordHash))
+	agg.RegisterUser(email, string(passwordHash), now)
 
-	// Save to EventStore + Outbox
-	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, UserTopicMapper); err != nil {
-		slog.Error("failed to save user", "error", err)
+	tx, err := s.eventStore.BeginTx(ctx)
+	if err != nil {
+		slog.Error("failed to begin register transaction", "error", err)
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to register"))
 	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
 
-	// Write projection synchronously for immediate availability
-	_, err = s.pool.Exec(ctx,
+	_, err = tx.Exec(ctx,
 		`INSERT INTO users (id, email, password_hash, role, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, NOW(), NOW())`,
-		agg.AggregateID(), email, passwordHash, agg.Role,
+		 VALUES ($1, $2, $3, $4, $5, $5)`,
+		agg.AggregateID(), email, passwordHash, agg.Role, now,
 	)
 	if err != nil {
+		if isUniqueViolation(err) {
+			return nil, connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("email already exists"))
+		}
 		slog.Error("failed to write user projection", "error", err)
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to register"))
 	}
+
+	newVersion, err := s.eventStore.AppendToStream(ctx, tx, agg.AggregateID(), agg.StreamType(), agg.Version(), agg.Changes())
+	if err != nil {
+		slog.Error("failed to append register events", "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to register"))
+	}
+
+	if err := s.insertOutboxEvents(ctx, tx, agg); err != nil {
+		slog.Error("failed to insert register outbox events", "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to register"))
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		slog.Error("failed to commit register transaction", "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to register"))
+	}
+
+	agg.SetVersion(newVersion)
+	agg.ClearChanges()
 
 	return connect.NewResponse(&authv1.RegisterUserResponse{
 		User: &authv1.User{
@@ -101,6 +134,9 @@ func (s *Service) LoginUser(ctx context.Context, req *connect.Request[authv1.Log
 
 	if email == "" || password == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("email and password are required"))
+	}
+	if err := s.requireWriteDependencies(); err != nil {
+		return nil, connect.NewError(connect.CodeUnavailable, err)
 	}
 
 	// Lookup user by email from projection table
@@ -127,12 +163,46 @@ func (s *Service) LoginUser(ctx context.Context, req *connect.Request[authv1.Log
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to login"))
 	}
 
+	now := time.Now().UTC()
+
 	// Record login
-	agg.LoggedIn()
-	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, UserTopicMapper); err != nil {
-		slog.Error("failed to save login event", "user_id", userID, "error", err)
+	agg.LoggedIn(now)
+
+	tx, err := s.eventStore.BeginTx(ctx)
+	if err != nil {
+		slog.Error("failed to begin login transaction", "error", err)
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to login"))
 	}
+	defer func() {
+		_ = tx.Rollback(ctx)
+	}()
+
+	if _, err := tx.Exec(ctx,
+		`UPDATE users SET last_login_at = $1, updated_at = $1 WHERE id = $2`,
+		now, userID,
+	); err != nil {
+		slog.Error("failed to update last_login_at projection", "user_id", userID, "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to login"))
+	}
+
+	newVersion, err := s.eventStore.AppendToStream(ctx, tx, agg.AggregateID(), agg.StreamType(), agg.Version(), agg.Changes())
+	if err != nil {
+		slog.Error("failed to append login events", "user_id", userID, "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to login"))
+	}
+
+	if err := s.insertOutboxEvents(ctx, tx, agg); err != nil {
+		slog.Error("failed to insert login outbox events", "user_id", userID, "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to login"))
+	}
+
+	if err := tx.Commit(ctx); err != nil {
+		slog.Error("failed to commit login transaction", "user_id", userID, "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to login"))
+	}
+
+	agg.SetVersion(newVersion)
+	agg.ClearChanges()
 
 	// Generate JWT token (24 hour expiry)
 	token, err := s.issueJWT(userID, email, role, 24*time.Hour)
@@ -215,6 +285,9 @@ func (s *Service) RegisterPokemon(ctx context.Context, userID, pokemonID string)
 	if userID == "" || pokemonID == "" {
 		return fmt.Errorf("user_id and pokemon_id are required")
 	}
+	if s.pool == nil {
+		return fmt.Errorf("database not configured")
+	}
 
 	_, err := s.pool.Exec(ctx,
 		`INSERT INTO user_pokemon (user_id, pokemon_id) VALUES ($1, $2)
@@ -222,4 +295,52 @@ func (s *Service) RegisterPokemon(ctx context.Context, userID, pokemonID string)
 		userID, pokemonID,
 	)
 	return err
+}
+
+func (s *Service) insertOutboxEvents(ctx context.Context, tx pgx.Tx, agg *UserAggregate) error {
+	if s.outbox == nil {
+		return nil
+	}
+
+	for _, change := range agg.Changes() {
+		topic := UserTopicMapper(change.Type)
+		if topic == "" {
+			continue
+		}
+
+		event := platform.NewEvent(change.Type, "auth-service", change.Data)
+		enrichedData := map[string]any{
+			"stream_id": agg.AggregateID(),
+		}
+		if raw, marshalErr := json.Marshal(change.Data); marshalErr == nil {
+			var payload map[string]any
+			if unmarshalErr := json.Unmarshal(raw, &payload); unmarshalErr == nil {
+				for key, value := range payload {
+					enrichedData[key] = value
+				}
+			}
+		}
+		event.Data = enrichedData
+
+		if err := s.outbox.InsertEvent(ctx, tx, topic, event); err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func (s *Service) requireWriteDependencies() error {
+	if s.eventStore == nil || s.pool == nil {
+		return fmt.Errorf("database not configured")
+	}
+	return nil
+}
+
+func isUniqueViolation(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "23505"
+	}
+	return false
 }

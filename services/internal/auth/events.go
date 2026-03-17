@@ -1,5 +1,7 @@
 package auth
 
+import "time"
+
 // Event type constants
 const (
 	EventUserRegistered  = "user.registered"
@@ -10,15 +12,17 @@ const (
 
 // UserRegisteredData is the payload for user.registered events
 type UserRegisteredData struct {
-	UserID string `json:"user_id"`
-	Email  string `json:"email"`
-	Role   string `json:"role"`
+	UserID     string    `json:"user_id"`
+	Email      string    `json:"email"`
+	Role       string    `json:"role"`
+	OccurredAt time.Time `json:"occurred_at"`
 }
 
 // UserLoggedInData is the payload for user.logged_in events
 type UserLoggedInData struct {
-	UserID       string `json:"user_id"`
-	IsFirstToday bool   `json:"is_first_today"`
+	UserID       string    `json:"user_id"`
+	IsFirstToday bool      `json:"is_first_today"`
+	OccurredAt   time.Time `json:"occurred_at"`
 }
 
 // UserFailedData is the payload for user.failed events
