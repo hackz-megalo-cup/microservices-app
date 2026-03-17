@@ -244,6 +244,16 @@ services:
     networks:
       - app
 
+  item:
+    build:
+      context: .
+      dockerfile: deploy/docker/item/Dockerfile
+    environment:
+      PORT: "8080"
+      DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/item_db"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""
+      OTEL_SERVICE_NAME: "item-service"
+
   masterdata:
     build:
       context: .
@@ -257,6 +267,12 @@ services:
       JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
     labels:
       - "traefik.enable=true"
+      - "traefik.http.routers.item.rule=PathPrefix(`/item.v1.ItemService`)"
+      - "traefik.http.routers.item.entrypoints=web"
+      - "traefik.http.routers.item.priority=100"
+      - "traefik.http.routers.item.middlewares=cors@file,auth@file,rate-limit@file,retry@file"
+      - "traefik.http.services.item.loadbalancer.server.port=8080"
+      - "traefik.http.services.item.loadbalancer.server.scheme=h2c"
       - "traefik.http.routers.masterdata.rule=PathPrefix(`/masterdata.v1.MasterdataService`)"
       - "traefik.http.routers.masterdata.entrypoints=web"
       - "traefik.http.routers.masterdata.priority=100"

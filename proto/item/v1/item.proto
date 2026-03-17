@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package item.v1;
+
+option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/item/v1;itemv1";
+
+service ItemService {
+  rpc GrantItem(GrantItemRequest) returns (GrantItemResponse) {}
+  rpc UseItem(UseItemRequest) returns (UseItemResponse) {}
+}
+
+message GrantItemRequest {
+  string user_id = 1;
+  string item_id = 2;
+  int32 quantity = 3;
+  string reason = 4;
+}
+
+message GrantItemResponse {
+  string id = 1;
+}
+
+message UseItemRequest {
+  string user_id = 1;
+  string item_id = 2;
+  int32 quantity = 3;
+}
+
+message UseItemResponse {}

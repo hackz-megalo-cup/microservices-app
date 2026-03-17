@@ -15,6 +15,11 @@
       "port": 8082,
       "k8s_resource": "gateway"
     },
+    "item": {
+      "cmd_path": "cmd/item",
+      "port": 8080,
+      "k8s_resource": "item-service"
+    },
     "masterdata": {
       "cmd_path": "cmd/masterdata",
       "port": 8084,
