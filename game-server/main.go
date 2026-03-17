@@ -69,11 +69,16 @@ func runLocalDev() {
 	log.Println("======================")
 
 	// Create session immediately
-	session := battle.NewSession(uuid.New(), uuid.New(), 50000, battle.TypeMatchup{}, 300*time.Second)
+	session := battle.NewSession(uuid.New(), uuid.New(), 50000, "normal", battle.TypeMatchup{}, 300*time.Second)
 	hub := transport.NewHub()
 	handler := transport.NewHandler(hub, session)
 
 	log.Println("battle session created (local dev)")
+
+	// Start timeout timer
+	time.AfterFunc(session.TimeoutDuration, func() {
+		session.Timeout()
+	})
 
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
@@ -257,10 +262,15 @@ func runProduction() {
 			matchups := battle.TypeMatchup{}
 
 			mu.Lock()
-			session = battle.NewSession(lobbyID, bossPokemonID, 50000, matchups, 300*time.Second)
+			session = battle.NewSession(lobbyID, bossPokemonID, 50000, "normal", matchups, 300*time.Second)
 			hub = transport.NewHub()
 			handler = transport.NewHandler(hub, session)
 			mu.Unlock()
+
+			// Start timeout timer
+			time.AfterFunc(session.TimeoutDuration, func() {
+				session.Timeout()
+			})
 
 			close(sessionReady)
 

@@ -11,7 +11,7 @@ import (
 func TestHandleMessage_Join(t *testing.T) {
 	hub := NewHub()
 	matchups := battle.TypeMatchup{}
-	session := battle.NewSession(uuid.New(), uuid.New(), 50000, matchups, 300*time.Second)
+	session := battle.NewSession(uuid.New(), uuid.New(), 50000, "normal", matchups, 300*time.Second)
 
 	conn := &mockConn{}
 	userID := uuid.New()
@@ -32,7 +32,7 @@ func TestHandleMessage_Join(t *testing.T) {
 func TestHandleMessage_Tap(t *testing.T) {
 	hub := NewHub()
 	matchups := battle.TypeMatchup{}
-	session := battle.NewSession(uuid.New(), uuid.New(), 50000, matchups, 300*time.Second)
+	session := battle.NewSession(uuid.New(), uuid.New(), 50000, "normal", matchups, 300*time.Second)
 
 	conn := &mockConn{}
 	userID := uuid.New()
@@ -59,7 +59,7 @@ func TestHandleMessage_Tap(t *testing.T) {
 func TestHandleMessage_Special_NotEnoughTaps(t *testing.T) {
 	hub := NewHub()
 	matchups := battle.TypeMatchup{}
-	session := battle.NewSession(uuid.New(), uuid.New(), 50000, matchups, 300*time.Second)
+	session := battle.NewSession(uuid.New(), uuid.New(), 50000, "normal", matchups, 300*time.Second)
 
 	conn := &mockConn{}
 	userID := uuid.New()
@@ -85,7 +85,7 @@ func TestHandleMessage_Special_NotEnoughTaps(t *testing.T) {
 func TestHandleMessage_BossDefeated(t *testing.T) {
 	hub := NewHub()
 	matchups := battle.TypeMatchup{}
-	session := battle.NewSession(uuid.New(), uuid.New(), 50, matchups, 300*time.Second)
+	session := battle.NewSession(uuid.New(), uuid.New(), 50, "normal", matchups, 300*time.Second)
 
 	conn := &mockConn{}
 	userID := uuid.New()

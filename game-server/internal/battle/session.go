@@ -24,13 +24,14 @@ type Session struct {
 	mu              sync.RWMutex
 }
 
-func NewSession(lobbyID, bossPokemonID uuid.UUID, bossHP int32, matchups TypeMatchup, timeout time.Duration) *Session {
+func NewSession(lobbyID, bossPokemonID uuid.UUID, bossHP int32, bossType string, matchups TypeMatchup, timeout time.Duration) *Session {
 	return &Session{
 		SessionID:       uuid.New(),
 		LobbyID:         lobbyID,
 		BossPokemonID:   bossPokemonID,
 		BossHP:          bossHP,
 		BossMaxHP:       bossHP,
+		BossType:        bossType,
 		TypeMatchups:    matchups,
 		Participants:    make(map[uuid.UUID]*Participant),
 		StartedAt:       time.Now(),

@@ -12,7 +12,7 @@ func TestNewSession(t *testing.T) {
 	bossID := uuid.New()
 	matchups := TypeMatchup{"static_typing": {"dynamic_typing": 2.0}}
 
-	s := NewSession(lobbyID, bossID, 50000, matchups, 300*time.Second)
+	s := NewSession(lobbyID, bossID, 50000, "normal", matchups, 300*time.Second)
 
 	if s.LobbyID != lobbyID {
 		t.Errorf("LobbyID = %v, want %v", s.LobbyID, lobbyID)
@@ -74,5 +74,5 @@ func TestSession_UnknownParticipant(t *testing.T) {
 
 func newTestSession(bossHP int32) *Session {
 	matchups := TypeMatchup{"static_typing": {"dynamic_typing": 2.0}}
-	return NewSession(uuid.New(), uuid.New(), bossHP, matchups, 300*time.Second)
+	return NewSession(uuid.New(), uuid.New(), bossHP, "normal", matchups, 300*time.Second)
 }
