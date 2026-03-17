@@ -4,8 +4,8 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
-	"log/slog"
 	"hash/fnv"
+	"log/slog"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
