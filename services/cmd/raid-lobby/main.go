@@ -17,6 +17,7 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1/masterdatav1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1/raid_lobbyv1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 	raidlobby "github.com/hackz-megalo-cup/microservices-app/services/internal/raid_lobby"
@@ -85,12 +86,12 @@ func run() error {
 			slog.Warn("compensation: missing stream_id", "event_id", event.ID)
 			return nil
 		}
-		agg := raidlobby.NewRaidLobbyAggregate(streamID)
+		agg := raidlobby.NewAggregate(streamID)
 		if err := platform.LoadAggregate(ctx, eventStore, agg); err != nil {
 			return err
 		}
 		agg.Compensate("saga compensation")
-		if err := platform.SaveAggregate(ctx, eventStore, outbox, agg, raidlobby.RaidLobbyTopicMapper); err != nil {
+		if err := platform.SaveAggregate(ctx, eventStore, outbox, agg, raidlobby.TopicMapper); err != nil {
 			return err
 		}
 		slog.Info("compensation: aggregate compensated via ES", "stream_id", streamID)
@@ -102,13 +103,25 @@ func run() error {
 		}
 	}()
 
+	// --- Masterdata client ---
+	var masterdataClient masterdatav1connect.MasterdataServiceClient
+	if masterdataURL := os.Getenv("MASTERDATA_URL"); masterdataURL != "" {
+		masterdataClient = masterdatav1connect.NewMasterdataServiceClient(
+			platform.NewInstrumentedHTTPClient(3*time.Second),
+			masterdataURL,
+		)
+	}
+
 	// --- Auth & Idempotency ---
 	verifier := platform.NewJWTVerifier(os.Getenv("JWKS_URL"))
 	idempotencyStore := platform.NewIdempotencyStore(dbPool)
 	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
 
 	// --- Service ---
-	svc := raidlobby.NewService(eventStore, outbox)
+	svc := raidlobby.NewService(eventStore, outbox, dbPool, masterdataClient, brokers)
+
+	// --- Battle.finished Consumer ---
+	go runBattleFinishedConsumer(ctx, brokers, svc)
 
 	// --- Connect-RPC Handler with interceptors ---
 	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
@@ -149,7 +162,7 @@ func run() error {
 		Addr:         ":" + port,
 		BaseContext:  func(net.Listener) context.Context { return ctx },
 		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		WriteTimeout: 0, // streaming のため無制限
 		Handler:      h2c.NewHandler(mux, &http2.Server{}),
 	}
 
@@ -171,4 +184,60 @@ func run() error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	return srv.Shutdown(shutdownCtx)
+}
+
+func runBattleFinishedConsumer(ctx context.Context, brokers []string, svc *raidlobby.Service) {
+	sub, err := platform.NewEventSubscriber(brokers, "raid-lobby-battle-consumer")
+	if err != nil {
+		slog.Error("failed to create battle.finished subscriber", "error", err)
+		return
+	}
+	if sub == nil {
+		return
+	}
+	defer sub.Close()
+
+	ch, err := sub.Subscribe(ctx, platform.TopicBattleFinished)
+	if err != nil {
+		slog.Error("failed to subscribe to battle.finished", "error", err)
+		return
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg, ok := <-ch:
+			if !ok {
+				return
+			}
+			event, err := platform.ParseEvent(msg)
+			if err != nil {
+				slog.Error("battle consumer: failed to parse event", "error", err)
+				msg.Nack()
+				continue
+			}
+			data, ok := event.Data.(map[string]any)
+			if !ok {
+				slog.Warn("battle consumer: unexpected data type", "event_id", event.ID)
+				msg.Ack()
+				continue
+			}
+			lobbyID, _ := data["lobby_id"].(string)
+			if lobbyID == "" {
+				slog.Warn("battle consumer: missing lobby_id", "event_id", event.ID)
+				msg.Ack()
+				continue
+			}
+			sessionID, _ := data["session_id"].(string)
+			result, _ := data["result"].(string)
+
+			if err := svc.HandleBattleFinished(ctx, lobbyID, sessionID, result); err != nil {
+				slog.Error("battle consumer: failed to handle event", "lobby_id", lobbyID, "error", err)
+				msg.Nack()
+				continue
+			}
+			msg.Ack()
+		}
+	}
 }
