@@ -147,10 +147,53 @@ func (s *Service) JoinRaid(ctx context.Context, req *connect.Request[pb.JoinRaid
 	}), nil
 }
 
-func (s *Service) StartBattle(_ context.Context, req *connect.Request[pb.StartBattleRequest]) (*connect.Response[pb.StartBattleResponse], error) {
-	if req.Msg.GetLobbyId() == "" {
+func (s *Service) validateLobbyForBattle(ctx context.Context, lobbyID string) error {
+	if s.db == nil {
+		return nil
+	}
+	var status string
+	err := s.db.QueryRow(ctx, `SELECT status FROM raid_lobby WHERE id = $1`, lobbyID).Scan(&status)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return connect.NewError(connect.CodeNotFound, fmt.Errorf("lobby not found: %s", lobbyID))
+		}
+		return connect.NewError(connect.CodeInternal, fmt.Errorf("failed to query lobby: %w", err))
+	}
+	if status != "waiting" {
+		return connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("lobby is not in waiting status (status: %s)", status))
+	}
+	return nil
+}
+
+func (s *Service) StartBattle(ctx context.Context, req *connect.Request[pb.StartBattleRequest]) (*connect.Response[pb.StartBattleResponse], error) {
+	lobbyID := req.Msg.GetLobbyId()
+	if lobbyID == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("lobby_id is required"))
 	}
+
+	if err := s.validateLobbyForBattle(ctx, lobbyID); err != nil {
+		return nil, err
+	}
+
+	agg := NewAggregate(lobbyID)
+	if err := platform.LoadAggregate(ctx, s.eventStore, agg); err != nil {
+		slog.Error("failed to load aggregate", "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to load lobby: %w", err))
+	}
+
+	agg.StartBattle()
+
+	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, TopicMapper); err != nil {
+		slog.Error("failed to save aggregate", "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save battle start: %w", err))
+	}
+
+	if s.db != nil {
+		if _, err := s.db.Exec(ctx, `UPDATE raid_lobby SET status = 'in_battle' WHERE id = $1`, lobbyID); err != nil {
+			slog.Error("failed to update raid_lobby status", "error", err)
+		}
+	}
+
 	return connect.NewResponse(&pb.StartBattleResponse{
 		BattleSessionId: uuid.NewString(),
 	}), nil
@@ -213,17 +256,31 @@ func (s *Service) sendParticipantSnapshots(ctx context.Context, lobbyID string, 
 }
 
 func (s *Service) streamKafkaEvents(ctx context.Context, lobbyID string, stream *connect.ServerStream[pb.StreamLobbyResponse]) error {
-	consumerGroup := "stream-lobby-" + uuid.NewString()
-	subscriber, err := platform.NewEventSubscriber(s.brokers, consumerGroup)
-	if err != nil || subscriber == nil {
-		slog.Warn("failed to create event subscriber for StreamLobby", "error", err)
+	groupBase := "stream-lobby-" + uuid.NewString()
+
+	sub1, err := platform.NewEventSubscriber(s.brokers, groupBase+"-joined")
+	if err != nil || sub1 == nil {
+		slog.Warn("failed to create joined subscriber for StreamLobby", "error", err)
 		return nil
 	}
-	defer subscriber.Close()
+	defer sub1.Close()
 
-	msgs, err := subscriber.Subscribe(ctx, platform.TopicRaidUserJoined)
-	if err != nil || msgs == nil {
+	msgs1, err := sub1.Subscribe(ctx, platform.TopicRaidUserJoined)
+	if err != nil || msgs1 == nil {
 		slog.Warn("failed to subscribe to raid.user_joined", "error", err)
+		return nil
+	}
+
+	sub2, err := platform.NewEventSubscriber(s.brokers, groupBase+"-battle")
+	if err != nil || sub2 == nil {
+		slog.Warn("failed to create battle subscriber for StreamLobby", "error", err)
+		return nil
+	}
+	defer sub2.Close()
+
+	msgs2, err := sub2.Subscribe(ctx, platform.TopicRaidBattleStarted)
+	if err != nil || msgs2 == nil {
+		slog.Warn("failed to subscribe to raid.battle_started", "error", err)
 		return nil
 	}
 
@@ -231,7 +288,7 @@ func (s *Service) streamKafkaEvents(ctx context.Context, lobbyID string, stream 
 		select {
 		case <-ctx.Done():
 			return nil
-		case msg, ok := <-msgs:
+		case msg, ok := <-msgs1:
 			if !ok {
 				return nil
 			}
@@ -239,8 +296,44 @@ func (s *Service) streamKafkaEvents(ctx context.Context, lobbyID string, stream 
 			if err := s.handleJoinedEvent(msg, lobbyID, stream); err != nil {
 				return err
 			}
+		case msg, ok := <-msgs2:
+			if !ok {
+				return nil
+			}
+			msg.Ack()
+			matched, err := s.handleBattleStartedEvent(msg, lobbyID, stream)
+			if err != nil {
+				return err
+			}
+			if matched {
+				return nil
+			}
 		}
 	}
+}
+
+func (s *Service) handleBattleStartedEvent(msg *message.Message, lobbyID string, stream *connect.ServerStream[pb.StreamLobbyResponse]) (bool, error) {
+	event, err := platform.ParseEvent(msg)
+	if err != nil {
+		slog.Warn("StreamLobby: failed to parse battle_started event", "error", err)
+		return false, nil
+	}
+
+	raw, _ := json.Marshal(event.Data)
+	var data BattleStartedData
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Warn("StreamLobby: failed to unmarshal battle_started data", "error", err)
+		return false, nil
+	}
+	if data.LobbyID != lobbyID {
+		return false, nil
+	}
+
+	return true, stream.Send(&pb.StreamLobbyResponse{
+		EventType: event.Type,
+		LobbyId:   data.LobbyID,
+		Payload:   string(raw),
+	})
 }
 
 func (s *Service) handleJoinedEvent(msg *message.Message, lobbyID string, stream *connect.ServerStream[pb.StreamLobbyResponse]) error {
@@ -252,7 +345,10 @@ func (s *Service) handleJoinedEvent(msg *message.Message, lobbyID string, stream
 
 	raw, _ := json.Marshal(event.Data)
 	var data UserJoinedData
-	_ = json.Unmarshal(raw, &data)
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Warn("StreamLobby: failed to unmarshal user_joined data", "error", err)
+		return nil
+	}
 	if data.LobbyID != lobbyID {
 		return nil
 	}
