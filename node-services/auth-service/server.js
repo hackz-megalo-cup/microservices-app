@@ -1,4 +1,3 @@
-import http2 from "node:http2";
 import { connectNodeAdapter } from "@connectrpc/connect-node";
 import { createKafkaClient, createOutbox } from "@microservices/shared";
 import pool from "@microservices/shared/db.js";
@@ -36,31 +35,10 @@ function routes(router) {
   });
 }
 
-// gRPC ハンドラー（connectNodeAdapter を使用）
-const grpcHandler = connectNodeAdapter({
-  routes,
-});
+// gRPC ハンドラーを Express に統合
+app.use(connectNodeAdapter({ routes }));
 
-// http2 サーバー作成（REST + gRPC）
-const server = http2.createServer((req, res) => {
-  const url = req.url || "";
-
-  // REST エンドポイント（Traefik forward-auth と JWKS のみ）
-  if (
-    url.startsWith("/verify") ||
-    url.startsWith("/auth/verify") ||
-    url.startsWith("/.well-known/jwks.json") ||
-    url === "/healthz"
-  ) {
-    // Express で処理
-    app(req, res);
-  } else {
-    // gRPC で処理
-    grpcHandler(req, res);
-  }
-});
-
-server.listen(port, () => {
+app.listen(port, () => {
   console.log(`auth-service listening on :${port}`);
   console.log(`  gRPC API: grpc://localhost:${port} (auth.v1.AuthService)`);
   console.log(`  REST API (limited): /verify, /jwks.json, /healthz`);
