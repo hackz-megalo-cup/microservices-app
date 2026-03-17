@@ -1,18 +1,19 @@
 package item
 
 const (
-	EventItemCreated = "item.created"
+	// ここGrantedになってます！！！！！！！！！.
+	EventItemGranted = "item.granted"
 	// ↓ ドメインイベントを追加する
 	// 例: EventItemCompleted = "item.completed"
 	// ⚠ 新しいイベントを追加したら platform/topics.go にもトピック定数と DefaultTopics() を追加すること。
-
+	EventItemUsed        = "item.used"
 	EventItemFailed      = "item.failed"      // main.go が参照 — 削除禁止
 	EventItemCompensated = "item.compensated" // main.go が参照 — 削除禁止
 )
 
 // ItemCreatedData — 作成イベントのペイロード。
 // ドメインに合わせてフィールドを書き換える。
-type CreatedData struct {
+type ItemGrantedData struct {
 	UserID   string `json:"user_id"`
 	ItemID   string `json:"item_id"`
 	Quantity int32  `json:"quantity"`
@@ -23,6 +24,11 @@ type CreatedData struct {
 // 例: type ItemCompletedData struct{}。
 
 // --- 以下は main.go の補償ハンドラが使用。型名とフィールドは残すこと。 ---。
+type ItemUsedData struct {
+	UserID   string `json:"user_id"`
+	ItemID   string `json:"item_id"`
+	Quantity int32  `json:"quantity"`
+}
 
 type FailedData struct {
 	Input string `json:"input"`

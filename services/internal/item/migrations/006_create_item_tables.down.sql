@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS user_item;
+DROP TABLE IF EXISTS item_history;

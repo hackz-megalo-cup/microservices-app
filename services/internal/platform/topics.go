@@ -11,6 +11,7 @@ const (
 	TopicCallCompleted     = "call.completed"
 	TopicInvocationCreated = "invocation.created"
 	TopicUserRegistered    = "user.registered"
+	TopicUserLoggedIn      = "user.logged_in"
 
 	// Saga compensation topics.
 	TopicGreetingFailed        = "greeting.failed"
@@ -23,6 +24,8 @@ const (
 
 	TopicItemCreated           = "item.created"
 	TopicItemFailed            = "item.failed"
+	TopicItemGranted           = "item.granted"
+	TopicItemUsed              = "item.used"
 	TopicItemCompensated       = "item.compensated"
 	TopicMasterdataCreated     = "masterdata.created"
 	TopicMasterdataFailed      = "masterdata.failed"
@@ -75,6 +78,7 @@ func DefaultTopics() map[string]int32 {
 		TopicCallCompleted:            3,
 		TopicInvocationCreated:        3,
 		TopicUserRegistered:           3,
+		TopicUserLoggedIn:             3,
 		TopicGreetingFailed:           1,
 		TopicInvocationFailed:         1,
 		TopicGreetingCompensated:      1,
@@ -88,6 +92,8 @@ func DefaultTopics() map[string]int32 {
 		TopicTodoDeleted:              1,
 		TopicItemCreated:              3,
 		TopicItemFailed:               1,
+		TopicItemGranted:              3,
+		TopicItemUsed:                 3,
 		TopicItemCompensated:          1,
 		TopicItemCreatedDLQ:           1,
 		TopicMasterdataCreated:        3,
