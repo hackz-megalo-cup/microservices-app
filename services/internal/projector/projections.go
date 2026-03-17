@@ -259,7 +259,7 @@ func (h *ProjectionHandler) onUserLoggedIn(ctx context.Context, event platform.E
 func selectItem(eventID string) string {
 	items := []string{"potion", "super_ball", "revive", "lure"}
 	h := fnv.New32a()
-	_, _ = h.Write([]byte(eventID)) //nolint:errcheck // hash.Write never fails.
+	_, _ = h.Write([]byte(eventID))
 	return items[h.Sum32()%uint32(len(items))]
 }
 
