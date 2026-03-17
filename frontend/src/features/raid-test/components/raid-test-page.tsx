@@ -78,6 +78,7 @@ function timestamp(): string {
 // ---------------------------------------------------------------------------
 const gameServerUrl = import.meta.env.VITE_GAME_SERVER_URL || "https://localhost:7777";
 const parsedGameServer = new URL(gameServerUrl);
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:30081";
 
 export function RaidTestPage() {
   // --- Form state ---
@@ -338,26 +339,73 @@ export function RaidTestPage() {
 
     const abort = new AbortController();
 
-    const autoConnect = async () => {
+    const allocateViaGateway = async (): Promise<{
+      host: string;
+      port: string;
+      certHash: string;
+    } | null> => {
+      try {
+        const res = await fetch(`${API_BASE_URL}/api/raid/allocate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lobbyId: generateUuid(),
+            bossPokemonId: generateUuid(),
+          }),
+          signal: abort.signal,
+        });
+        if (!res.ok) {
+          return null;
+        }
+        const data = await res.json();
+        if (!data.host || !data.certHash) {
+          return null;
+        }
+        return { host: data.host, port: String(data.port), certHash: data.certHash.trim() };
+      } catch {
+        return null;
+      }
+    };
+
+    const fallbackDirect = async (): Promise<{
+      host: string;
+      port: string;
+      certHash: string;
+    } | null> => {
       try {
         const res = await fetch(`${gameServerUrl}/cert-hash`, { signal: abort.signal });
         if (!res.ok) {
-          return;
+          return null;
         }
         const hash = (await res.text()).trim();
+        return { host: parsedGameServer.hostname, port: parsedGameServer.port, certHash: hash };
+      } catch {
+        return null;
+      }
+    };
+
+    const autoConnect = async () => {
+      try {
+        // Try Gateway allocate first (EKS), then fallback to direct game server (local dev)
+        const conn = (await allocateViaGateway()) ?? (await fallbackDirect());
+        if (!conn) {
+          return;
+        }
+
+        const { host: connectHost, port: connectPort, certHash: hash } = conn;
+
+        setHost(connectHost);
+        setPort(connectPort);
         setCertHash(hash);
 
         const hashBytes = hexToUint8Array(hash);
         setConnectionState("connecting");
 
-        const transport = new WebTransport(
-          `https://${parsedGameServer.hostname}:${parsedGameServer.port}/wt`,
-          {
-            serverCertificateHashes: [
-              { algorithm: "sha-256", value: hashBytes.buffer as ArrayBuffer },
-            ],
-          },
-        );
+        const transport = new WebTransport(`https://${connectHost}:${connectPort}/wt`, {
+          serverCertificateHashes: [
+            { algorithm: "sha-256", value: hashBytes.buffer as ArrayBuffer },
+          ],
+        });
         await transport.ready;
         transportRef.current = transport;
 
