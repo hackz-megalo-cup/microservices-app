@@ -49,7 +49,6 @@ export async function registerUser(req, context) {
         email: user.email,
         role: user.role,
         createdAt: user.created_at,
-        lastLoginAt: null,
       };
     } catch (innerErr) {
       await client.query("ROLLBACK");
@@ -91,8 +90,12 @@ export async function loginUser(req, context) {
       throw new Error("invalid email or password");
     }
 
-    // Update last_login_at
-    await pool.query("UPDATE users SET last_login_at = NOW() WHERE id = $1", [user.id]);
+    // Update last_login_at and get the updated value
+    const updateResult = await pool.query(
+      "UPDATE users SET last_login_at = NOW() WHERE id = $1 RETURNING last_login_at",
+      [user.id],
+    );
+    const lastLoginAt = updateResult.rows[0].last_login_at;
 
     const token = jwt.sign(
       {
@@ -115,7 +118,7 @@ export async function loginUser(req, context) {
         email: user.email,
         role: user.role,
         createdAt: user.created_at,
-        lastLoginAt: user.last_login_at || null,
+        lastLoginAt,
       },
     };
   } catch (err) {
