@@ -135,6 +135,9 @@ export async function loginUser(req, context) {
       },
     };
   } catch (err) {
+    if (err instanceof Error && err.message === "invalid email or password") {
+      throw err;
+    }
     console.error("loginUser error:", err);
     throw new Error("authentication failed");
   }
@@ -173,6 +176,9 @@ export async function getUserProfile(req, _context) {
       lastLoginAt: user.last_login_at ? toTimestamp(user.last_login_at) : null,
     };
   } catch (err) {
+    if (err instanceof Error && err.message === "user not found") {
+      throw err;
+    }
     console.error("getUserProfile error:", err);
     throw new Error("internal server error");
   }
