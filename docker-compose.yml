@@ -265,8 +265,6 @@ services:
       - "traefik.http.services.item.loadbalancer.server.scheme=h2c"
     networks:
       - app
-    networks:
-      - app
     depends_on:
       postgres-db-sync:
         condition: service_completed_successfully
