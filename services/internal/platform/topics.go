@@ -21,9 +21,9 @@ const (
 	TopicTodoTitleUpdated = "todo.title_updated"
 	TopicTodoDeleted      = "todo.deleted"
 
-	TopicItemCreated     = "item.created"
-	TopicItemFailed      = "item.failed"
-	TopicItemCompensated = "item.compensated"
+	TopicItemCreated           = "item.created"
+	TopicItemFailed            = "item.failed"
+	TopicItemCompensated       = "item.compensated"
 	TopicMasterdataCreated     = "masterdata.created"
 	TopicMasterdataFailed      = "masterdata.failed"
 	TopicMasterdataCompensated = "masterdata.compensated"
