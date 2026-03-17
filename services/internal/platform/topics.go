@@ -21,12 +21,16 @@ const (
 	TopicTodoTitleUpdated = "todo.title_updated"
 	TopicTodoDeleted      = "todo.deleted"
 
-	TopicItemCreated     = "item.created"
-	TopicItemFailed      = "item.failed"
-	TopicItemCompensated = "item.compensated"
+	TopicItemCreated           = "item.created"
+	TopicItemFailed            = "item.failed"
+	TopicItemCompensated       = "item.compensated"
 	TopicMasterdataCreated     = "masterdata.created"
 	TopicMasterdataFailed      = "masterdata.failed"
 	TopicMasterdataCompensated = "masterdata.compensated"
+
+	TopicRaidLobbyCreated     = "raid_lobby.created"
+	TopicRaidLobbyFailed      = "raid_lobby.failed"
+	TopicRaidLobbyCompensated = "raid_lobby.compensated"
 
 	// Dead Letter Queue topics.
 	TopicGreetingCreatedDLQ       = "greeting.created.dlq"
@@ -36,6 +40,7 @@ const (
 	TopicInvocationCompensatedDLQ = "invocation.compensated.dlq"
 	TopicItemCreatedDLQ           = "item.created.dlq"
 	TopicMasterdataCreatedDLQ     = "masterdata.created.dlq"
+	TopicRaidLobbyCreatedDLQ      = "raid_lobby.created.dlq"
 )
 
 // DLQTopic returns the dead-letter queue topic for a given source topic.
@@ -49,6 +54,7 @@ func DLQTopic(source string) string {
 		TopicInvocationCompensated: TopicInvocationCompensatedDLQ,
 		TopicItemCreated:           TopicItemCreatedDLQ,
 		TopicMasterdataCreated:     TopicMasterdataCreatedDLQ,
+		TopicRaidLobbyCreated:      TopicRaidLobbyCreatedDLQ,
 	}
 	return m[source]
 }
@@ -79,6 +85,10 @@ func DefaultTopics() map[string]int32 {
 		TopicMasterdataFailed:         1,
 		TopicMasterdataCompensated:    1,
 		TopicMasterdataCreatedDLQ:     1,
+		TopicRaidLobbyCreated:         3,
+		TopicRaidLobbyFailed:          1,
+		TopicRaidLobbyCompensated:     1,
+		TopicRaidLobbyCreatedDLQ:      1,
 	}
 }
 
