@@ -4,6 +4,7 @@ import pool from "@microservices/shared/db.js";
 import express from "express";
 import { AuthService } from "../gen/auth/v1/auth_pb.js";
 import app, { kid, privateKey } from "./app.js";
+import { startCaptureConsumer } from "./consumer.js";
 import { getUserProfile, loginUser, registerUser } from "./handlers.js";
 
 const kafka = createKafkaClient("auth-service");
@@ -51,9 +52,10 @@ server.use((req, res, next) => {
 // 2. RESTエンドポイント（app.jsで定義）
 server.use(app);
 
-server.listen(port, () => {
+server.listen(port, async () => {
   console.log(
     `auth-service listening on :${port} (gRPC: auth.v1.AuthService, REST: /verify, /jwks.json, /healthz)`,
   );
   outbox.startPoller();
+  await startCaptureConsumer(kafka);
 });
