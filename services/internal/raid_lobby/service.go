@@ -62,9 +62,9 @@ func (s *Service) CreateRaid(ctx context.Context, req *connect.Request[pb.Create
 	lobbyID := uuid.NewString()
 
 	// イベントソーシング: ロビー作成イベントを保存 + Kafka 発行
-	agg := NewRaidLobbyAggregate(lobbyID)
+	agg := NewAggregate(lobbyID)
 	agg.Create(bossPokemonID)
-	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, RaidLobbyTopicMapper); err != nil {
+	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, TopicMapper); err != nil {
 		slog.Error("failed to save aggregate", "error", err)
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save"))
 	}
@@ -111,13 +111,13 @@ func (s *Service) JoinRaid(ctx context.Context, req *connect.Request[pb.JoinRaid
 	participantID := uuid.NewString()
 
 	// 既存の集約を読み込んで参加イベントを発行
-	agg := NewRaidLobbyAggregate(lobbyID)
+	agg := NewAggregate(lobbyID)
 	if err := platform.LoadAggregate(ctx, s.eventStore, agg); err != nil {
 		slog.Error("failed to load aggregate", "error", err)
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to load lobby"))
 	}
 	agg.Join(userID, participantID)
-	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, RaidLobbyTopicMapper); err != nil {
+	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, TopicMapper); err != nil {
 		slog.Error("failed to save aggregate", "error", err)
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to join lobby"))
 	}
@@ -187,7 +187,7 @@ func (s *Service) sendParticipantSnapshots(ctx context.Context, lobbyID string, 
 		if err := rows.Scan(&participantID, &userID, &joinedAt); err != nil {
 			continue
 		}
-		payload, _ := json.Marshal(RaidUserJoinedData{
+		payload, _ := json.Marshal(UserJoinedData{
 			LobbyID:       lobbyID,
 			UserID:        userID,
 			ParticipantID: participantID,
@@ -242,7 +242,7 @@ func (s *Service) handleJoinedEvent(msg *message.Message, lobbyID string, stream
 	}
 
 	raw, _ := json.Marshal(event.Data)
-	var data RaidUserJoinedData
+	var data UserJoinedData
 	_ = json.Unmarshal(raw, &data)
 	if data.LobbyID != lobbyID {
 		return nil

@@ -86,12 +86,12 @@ func run() error {
 			slog.Warn("compensation: missing stream_id", "event_id", event.ID)
 			return nil
 		}
-		agg := raidlobby.NewRaidLobbyAggregate(streamID)
+		agg := raidlobby.NewAggregate(streamID)
 		if err := platform.LoadAggregate(ctx, eventStore, agg); err != nil {
 			return err
 		}
 		agg.Compensate("saga compensation")
-		if err := platform.SaveAggregate(ctx, eventStore, outbox, agg, raidlobby.RaidLobbyTopicMapper); err != nil {
+		if err := platform.SaveAggregate(ctx, eventStore, outbox, agg, raidlobby.TopicMapper); err != nil {
 			return err
 		}
 		slog.Info("compensation: aggregate compensated via ES", "stream_id", streamID)

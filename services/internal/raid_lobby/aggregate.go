@@ -7,46 +7,46 @@ import (
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
-type RaidLobbyAggregate struct {
+type Aggregate struct {
 	platform.AggregateBase
 	Status        string
 	BossPokemonID string
 	Participants  []string
 }
 
-func NewRaidLobbyAggregate(id string) *RaidLobbyAggregate {
-	return &RaidLobbyAggregate{
+func NewAggregate(id string) *Aggregate {
+	return &Aggregate{
 		AggregateBase: platform.NewAggregateBase(id),
 	}
 }
 
-func (a *RaidLobbyAggregate) StreamType() string { return "raid_lobby" }
+func (a *Aggregate) StreamType() string { return "raid_lobby" }
 
-func (a *RaidLobbyAggregate) ApplyEvent(eventType string, data json.RawMessage) {
+func (a *Aggregate) ApplyEvent(eventType string, data json.RawMessage) {
 	switch eventType {
-	case EventRaidLobbyCreated:
-		var d RaidLobbyCreatedData
+	case EventCreated:
+		var d CreatedData
 		if err := json.Unmarshal(data, &d); err != nil {
 			slog.Warn("failed to unmarshal created data", "error", err)
 		}
 		a.BossPokemonID = d.BossPokemonID
 		a.Status = "waiting"
-	case EventRaidUserJoined:
-		var d RaidUserJoinedData
+	case EventUserJoined:
+		var d UserJoinedData
 		if err := json.Unmarshal(data, &d); err != nil {
 			slog.Warn("failed to unmarshal user joined data", "error", err)
 		}
 		a.Participants = append(a.Participants, d.UserID)
-	case EventRaidLobbyFailed:
+	case EventFailed:
 		a.Status = "failed"
-	case EventRaidLobbyCompensated:
+	case EventCompensated:
 		a.Status = "compensated"
 	}
 }
 
 // Create initialises a new raid lobby.
-func (a *RaidLobbyAggregate) Create(bossPokemonID string) {
-	a.Raise(EventRaidLobbyCreated, RaidLobbyCreatedData{
+func (a *Aggregate) Create(bossPokemonID string) {
+	a.Raise(EventCreated, CreatedData{
 		BossPokemonID: bossPokemonID,
 	})
 	a.BossPokemonID = bossPokemonID
@@ -54,8 +54,8 @@ func (a *RaidLobbyAggregate) Create(bossPokemonID string) {
 }
 
 // Join adds a participant to the lobby.
-func (a *RaidLobbyAggregate) Join(userID, participantID string) {
-	a.Raise(EventRaidUserJoined, RaidUserJoinedData{
+func (a *Aggregate) Join(userID, participantID string) {
+	a.Raise(EventUserJoined, UserJoinedData{
 		LobbyID:       a.AggregateID(),
 		UserID:        userID,
 		ParticipantID: participantID,
@@ -64,8 +64,8 @@ func (a *RaidLobbyAggregate) Join(userID, participantID string) {
 }
 
 // Fail records a failed operation — main.go が参照、削除禁止。
-func (a *RaidLobbyAggregate) Fail(input string, reason string) {
-	a.Raise(EventRaidLobbyFailed, RaidLobbyFailedData{
+func (a *Aggregate) Fail(input string, reason string) {
+	a.Raise(EventFailed, FailedData{
 		Input: input,
 		Error: reason,
 	})
@@ -73,24 +73,24 @@ func (a *RaidLobbyAggregate) Fail(input string, reason string) {
 }
 
 // Compensate marks this aggregate as compensated — main.go が参照、削除禁止。
-func (a *RaidLobbyAggregate) Compensate(reason string) {
+func (a *Aggregate) Compensate(reason string) {
 	if a.Status == "compensated" {
 		return
 	}
-	a.Raise(EventRaidLobbyCompensated, RaidLobbyCompensatedData{
+	a.Raise(EventCompensated, CompensatedData{
 		Reason: reason,
 	})
 	a.Status = "compensated"
 }
 
-// RaidLobbyTopicMapper maps event types to Kafka topics.
-func RaidLobbyTopicMapper(eventType string) string {
+// TopicMapper maps event types to Kafka topics.
+func TopicMapper(eventType string) string {
 	switch eventType {
-	case EventRaidLobbyCreated:
+	case EventCreated:
 		return platform.TopicRaidLobbyCreated
-	case EventRaidUserJoined:
+	case EventUserJoined:
 		return platform.TopicRaidUserJoined
-	case EventRaidLobbyFailed:
+	case EventFailed:
 		return platform.TopicRaidLobbyFailed
 	default:
 		return ""
