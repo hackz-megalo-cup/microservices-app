@@ -104,6 +104,12 @@ func (h *AllocateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	if len(result.Status.Ports) == 0 {
+		slog.Error("allocated game server has no ports", "address", result.Status.Address)
+		http.Error(w, "allocated game server has no ports", http.StatusInternalServerError)
+		return
+	}
+
 	address := result.Status.Address
 	port := result.Status.Ports[0].Port
 

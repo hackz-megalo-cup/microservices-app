@@ -78,7 +78,7 @@ function timestamp(): string {
 // ---------------------------------------------------------------------------
 const gameServerUrl = import.meta.env.VITE_GAME_SERVER_URL || "https://localhost:7777";
 const parsedGameServer = new URL(gameServerUrl);
-const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:30081";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || "http://localhost:30081";
 
 export function RaidTestPage() {
   // --- Form state ---
@@ -339,10 +339,13 @@ export function RaidTestPage() {
 
     const abort = new AbortController();
 
-    const autoConnect = async () => {
+    const allocateViaGateway = async (): Promise<{
+      host: string;
+      port: string;
+      certHash: string;
+    } | null> => {
       try {
-        // Try Gateway allocate first (EKS)
-        const allocRes = await fetch(`${apiBaseUrl}/api/raid/allocate`, {
+        const res = await fetch(`${API_BASE_URL}/api/raid/allocate`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
@@ -351,26 +354,45 @@ export function RaidTestPage() {
           }),
           signal: abort.signal,
         });
-
-        let connectHost: string;
-        let connectPort: string;
-        let hash: string;
-
-        if (allocRes.ok) {
-          const data = await allocRes.json();
-          connectHost = data.host;
-          connectPort = String(data.port);
-          hash = data.certHash.trim();
-        } else {
-          // Fallback: direct game server (local dev)
-          const res = await fetch(`${gameServerUrl}/cert-hash`, { signal: abort.signal });
-          if (!res.ok) {
-            return;
-          }
-          connectHost = parsedGameServer.hostname;
-          connectPort = parsedGameServer.port;
-          hash = (await res.text()).trim();
+        if (!res.ok) {
+          return null;
         }
+        const data = await res.json();
+        if (!data.host || !data.certHash) {
+          return null;
+        }
+        return { host: data.host, port: String(data.port), certHash: data.certHash.trim() };
+      } catch {
+        return null;
+      }
+    };
+
+    const fallbackDirect = async (): Promise<{
+      host: string;
+      port: string;
+      certHash: string;
+    } | null> => {
+      try {
+        const res = await fetch(`${gameServerUrl}/cert-hash`, { signal: abort.signal });
+        if (!res.ok) {
+          return null;
+        }
+        const hash = (await res.text()).trim();
+        return { host: parsedGameServer.hostname, port: parsedGameServer.port, certHash: hash };
+      } catch {
+        return null;
+      }
+    };
+
+    const autoConnect = async () => {
+      try {
+        // Try Gateway allocate first (EKS), then fallback to direct game server (local dev)
+        const conn = (await allocateViaGateway()) ?? (await fallbackDirect());
+        if (!conn) {
+          return;
+        }
+
+        const { host: connectHost, port: connectPort, certHash: hash } = conn;
 
         setHost(connectHost);
         setPort(connectPort);
