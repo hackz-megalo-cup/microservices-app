@@ -91,6 +91,9 @@ export async function loginUser(req, context) {
       throw new Error("invalid email or password");
     }
 
+    // Update last_login_at
+    await pool.query("UPDATE users SET last_login_at = NOW() WHERE id = $1", [user.id]);
+
     const token = jwt.sign(
       {
         sub: user.id,
