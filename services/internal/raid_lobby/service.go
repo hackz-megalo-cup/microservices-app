@@ -301,29 +301,35 @@ func (s *Service) streamKafkaEvents(ctx context.Context, lobbyID string, stream 
 				return nil
 			}
 			msg.Ack()
-			if err := s.handleBattleStartedEvent(msg, lobbyID, stream); err != nil {
+			matched, err := s.handleBattleStartedEvent(msg, lobbyID, stream)
+			if err != nil {
 				return err
 			}
-			return nil
+			if matched {
+				return nil
+			}
 		}
 	}
 }
 
-func (s *Service) handleBattleStartedEvent(msg *message.Message, lobbyID string, stream *connect.ServerStream[pb.StreamLobbyResponse]) error {
+func (s *Service) handleBattleStartedEvent(msg *message.Message, lobbyID string, stream *connect.ServerStream[pb.StreamLobbyResponse]) (bool, error) {
 	event, err := platform.ParseEvent(msg)
 	if err != nil {
 		slog.Warn("StreamLobby: failed to parse battle_started event", "error", err)
-		return nil
+		return false, nil
 	}
 
 	raw, _ := json.Marshal(event.Data)
 	var data BattleStartedData
-	_ = json.Unmarshal(raw, &data)
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Warn("StreamLobby: failed to unmarshal battle_started data", "error", err)
+		return false, nil
+	}
 	if data.LobbyID != lobbyID {
-		return nil
+		return false, nil
 	}
 
-	return stream.Send(&pb.StreamLobbyResponse{
+	return true, stream.Send(&pb.StreamLobbyResponse{
 		EventType: event.Type,
 		LobbyId:   data.LobbyID,
 		Payload:   string(raw),
@@ -339,7 +345,10 @@ func (s *Service) handleJoinedEvent(msg *message.Message, lobbyID string, stream
 
 	raw, _ := json.Marshal(event.Data)
 	var data UserJoinedData
-	_ = json.Unmarshal(raw, &data)
+	if err := json.Unmarshal(raw, &data); err != nil {
+		slog.Warn("StreamLobby: failed to unmarshal user_joined data", "error", err)
+		return nil
+	}
 	if data.LobbyID != lobbyID {
 		return nil
 	}
