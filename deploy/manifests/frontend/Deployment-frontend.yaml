@@ -16,8 +16,8 @@ spec:
         app.kubernetes.io/version: 0.1.0
     spec:
       containers:
-        - image: frontend:latest
-          imagePullPolicy: Never
+        - image: ghcr.io/hackz-megalo-cup/frontend:latest
+          imagePullPolicy: Always
           livenessProbe:
             httpGet:
               path: /

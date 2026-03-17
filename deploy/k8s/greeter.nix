@@ -17,8 +17,8 @@ in
         template = {
           metadata.labels = labels;
           spec.containers.greeter-service = {
-            image = "greeter:latest";
-            imagePullPolicy = "Never";
+            image = "ghcr.io/hackz-megalo-cup/greeter:latest";
+            imagePullPolicy = "Always";
             ports.http.containerPort = 8080;
 
             env = {

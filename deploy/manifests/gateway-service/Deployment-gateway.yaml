@@ -35,8 +35,8 @@ spec:
               value: gateway-service
             - name: PORT
               value: "8082"
-          image: gateway:latest
-          imagePullPolicy: Never
+          image: ghcr.io/hackz-megalo-cup/gateway:latest
+          imagePullPolicy: Always
           livenessProbe:
             httpGet:
               path: /healthz

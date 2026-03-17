@@ -17,8 +17,8 @@ in
         template = {
           metadata.labels = labels;
           spec.containers.custom-lang-service = {
-            image = "custom-lang-service:latest";
-            imagePullPolicy = "Never";
+            image = "ghcr.io/hackz-megalo-cup/custom-lang-service:latest";
+            imagePullPolicy = "Always";
             ports.http.containerPort = 3000;
 
             env = {
