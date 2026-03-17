@@ -45,6 +45,7 @@ const (
 	TopicCallCompletedDLQ         = "call.completed.dlq"
 	TopicInvocationCreatedDLQ     = "invocation.created.dlq"
 	TopicUserRegisteredDLQ        = "user.registered.dlq"
+	TopicUserLoggedInDLQ          = "user.logged_in.dlq"
 	TopicInvocationCompensatedDLQ = "invocation.compensated.dlq"
 	TopicItemCreatedDLQ           = "item.created.dlq"
 	TopicMasterdataCreatedDLQ     = "masterdata.created.dlq"
@@ -61,6 +62,7 @@ func DLQTopic(source string) string {
 		TopicCallCompleted:         TopicCallCompletedDLQ,
 		TopicInvocationCreated:     TopicInvocationCreatedDLQ,
 		TopicUserRegistered:        TopicUserRegisteredDLQ,
+		TopicUserLoggedIn:          TopicUserLoggedInDLQ,
 		TopicInvocationCompensated: TopicInvocationCompensatedDLQ,
 		TopicItemCreated:           TopicItemCreatedDLQ,
 		TopicMasterdataCreated:     TopicMasterdataCreatedDLQ,
@@ -87,6 +89,7 @@ func DefaultTopics() map[string]int32 {
 		TopicCallCompletedDLQ:         1,
 		TopicInvocationCreatedDLQ:     1,
 		TopicUserRegisteredDLQ:        1,
+		TopicUserLoggedInDLQ:          1,
 		TopicInvocationCompensatedDLQ: 1,
 		TopicTodoTitleUpdated:         1,
 		TopicTodoDeleted:              1,
