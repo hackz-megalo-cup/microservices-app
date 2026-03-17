@@ -9,9 +9,20 @@ import (
 
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
 	"golang.org/x/crypto/bcrypt"
 
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
+)
+
+var (
+	ErrEmailAndPasswordRequired = errors.New("email and password are required")
+	ErrUserIDRequired           = errors.New("user_id is required")
+	ErrUserAndPokemonIDRequired = errors.New("user_id and pokemon_id are required")
+	ErrInvalidCredentials       = errors.New("invalid email or password")
+	ErrEmailAlreadyExists       = errors.New("email already exists")
+	ErrUserNotFound             = errors.New("user not found")
 )
 
 type userRepository interface {
@@ -21,6 +32,11 @@ type userRepository interface {
 	UpdateLastLogin(ctx context.Context, userID string) (*time.Time, error)
 	RegisterPokemon(ctx context.Context, userID, pokemonID string) error
 	GetUserPokemon(ctx context.Context, userID string) ([]string, error)
+}
+
+type userRepositoryTx interface {
+	CreateTx(ctx context.Context, tx pgx.Tx, user *User) error
+	UpdateLastLoginTx(ctx context.Context, tx pgx.Tx, userID string) (*time.Time, error)
 }
 
 // Service handles authentication business logic
@@ -70,7 +86,7 @@ type UserResponse struct {
 // RegisterUser creates a new user and emits UserRegistered event in a single transaction
 func (s *Service) RegisterUser(ctx context.Context, req RegisterUserRequest) (*UserResponse, error) {
 	if req.Email == "" || req.Password == "" {
-		return nil, errors.New("email and password are required")
+		return nil, ErrEmailAndPasswordRequired
 	}
 
 	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), 10)
@@ -90,23 +106,7 @@ func (s *Service) RegisterUser(ctx context.Context, req RegisterUserRequest) (*U
 		Version:      0,
 	}
 
-	// Create user in repository
-	if err := s.repo.Create(ctx, user); err != nil {
-		// Check for specific database errors
-		errStr := err.Error()
-		if errStr == "user not found" {
-			// Should not happen on Create, but handle it
-			return nil, fmt.Errorf("internal error: %w", err)
-		}
-		// PostgreSQL duplicate key error code: 23505
-		if errStr == "duplicate key" || errStr == "already exists" ||
-			(len(errStr) >= 5 && errStr[:5] == "23505") {
-			return nil, errors.New("email already exists")
-		}
-		return nil, fmt.Errorf("failed to create user: %w", err)
-	}
-
-	// Emit UserRegistered event (within transaction)
+	// Emit UserRegistered event
 	event := UserRegistered{
 		UserID:    userID,
 		Email:     req.Email,
@@ -114,11 +114,40 @@ func (s *Service) RegisterUser(ctx context.Context, req RegisterUserRequest) (*U
 		Timestamp: now,
 	}
 
-	if err := s.appendAndPublishEvent(ctx, userID, 0, event.EventType(), event, platform.TopicUserRegistered); err != nil {
-		// Event publish failed - user was created but event wasn't published
-		// This is acceptable because event sourcing uses EventStore as single source of truth
-		// The event will be retried if EventStore is enabled
-		return nil, fmt.Errorf("failed to publish event: %w", err)
+	if txRepo, ok := s.repo.(userRepositoryTx); ok && (s.eventStore != nil || s.outbox != nil) {
+		tx, err := s.beginManagedTx(ctx)
+		if err != nil {
+			return nil, fmt.Errorf("begin transaction: %w", err)
+		}
+		defer func() {
+			_ = tx.Rollback(ctx)
+		}()
+
+		if err := txRepo.CreateTx(ctx, tx, user); err != nil {
+			if isDuplicateKeyError(err) {
+				return nil, ErrEmailAlreadyExists
+			}
+			return nil, fmt.Errorf("failed to create user: %w", err)
+		}
+
+		if err := s.appendAndPublishEventInTx(ctx, tx, userID, 0, event.EventType(), event, platform.TopicUserRegistered); err != nil {
+			return nil, fmt.Errorf("failed to publish event: %w", err)
+		}
+
+		if err := tx.Commit(ctx); err != nil {
+			return nil, fmt.Errorf("commit transaction: %w", err)
+		}
+	} else {
+		if err := s.repo.Create(ctx, user); err != nil {
+			if isDuplicateKeyError(err) {
+				return nil, ErrEmailAlreadyExists
+			}
+			return nil, fmt.Errorf("failed to create user: %w", err)
+		}
+
+		if err := s.appendAndPublishEvent(ctx, userID, 0, event.EventType(), event, platform.TopicUserRegistered); err != nil {
+			return nil, fmt.Errorf("failed to publish event: %w", err)
+		}
 	}
 
 	return &UserResponse{
@@ -144,38 +173,59 @@ type LoginUserResponse struct {
 // LoginUser authenticates a user and returns JWT token
 func (s *Service) LoginUser(ctx context.Context, req LoginUserRequest) (*LoginUserResponse, error) {
 	if req.Email == "" || req.Password == "" {
-		return nil, errors.New("email and password are required")
+		return nil, ErrEmailAndPasswordRequired
 	}
 
 	user, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil {
-		return nil, errors.New("invalid email or password")
+		return nil, ErrInvalidCredentials
 	}
 
 	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
-		return nil, errors.New("invalid email or password")
+		return nil, ErrInvalidCredentials
 	}
 
 	// Check if this is first login today
 	isFirstToday := user.IsFirstToday()
 
-	// Update last login timestamp
-	lastLoginAt, err := s.repo.UpdateLastLogin(ctx, user.ID)
-	if err != nil {
-		return nil, fmt.Errorf("failed to update last login: %w", err)
-	}
-
-	// Emit UserLoggedIn event (within transaction with UpdateLastLogin)
+	// Emit UserLoggedIn event
 	event := UserLoggedIn{
 		UserID:       user.ID,
 		IsFirstToday: isFirstToday,
 		Timestamp:    time.Now(),
 	}
 
-	if err := s.appendAndPublishEvent(ctx, user.ID, user.Version, event.EventType(), event, platform.TopicUserLoggedIn); err != nil {
-		// Event publish failed - last_login_at was already updated in DB
-		// This is acceptable for now; event will retry if EventStore is enabled
-		return nil, fmt.Errorf("failed to publish event: %w", err)
+	var lastLoginAt *time.Time
+	if txRepo, ok := s.repo.(userRepositoryTx); ok && (s.eventStore != nil || s.outbox != nil) {
+		tx, txErr := s.beginManagedTx(ctx)
+		if txErr != nil {
+			return nil, fmt.Errorf("begin transaction: %w", txErr)
+		}
+		defer func() {
+			_ = tx.Rollback(ctx)
+		}()
+
+		lastLoginAt, err = txRepo.UpdateLastLoginTx(ctx, tx, user.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update last login: %w", err)
+		}
+
+		if err := s.appendAndPublishEventInTx(ctx, tx, user.ID, user.Version, event.EventType(), event, platform.TopicUserLoggedIn); err != nil {
+			return nil, fmt.Errorf("failed to publish event: %w", err)
+		}
+
+		if err := tx.Commit(ctx); err != nil {
+			return nil, fmt.Errorf("commit transaction: %w", err)
+		}
+	} else {
+		lastLoginAt, err = s.repo.UpdateLastLogin(ctx, user.ID)
+		if err != nil {
+			return nil, fmt.Errorf("failed to update last login: %w", err)
+		}
+
+		if err := s.appendAndPublishEvent(ctx, user.ID, user.Version, event.EventType(), event, platform.TopicUserLoggedIn); err != nil {
+			return nil, fmt.Errorf("failed to publish event: %w", err)
+		}
 	}
 
 	// Generate JWT token
@@ -212,11 +262,14 @@ type GetUserProfileRequest struct {
 // GetUserProfile retrieves user profile by ID
 func (s *Service) GetUserProfile(ctx context.Context, req GetUserProfileRequest) (*UserResponse, error) {
 	if req.UserID == "" {
-		return nil, errors.New("user_id is required")
+		return nil, ErrUserIDRequired
 	}
 
 	user, err := s.repo.GetByID(ctx, req.UserID)
 	if err != nil {
+		if errors.Is(err, ErrUserNotFound) {
+			return nil, ErrUserNotFound
+		}
 		return nil, fmt.Errorf("failed to get user: %w", err)
 	}
 
@@ -238,7 +291,7 @@ type RegisterPokemonRequest struct {
 // RegisterPokemon registers a caught pokemon for a user
 func (s *Service) RegisterPokemon(ctx context.Context, req RegisterPokemonRequest) error {
 	if req.UserID == "" || req.PokemonID == "" {
-		return errors.New("user_id and pokemon_id are required")
+		return ErrUserAndPokemonIDRequired
 	}
 
 	return s.repo.RegisterPokemon(ctx, req.UserID, req.PokemonID)
@@ -252,10 +305,54 @@ type GetUserPokemonRequest struct {
 // GetUserPokemon retrieves all pokemon caught by a user
 func (s *Service) GetUserPokemon(ctx context.Context, req GetUserPokemonRequest) ([]string, error) {
 	if req.UserID == "" {
-		return nil, errors.New("user_id is required")
+		return nil, ErrUserIDRequired
 	}
 
 	return s.repo.GetUserPokemon(ctx, req.UserID)
+}
+
+func (s *Service) beginManagedTx(ctx context.Context) (pgx.Tx, error) {
+	if s.eventStore != nil {
+		return s.eventStore.BeginTx(ctx)
+	}
+	return s.outbox.BeginTx(ctx)
+}
+
+func (s *Service) appendAndPublishEventInTx(
+	ctx context.Context,
+	tx pgx.Tx,
+	streamID string,
+	expectedVersion int,
+	eventType string,
+	data any,
+	topic string,
+) error {
+	if s.eventStore != nil {
+		_, err := s.eventStore.AppendToStream(ctx, tx, streamID, "auth.user", expectedVersion, []platform.UnsavedEvent{{
+			Type: eventType,
+			Data: data,
+		}})
+		if err != nil {
+			return fmt.Errorf("append to stream: %w", err)
+		}
+	}
+
+	if s.outbox != nil {
+		event := platform.NewEvent(eventType, "auth-service", data)
+		if err := s.outbox.InsertEvent(ctx, tx, topic, event); err != nil {
+			return fmt.Errorf("insert outbox event: %w", err)
+		}
+	}
+
+	return nil
+}
+
+func isDuplicateKeyError(err error) bool {
+	var pgErr *pgconn.PgError
+	if errors.As(err, &pgErr) {
+		return pgErr.Code == "23505"
+	}
+	return false
 }
 
 func (s *Service) appendAndPublishEvent(

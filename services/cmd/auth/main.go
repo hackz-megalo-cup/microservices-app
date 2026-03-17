@@ -74,7 +74,11 @@ func run() error {
 	platform.TryEnsureTopics(ctx, brokers)
 
 	publisher, _ := platform.NewEventPublisher(brokers)
-	defer publisher.Close()
+	if publisher != nil {
+		defer func() {
+			_ = publisher.Close()
+		}()
+	}
 
 	outbox := platform.NewOutboxStore(dbPool, publisher)
 	outbox.StartPoller(ctx, 500*time.Millisecond)
@@ -203,6 +207,7 @@ func registerJWKSHandler(mux *http.ServeMux, publicKey *rsa.PublicKey, kid strin
 				{
 					"kty": "RSA",
 					"use": "sig",
+					"alg": "RS256",
 					"kid": kid,
 					"n":   extractRSAModulus(publicKey),
 					"e":   extractRSAExponent(publicKey),
@@ -440,30 +445,23 @@ func mapServiceErrorCode(err error) connect.Code {
 		return connect.CodeInternal
 	}
 
-	errMsg := err.Error()
-
-	// Validation errors
-	if errMsg == "email and password are required" ||
-		errMsg == "user_id is required" ||
-		errMsg == "user_id and pokemon_id are required" {
+	if errors.Is(err, auth.ErrEmailAndPasswordRequired) ||
+		errors.Is(err, auth.ErrUserIDRequired) ||
+		errors.Is(err, auth.ErrUserAndPokemonIDRequired) {
 		return connect.CodeInvalidArgument
 	}
 
-	// Duplicate key error
-	if errMsg == "email already exists" {
+	if errors.Is(err, auth.ErrEmailAlreadyExists) {
 		return connect.CodeAlreadyExists
 	}
 
-	// Authentication errors
-	if errMsg == "invalid email or password" {
+	if errors.Is(err, auth.ErrInvalidCredentials) {
 		return connect.CodeUnauthenticated
 	}
 
-	// Not found errors
-	if errMsg == "user not found" {
+	if errors.Is(err, auth.ErrUserNotFound) {
 		return connect.CodeNotFound
 	}
 
-	// Internal errors (default)
 	return connect.CodeInternal
 }

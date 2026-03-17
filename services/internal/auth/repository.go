@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"errors"
 	"time"
+
+	"github.com/jackc/pgx/v5"
 )
 
 // UserRepository handles user data access
@@ -29,7 +31,7 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*User, e
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("user not found")
+			return nil, ErrUserNotFound
 		}
 		return nil, err
 	}
@@ -49,7 +51,7 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*User, error) 
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, errors.New("user not found")
+			return nil, ErrUserNotFound
 		}
 		return nil, err
 	}
@@ -60,6 +62,17 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*User, error) 
 // Create inserts a new user
 func (r *UserRepository) Create(ctx context.Context, user *User) error {
 	_, err := r.db.ExecContext(
+		ctx,
+		`INSERT INTO users (id, email, password_hash, role, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6)`,
+		user.ID, user.Email, user.PasswordHash, user.Role, user.CreatedAt, time.Now(),
+	)
+	return err
+}
+
+// CreateTx inserts a new user within an existing transaction.
+func (r *UserRepository) CreateTx(ctx context.Context, tx pgx.Tx, user *User) error {
+	_, err := tx.Exec(
 		ctx,
 		`INSERT INTO users (id, email, password_hash, role, created_at, updated_at)
 		 VALUES ($1, $2, $3, $4, $5, $6)`,
@@ -81,6 +94,20 @@ func (r *UserRepository) UpdateLastLogin(ctx context.Context, userID string) (*t
 		return nil, err
 	}
 
+	return &lastLoginAt, nil
+}
+
+// UpdateLastLoginTx updates last_login_at within an existing transaction.
+func (r *UserRepository) UpdateLastLoginTx(ctx context.Context, tx pgx.Tx, userID string) (*time.Time, error) {
+	var lastLoginAt time.Time
+	err := tx.QueryRow(
+		ctx,
+		`UPDATE users SET last_login_at = NOW() WHERE id = $1 RETURNING last_login_at`,
+		userID,
+	).Scan(&lastLoginAt)
+	if err != nil {
+		return nil, err
+	}
 	return &lastLoginAt, nil
 }
 
