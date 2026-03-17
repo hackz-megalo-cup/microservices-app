@@ -68,14 +68,21 @@
           };
           nodeServicesRoot = repoSrc + "/node-services";
           frontendRoot = repoSrc + "/frontend";
-          nodeServicesNodeModules = pkgs.importNpmLock.buildNodeModules {
-            npmRoot = nodeServicesRoot;
-            inherit nodejs;
-            derivationArgs = {
-              pname = "node-services-node-modules";
-              version = "0.1.0";
+          nodeServicesPackageLock = builtins.fromJSON (
+            builtins.readFile (nodeServicesRoot + "/package-lock.json")
+          );
+          nodeServiceNodeModules =
+            name:
+            pkgs.importNpmLock.buildNodeModules {
+              npmRoot = nodeServicesRoot;
+              package = builtins.fromJSON (builtins.readFile (nodeServicesRoot + "/${name}/package.json"));
+              packageLock = nodeServicesPackageLock;
+              inherit nodejs;
+              derivationArgs = {
+                pname = "${name}-node-modules";
+                version = "0.1.0";
+              };
             };
-          };
           frontendNodeModules = pkgs.importNpmLock.buildNodeModules {
             npmRoot = frontendRoot;
             inherit nodejs;
@@ -137,7 +144,7 @@
           raid-lobby-image = buildGoServiceImage "raid-lobby" raid-lobby;
 
           buildNodeService =
-            name:
+            name: nodeModules:
             pkgs.stdenv.mkDerivation {
               pname = name;
               version = "0.1.0";
@@ -148,7 +155,7 @@
                 mkdir -p $out/app
                 cp -r node-services/${name} $out/app/${name}
                 cp -r node-services/shared $out/app/shared
-                cp -r ${nodeServicesNodeModules}/node_modules $out/app/node_modules
+                cp -r ${nodeModules}/node_modules $out/app/node_modules
                 runHook postInstall
               '';
             };
@@ -188,10 +195,12 @@
               ];
             };
 
-          auth-service = buildNodeService "auth-service";
+          auth-service = buildNodeService "auth-service" (nodeServiceNodeModules "auth-service");
           auth-service-image = buildNodeServiceImage "auth-service" auth-service;
 
-          custom-lang-service = buildNodeService "custom-lang-service";
+          custom-lang-service = buildNodeService "custom-lang-service" (
+            nodeServiceNodeModules "custom-lang-service"
+          );
           custom-lang-service-image = buildNodeServiceImage "custom-lang-service" custom-lang-service;
 
           frontend-assets = pkgs.stdenv.mkDerivation {
