@@ -38,8 +38,8 @@ spec:
               value: auth-service
             - name: PORT
               value: "8090"
-          image: auth-service:latest
-          imagePullPolicy: Never
+          image: ghcr.io/hackz-megalo-cup/auth-service:latest
+          imagePullPolicy: Always
           livenessProbe:
             httpGet:
               path: /healthz

@@ -17,8 +17,8 @@ in
         template = {
           metadata.labels = labels;
           spec.containers.gateway = {
-            image = "gateway:latest";
-            imagePullPolicy = "Never";
+            image = "ghcr.io/hackz-megalo-cup/gateway:latest";
+            imagePullPolicy = "Always";
             ports.http.containerPort = 8082;
 
             env = {

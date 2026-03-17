@@ -49,6 +49,7 @@ _: {
         type = "Opaque";
         stringData = {
           DATABASE_URL = "postgresql://devuser:devpass@postgresql.database:5432/item_db";
+          KAFKA_BROKERS = "redpanda.messaging:9092";
         };
       };
 

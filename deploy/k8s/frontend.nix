@@ -17,8 +17,8 @@ in
         template = {
           metadata.labels = labels;
           spec.containers.frontend = {
-            image = "frontend:latest";
-            imagePullPolicy = "Never";
+            image = "ghcr.io/hackz-megalo-cup/frontend:latest";
+            imagePullPolicy = "Always";
             ports.http.containerPort = 80;
 
             livenessProbe = {
