@@ -17,7 +17,7 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
-	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid-lobby/v1/raid_lobbyv1connect"
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1/raid_lobbyv1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/raid_lobby"
 )

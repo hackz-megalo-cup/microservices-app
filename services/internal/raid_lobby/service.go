@@ -8,7 +8,7 @@ import (
 	"connectrpc.com/connect"
 	"github.com/google/uuid"
 
-	pb "github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid-lobby/v1"
+	pb "github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
@@ -59,7 +59,7 @@ func (s *Service) StartBattle(_ context.Context, req *connect.Request[pb.StartBa
 	}), nil
 }
 
-func (s *Service) StreamLobby(_ context.Context, req *connect.Request[pb.StreamLobbyRequest], stream *connect.ServerStream[pb.LobbyEvent]) error {
+func (s *Service) StreamLobby(_ context.Context, req *connect.Request[pb.StreamLobbyRequest], stream *connect.ServerStream[pb.StreamLobbyResponse]) error {
 	if req.Msg.GetLobbyId() == "" {
 		return connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("lobby_id is required"))
 	}
