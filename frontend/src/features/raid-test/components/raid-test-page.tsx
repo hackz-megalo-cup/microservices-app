@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 
 // ---------------------------------------------------------------------------
 // WebTransport type declarations (not yet in lib.dom.d.ts)
@@ -76,10 +76,13 @@ function timestamp(): string {
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
+const gameServerUrl = import.meta.env.VITE_GAME_SERVER_URL || "https://localhost:7777";
+const parsedGameServer = new URL(gameServerUrl);
+
 export function RaidTestPage() {
   // --- Form state ---
-  const [host, setHost] = useState("localhost");
-  const [port, setPort] = useState("");
+  const [host, setHost] = useState(parsedGameServer.hostname);
+  const [port, setPort] = useState(parsedGameServer.port);
   const [certHash, setCertHash] = useState("");
   const [protocol, setProtocol] = useState<"wt" | "ws">("wt");
   const [userId] = useState(generateUuid);
@@ -107,6 +110,7 @@ export function RaidTestPage() {
   const transportRef = useRef<WebTransport | null>(null);
   const wsRef = useRef<WebSocket | null>(null);
   const dgWriterRef = useRef<WritableStreamDefaultWriter | null>(null);
+  const autoConnectedRef = useRef(false);
 
   // --- Logging helper ---
   const addLog = useCallback((direction: "\u2192" | "\u2190", data: string) => {
@@ -324,6 +328,84 @@ export function RaidTestPage() {
     readDatagrams,
     readIncomingUniStreams,
   ]);
+
+  // --- Auto-connect on mount ---
+  useEffect(() => {
+    if (autoConnectedRef.current) {
+      return;
+    }
+    autoConnectedRef.current = true;
+
+    const abort = new AbortController();
+
+    const autoConnect = async () => {
+      try {
+        const res = await fetch(`${gameServerUrl}/cert-hash`, { signal: abort.signal });
+        if (!res.ok) {
+          return;
+        }
+        const hash = (await res.text()).trim();
+        setCertHash(hash);
+
+        const hashBytes = hexToUint8Array(hash);
+        setConnectionState("connecting");
+
+        const transport = new WebTransport(
+          `https://${parsedGameServer.hostname}:${parsedGameServer.port}/wt`,
+          {
+            serverCertificateHashes: [
+              { algorithm: "sha-256", value: hashBytes.buffer as ArrayBuffer },
+            ],
+          },
+        );
+        await transport.ready;
+        transportRef.current = transport;
+
+        const dgWriter = transport.datagrams.writable.getWriter();
+        dgWriterRef.current = dgWriter;
+
+        readDatagrams(transport);
+        readIncomingUniStreams(transport);
+        setConnectionState("connected");
+
+        transport.closed
+          .then(() => setConnectionState("disconnected"))
+          .catch(() => setConnectionState("disconnected"));
+
+        // Auto-join
+        const joinPayload = JSON.stringify({ t: "join", userId });
+        addLog("\u2192", joinPayload);
+        const stream = await transport.createBidirectionalStream();
+        const writer = stream.writable.getWriter();
+        await writer.write(new TextEncoder().encode(joinPayload));
+        await writer.close();
+        const reader = stream.readable.getReader();
+        try {
+          while (!(await reader.read()).done) {
+            /* drain */
+          }
+        } catch {
+          /* stream closed */
+        }
+      } catch (err) {
+        if (!abort.signal.aborted) {
+          console.warn("Auto-connect failed:", err);
+          setConnectionState("disconnected");
+        }
+      }
+    };
+
+    autoConnect();
+
+    return () => {
+      abort.abort();
+      if (transportRef.current) {
+        transportRef.current.close();
+        transportRef.current = null;
+        dgWriterRef.current = null;
+      }
+    };
+  }, [addLog, readDatagrams, readIncomingUniStreams, userId]);
 
   // --- Disconnect ---
   const disconnect = useCallback(() => {

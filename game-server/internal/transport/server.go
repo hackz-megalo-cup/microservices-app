@@ -12,15 +12,16 @@ import (
 )
 
 type DualServer struct {
-	port   int32
-	wtCert tls.Certificate
-	wsCert tls.Certificate
-	onWT   func(*webtransport.Session)
-	onWS   func(http.ResponseWriter, *http.Request)
+	port     int32
+	wtCert   tls.Certificate
+	wsCert   tls.Certificate
+	certHash string
+	onWT     func(*webtransport.Session)
+	onWS     func(http.ResponseWriter, *http.Request)
 }
 
-func NewDualServer(port int32, wtCert, wsCert tls.Certificate, onWT func(*webtransport.Session), onWS func(http.ResponseWriter, *http.Request)) *DualServer {
-	return &DualServer{port: port, wtCert: wtCert, wsCert: wsCert, onWT: onWT, onWS: onWS}
+func NewDualServer(port int32, wtCert, wsCert tls.Certificate, certHash string, onWT func(*webtransport.Session), onWS func(http.ResponseWriter, *http.Request)) *DualServer {
+	return &DualServer{port: port, wtCert: wtCert, wsCert: wsCert, certHash: certHash, onWT: onWT, onWS: onWS}
 }
 
 func (ds *DualServer) Start() error {
@@ -54,6 +55,17 @@ func (ds *DualServer) Start() error {
 	mux.HandleFunc("/ws", ds.onWS)
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, _ *http.Request) {
 		w.WriteHeader(http.StatusOK)
+	})
+	mux.HandleFunc("/cert-hash", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Access-Control-Allow-Origin", "*")
+		w.Header().Set("Access-Control-Allow-Methods", "GET, OPTIONS")
+		w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+		w.Header().Set("Content-Type", "text/plain")
+		_, _ = w.Write([]byte(ds.certHash)) // best-effort; client may have disconnected
 	})
 
 	h3s.Handler = mux

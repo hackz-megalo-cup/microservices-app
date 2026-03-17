@@ -118,7 +118,7 @@ func runLocalDev() {
 		log.Printf("ws client disconnected: %s", userID)
 	}
 
-	srv := transport.NewDualServer(port, wtCert, wsCert, onWT, onWS)
+	srv := transport.NewDualServer(port, wtCert, wsCert, certHash, onWT, onWS)
 	go func() {
 		if err := srv.Start(); err != nil {
 			log.Printf("server error: %v", err)
@@ -236,7 +236,7 @@ func runProduction() {
 	}
 
 	// 7. Start dual-stack server
-	srv := transport.NewDualServer(port, wtCert, wsCert, onWT, onWS)
+	srv := transport.NewDualServer(port, wtCert, wsCert, certHash, onWT, onWS)
 	go func() {
 		if err := srv.Start(); err != nil {
 			log.Printf("server error: %v", err)
