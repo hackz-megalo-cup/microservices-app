@@ -10,7 +10,9 @@
     "lint": "biome check src/",
     "lint:fix": "biome check --write src/",
     "format": "biome format --write src/",
-    "format:check": "biome format src/"
+    "format:check": "biome format src/",
+    "test:e2e": "playwright test",
+    "test:e2e:ui": "playwright test --ui"
   },
   "dependencies": {
     "@connectrpc/connect": "^2.1.1",
@@ -36,6 +38,7 @@
     "@biomejs/biome": "^2.0.0",
     "@bufbuild/protoc-gen-es": "^2.11.0",
     "@connectrpc/protoc-gen-connect-query": "^2.2.0",
+    "@playwright/test": "^1.58.2",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
     "@vitejs/plugin-react": "^6.0.1",

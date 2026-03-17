@@ -1,0 +1,42 @@
+apiVersion: agones.dev/v1
+kind: Fleet
+metadata:
+  name: raid-battle-fleet
+  namespace: default
+spec:
+  replicas: 2
+  scheduling: Packed
+  template:
+    metadata:
+      labels:
+        game: raid-battle
+    spec:
+      ports:
+        - name: game
+          portPolicy: Passthrough
+          protocol: TCPUDP
+      health:
+        initialDelaySeconds: 5
+        periodSeconds: 3
+      template:
+        spec:
+          tolerations:
+            - key: "node-role.kubernetes.io/control-plane"
+              operator: "Exists"
+              effect: "NoSchedule"
+          containers:
+            - name: game-server
+              image: ghcr.io/hackz-megalo-cup/game-server:latest
+              env:
+                - name: MASTERDATA_ADDR
+                  value: "masterdata.default.svc.cluster.local:8084"
+                - name: KAFKA_BROKERS
+                  value: "redpanda.redpanda.svc.cluster.local:9093"
+              volumeMounts:
+                - name: mkcert-tls
+                  mountPath: /etc/tls/mkcert
+                  readOnly: true
+          volumes:
+            - name: mkcert-tls
+              secret:
+                secretName: game-server-mkcert-tls
