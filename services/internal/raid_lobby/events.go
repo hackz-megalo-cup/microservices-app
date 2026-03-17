@@ -2,22 +2,21 @@ package raidlobby
 
 const (
 	EventRaidLobbyCreated = "raid_lobby.created"
-	// ↓ ドメインイベントを追加する
-	// 例: EventRaidLobbyCompleted = "raid_lobby.completed"
-	// ⚠ 新しいイベントを追加したら platform/topics.go にもトピック定数と DefaultTopics() を追加すること
+	EventRaidUserJoined   = "raid.user_joined"
 
 	EventRaidLobbyFailed      = "raid_lobby.failed"      // main.go が参照 — 削除禁止
 	EventRaidLobbyCompensated = "raid_lobby.compensated" // main.go が参照 — 削除禁止
 )
 
-// RaidLobbyCreatedData — 作成イベントのペイロード。
-// ドメインに合わせてフィールドを書き換える。
 type RaidLobbyCreatedData struct {
-	// 例: Title string `json:"title"`
+	BossPokemonID string `json:"boss_pokemon_id"`
 }
 
-// ↓ 追加イベントのペイロードをここに定義する
-// 例: type RaidLobbyCompletedData struct{}
+type RaidUserJoinedData struct {
+	LobbyID       string `json:"lobby_id"`
+	UserID        string `json:"user_id"`
+	ParticipantID string `json:"participant_id"`
+}
 
 // --- 以下は main.go の補償ハンドラが使用。型名とフィールドは残すこと。 ---
 

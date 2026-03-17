@@ -7,14 +7,11 @@ import (
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
-// ==========================================================.
-// Aggregate — ドメインエンティティ。
-// ↓ ドメインの状態フィールドを追加する（例: Title string）
-// ==========================================================.
-
 type RaidLobbyAggregate struct {
 	platform.AggregateBase
-	Status string
+	Status        string
+	BossPokemonID string
+	Participants  []string
 }
 
 func NewRaidLobbyAggregate(id string) *RaidLobbyAggregate {
@@ -25,8 +22,6 @@ func NewRaidLobbyAggregate(id string) *RaidLobbyAggregate {
 
 func (a *RaidLobbyAggregate) StreamType() string { return "raid_lobby" }
 
-// ApplyEvent はイベントを再生して状態を復元する。
-// Created の case を書き換え、追加イベントの case を足す。
 func (a *RaidLobbyAggregate) ApplyEvent(eventType string, data json.RawMessage) {
 	switch eventType {
 	case EventRaidLobbyCreated:
@@ -34,12 +29,14 @@ func (a *RaidLobbyAggregate) ApplyEvent(eventType string, data json.RawMessage) 
 		if err := json.Unmarshal(data, &d); err != nil {
 			slog.Warn("failed to unmarshal created data", "error", err)
 		}
-		// ↓ フィールドの復元を書く（例: a.Title = d.Title）
-		a.Status = "created"
-	// ↓ 追加イベントの case をここに足す
-	// 例:
-	// case EventRaidLobbyCompleted:
-	//     a.Status = "completed"
+		a.BossPokemonID = d.BossPokemonID
+		a.Status = "waiting"
+	case EventRaidUserJoined:
+		var d RaidUserJoinedData
+		if err := json.Unmarshal(data, &d); err != nil {
+			slog.Warn("failed to unmarshal user joined data", "error", err)
+		}
+		a.Participants = append(a.Participants, d.UserID)
 	case EventRaidLobbyFailed:
 		a.Status = "failed"
 	case EventRaidLobbyCompensated:
@@ -47,29 +44,24 @@ func (a *RaidLobbyAggregate) ApplyEvent(eventType string, data json.RawMessage) 
 	}
 }
 
-// ==========================================================.
-// コマンドメソッド — Raise() でイベントを発行し、状態を更新する。
-//
-// Fail / Compensate は main.go の補償ハンドラが参照 — 削除禁止。
-// AggregateID() で集約の ID を取得できる。
-// 既存集約のロード: platform.LoadAggregate(ctx, eventStore, agg)
-// ==========================================================.
-
-// Create — 引数をドメインに合わせて変更する（例: Create(title string)）
-func (a *RaidLobbyAggregate) Create() {
+// Create initialises a new raid lobby.
+func (a *RaidLobbyAggregate) Create(bossPokemonID string) {
 	a.Raise(EventRaidLobbyCreated, RaidLobbyCreatedData{
-		// ↓ フィールドを渡す（例: Title: title）
+		BossPokemonID: bossPokemonID,
 	})
-	// ↓ 状態を更新する（例: a.Title = title）
-	a.Status = "created"
+	a.BossPokemonID = bossPokemonID
+	a.Status = "waiting"
 }
 
-// ↓ 追加コマンドをここに定義する
-// 例:
-// func (a *RaidLobbyAggregate) Complete() {
-//     a.Raise(EventRaidLobbyCompleted, RaidLobbyCompletedData{})
-//     a.Status = "completed"
-// }
+// Join adds a participant to the lobby.
+func (a *RaidLobbyAggregate) Join(userID, participantID string) {
+	a.Raise(EventRaidUserJoined, RaidUserJoinedData{
+		LobbyID:       a.AggregateID(),
+		UserID:        userID,
+		ParticipantID: participantID,
+	})
+	a.Participants = append(a.Participants, userID)
+}
 
 // Fail records a failed operation — main.go が参照、削除禁止。
 func (a *RaidLobbyAggregate) Fail(input string, reason string) {
@@ -96,6 +88,8 @@ func RaidLobbyTopicMapper(eventType string) string {
 	switch eventType {
 	case EventRaidLobbyCreated:
 		return platform.TopicRaidLobbyCreated
+	case EventRaidUserJoined:
+		return platform.TopicRaidUserJoined
 	case EventRaidLobbyFailed:
 		return platform.TopicRaidLobbyFailed
 	default:

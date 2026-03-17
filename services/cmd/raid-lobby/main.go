@@ -17,6 +17,7 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1/masterdatav1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1/raid_lobbyv1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 	raidlobby "github.com/hackz-megalo-cup/microservices-app/services/internal/raid_lobby"
@@ -102,13 +103,22 @@ func run() error {
 		}
 	}()
 
+	// --- Masterdata client ---
+	var masterdataClient masterdatav1connect.MasterdataServiceClient
+	if masterdataURL := os.Getenv("MASTERDATA_URL"); masterdataURL != "" {
+		masterdataClient = masterdatav1connect.NewMasterdataServiceClient(
+			&http.Client{},
+			masterdataURL,
+		)
+	}
+
 	// --- Auth & Idempotency ---
 	verifier := platform.NewJWTVerifier(os.Getenv("JWKS_URL"))
 	idempotencyStore := platform.NewIdempotencyStore(dbPool)
 	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
 
 	// --- Service ---
-	svc := raidlobby.NewService(eventStore, outbox)
+	svc := raidlobby.NewService(eventStore, outbox, dbPool, masterdataClient, brokers)
 
 	// --- Connect-RPC Handler with interceptors ---
 	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
@@ -149,7 +159,7 @@ func run() error {
 		Addr:         ":" + port,
 		BaseContext:  func(net.Listener) context.Context { return ctx },
 		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 30 * time.Second,
+		WriteTimeout: 0, // streaming のため無制限
 		Handler:      h2c.NewHandler(mux, &http2.Server{}),
 	}
 
