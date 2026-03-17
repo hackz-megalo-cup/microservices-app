@@ -12,7 +12,7 @@ const (
 
 // ItemCreatedData — 作成イベントのペイロード。
 // ドメインに合わせてフィールドを書き換える。
-type ItemCreatedData struct {
+type CreatedData struct {
 	UserID   string `json:"user_id"`
 	ItemID   string `json:"item_id"`
 	Quantity int32  `json:"quantity"`
@@ -24,11 +24,11 @@ type ItemCreatedData struct {
 
 // --- 以下は main.go の補償ハンドラが使用。型名とフィールドは残すこと。 ---。
 
-type ItemFailedData struct {
+type FailedData struct {
 	Input string `json:"input"`
 	Error string `json:"error"`
 }
 
-type ItemCompensatedData struct {
+type CompensatedData struct {
 	Reason string `json:"reason"`
 }

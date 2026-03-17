@@ -30,7 +30,7 @@ func (a *ItemAggregate) StreamType() string { return "item" }
 func (a *ItemAggregate) ApplyEvent(eventType string, data json.RawMessage) {
 	switch eventType {
 	case EventItemCreated:
-		var d ItemCreatedData
+		var d CreatedData
 		if err := json.Unmarshal(data, &d); err != nil {
 			slog.Warn("failed to unmarshal created data", "error", err)
 		}
@@ -57,7 +57,7 @@ func (a *ItemAggregate) ApplyEvent(eventType string, data json.RawMessage) {
 
 // Create — 引数をドメインに合わせて変更する（例: Create(title string)）。
 func (a *ItemAggregate) Create(userID, itemID string, quantity int32, reason string) {
-	a.Raise(EventItemCreated, ItemCreatedData{
+	a.Raise(EventItemCreated, CreatedData{
 		UserID:   userID,
 		ItemID:   itemID,
 		Quantity: quantity,
@@ -75,7 +75,7 @@ func (a *ItemAggregate) Create(userID, itemID string, quantity int32, reason str
 
 // Fail records a failed operation — main.go が参照、削除禁止。
 func (a *ItemAggregate) Fail(input string, reason string) {
-	a.Raise(EventItemFailed, ItemFailedData{
+	a.Raise(EventItemFailed, FailedData{
 		Input: input,
 		Error: reason,
 	})
@@ -87,7 +87,7 @@ func (a *ItemAggregate) Compensate(reason string) {
 	if a.Status == "compensated" {
 		return
 	}
-	a.Raise(EventItemCompensated, ItemCompensatedData{
+	a.Raise(EventItemCompensated, CompensatedData{
 		Reason: reason,
 	})
 	a.Status = "compensated"
