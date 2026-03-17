@@ -1,8 +1,9 @@
 package raidlobby
 
 const (
-	EventCreated    = "raid_lobby.created"
-	EventUserJoined = "raid.user_joined"
+	EventCreated       = "raid_lobby.created"
+	EventUserJoined    = "raid.user_joined"
+	EventBattleStarted = "raid.battle_started"
 
 	EventFailed      = "raid_lobby.failed"      // main.go が参照 — 削除禁止
 	EventCompensated = "raid_lobby.compensated" // main.go が参照 — 削除禁止
@@ -16,6 +17,12 @@ type UserJoinedData struct {
 	LobbyID       string `json:"lobby_id"`
 	UserID        string `json:"user_id"`
 	ParticipantID string `json:"participant_id"`
+}
+
+type BattleStartedData struct {
+	LobbyID            string   `json:"lobby_id"`
+	BossPokemonID      string   `json:"boss_pokemon_id"`
+	ParticipantUserIDs []string `json:"participant_user_ids"`
 }
 
 // --- 以下は main.go の補償ハンドラが使用。型名とフィールドは残すこと。 ---

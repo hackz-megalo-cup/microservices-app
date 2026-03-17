@@ -37,6 +37,8 @@ func (a *Aggregate) ApplyEvent(eventType string, data json.RawMessage) {
 			slog.Warn("failed to unmarshal user joined data", "error", err)
 		}
 		a.Participants = append(a.Participants, d.UserID)
+	case EventBattleStarted:
+		a.Status = "in_battle"
 	case EventFailed:
 		a.Status = "failed"
 	case EventCompensated:
@@ -61,6 +63,16 @@ func (a *Aggregate) Join(userID, participantID string) {
 		ParticipantID: participantID,
 	})
 	a.Participants = append(a.Participants, userID)
+}
+
+// StartBattle transitions the lobby to in_battle status.
+func (a *Aggregate) StartBattle() {
+	a.Raise(EventBattleStarted, BattleStartedData{
+		LobbyID:            a.AggregateID(),
+		BossPokemonID:      a.BossPokemonID,
+		ParticipantUserIDs: a.Participants,
+	})
+	a.Status = "in_battle"
 }
 
 // Fail records a failed operation — main.go が参照、削除禁止。
@@ -90,6 +102,8 @@ func TopicMapper(eventType string) string {
 		return platform.TopicRaidLobbyCreated
 	case EventUserJoined:
 		return platform.TopicRaidUserJoined
+	case EventBattleStarted:
+		return platform.TopicRaidBattleStarted
 	case EventFailed:
 		return platform.TopicRaidLobbyFailed
 	default:
