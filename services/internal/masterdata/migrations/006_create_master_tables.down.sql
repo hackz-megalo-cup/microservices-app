@@ -1,0 +1,3 @@
+DROP TABLE IF EXISTS item_master;
+DROP TABLE IF EXISTS type_matchup;
+DROP TABLE IF EXISTS pokemon;

@@ -244,6 +244,33 @@ services:
     networks:
       - app
 
+  masterdata:
+    build:
+      context: .
+      dockerfile: deploy/docker/masterdata/Dockerfile
+    environment:
+      PORT: "8084"
+      DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/masterdata_db"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""
+      OTEL_SERVICE_NAME: "masterdata-service"
+      KAFKA_BROKERS: "redpanda:9092"
+      JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.masterdata.rule=PathPrefix(`/masterdata.v1.MasterdataService`)"
+      - "traefik.http.routers.masterdata.entrypoints=web"
+      - "traefik.http.routers.masterdata.priority=100"
+      - "traefik.http.routers.masterdata.middlewares=cors@file,rate-limit@file,retry@file"
+      - "traefik.http.services.masterdata.loadbalancer.server.port=8084"
+      - "traefik.http.services.masterdata.loadbalancer.server.scheme=h2c"
+    networks:
+      - app
+    depends_on:
+      postgres-db-sync:
+        condition: service_completed_successfully
+      redpanda:
+        condition: service_healthy
+
 networks:
   app:
     driver: bridge
