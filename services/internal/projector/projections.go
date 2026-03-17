@@ -21,11 +21,11 @@ type ProjectionHandler struct {
 }
 
 // NewProjectionHandler creates a new ProjectionHandler.
-func NewProjectionHandler(pool *pgxpool.Pool) *ProjectionHandler {
+func NewProjectionHandler(pool *pgxpool.Pool, eventStore *platform.EventStore, outbox *platform.OutboxStore) *ProjectionHandler {
 	if pool == nil {
 		return nil
 	}
-	return &ProjectionHandler{pool: pool}
+	return &ProjectionHandler{pool: pool, eventStore: eventStore, outbox: outbox}
 }
 
 // HandleEvent dispatches an event to the appropriate projection.
@@ -234,7 +234,9 @@ func (h *ProjectionHandler) onUserLoggedIn(ctx context.Context, event platform.E
 	// 集約をロードして付与
 	aggID := fmt.Sprintf("%s:%s", userID, itemID)
 	agg := item.NewItemAggregate(aggID)
-	_ = platform.LoadAggregate(ctx, h.eventStore, agg)
+	if err := platform.LoadAggregate(ctx, h.eventStore, agg); err != nil {
+		slog.Warn("load aggregate (may be new)", "error", err)
+	}
 	agg.Grant(userID, itemID, quantity, "login_bonus")
 
 	if err := platform.SaveAggregate(ctx, h.eventStore, h.outbox, agg, item.ItemTopicMapper); err != nil {
