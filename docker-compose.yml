@@ -298,6 +298,14 @@ services:
       OTEL_SERVICE_NAME: "raid-lobby-service"
       KAFKA_BROKERS: "redpanda:9092"
       JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.raid-lobby.rule=PathPrefix(`/raid_lobby.v1.RaidLobbyService`)"
+      - "traefik.http.routers.raid-lobby.entrypoints=web"
+      - "traefik.http.routers.raid-lobby.priority=100"
+      - "traefik.http.routers.raid-lobby.middlewares=cors@file,rate-limit@file,retry@file"
+      - "traefik.http.services.raid-lobby.loadbalancer.server.port=8086"
+      - "traefik.http.services.raid-lobby.loadbalancer.server.scheme=h2c"
     networks:
       - app
     depends_on:

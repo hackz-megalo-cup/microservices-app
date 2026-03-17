@@ -245,7 +245,7 @@
               entryPoints = [ "web" ];
               routes = [
                 {
-                  match = "PathPrefix(`/raid-lobby.v1.RaidLobbyService`)";
+                  match = "PathPrefix(`/raid_lobby.v1.RaidLobbyService`)";
                   kind = "Rule";
                   priority = 100;
                   middlewares = [
