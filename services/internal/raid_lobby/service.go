@@ -55,7 +55,10 @@ func (s *Service) CreateRaid(ctx context.Context, req *connect.Request[pb.Create
 		}))
 		if err != nil {
 			slog.Error("failed to get pokemon from masterdata", "pokemon_id", bossPokemonID, "error", err)
-			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("pokemon not found: %s", bossPokemonID))
+			if connect.CodeOf(err) == connect.CodeNotFound {
+				return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("pokemon not found: %s", bossPokemonID))
+			}
+			return nil, err
 		}
 	}
 

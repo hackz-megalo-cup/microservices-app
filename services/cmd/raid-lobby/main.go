@@ -107,7 +107,7 @@ func run() error {
 	var masterdataClient masterdatav1connect.MasterdataServiceClient
 	if masterdataURL := os.Getenv("MASTERDATA_URL"); masterdataURL != "" {
 		masterdataClient = masterdatav1connect.NewMasterdataServiceClient(
-			&http.Client{},
+			platform.NewInstrumentedHTTPClient(3*time.Second),
 			masterdataURL,
 		)
 	}
