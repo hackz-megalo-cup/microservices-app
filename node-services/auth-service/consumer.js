@@ -27,13 +27,11 @@ export async function startCaptureConsumer(kafkaClient) {
         const { user_id, pokemon_id } = payload;
 
         if (!user_id || !pokemon_id) {
-          console.warn("Invalid payload: missing user_id or pokemon_id", payload);
-          return;
+          throw new Error(`Invalid payload: missing user_id or pokemon_id`);
         }
 
         if (!pool) {
-          console.warn("Database pool not available");
-          return;
+          throw new Error("Database pool not available");
         }
 
         // Insert into user_pokemon (or ignore on duplicate)
@@ -47,7 +45,7 @@ export async function startCaptureConsumer(kafkaClient) {
         console.log(`Registered pokemon ${pokemon_id} for user ${user_id}`);
       } catch (err) {
         console.error("Error processing capture event:", err);
-        // Let Kafka retry the message
+        throw err;
       }
     };
 
