@@ -17,3 +17,7 @@ plugins:
     out: frontend/src/gen
     opt:
       - target=ts
+  - local: node-services/node_modules/.bin/protoc-gen-es
+    out: node-services/gen
+    opt:
+      - target=js+dts

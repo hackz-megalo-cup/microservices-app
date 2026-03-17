@@ -2,6 +2,7 @@ import http2 from "node:http2";
 import { connectNodeAdapter } from "@connectrpc/connect-node";
 import { createKafkaClient, createOutbox } from "@microservices/shared";
 import pool from "@microservices/shared/db.js";
+import { AuthService } from "../gen/auth/v1/auth_pb.js";
 import app, { kid, privateKey } from "./app.js";
 import { getUserProfile, loginUser, registerUser } from "./handlers.js";
 
@@ -22,16 +23,16 @@ const grpcContext = {
 
 // Connect-RPC ルーター設定
 function routes(router) {
-  router.rpc({ service: "auth.v1.AuthService", method: "RegisterUser" }, async (req) => {
-    return await registerUser(req, grpcContext);
-  });
-
-  router.rpc({ service: "auth.v1.AuthService", method: "LoginUser" }, async (req) => {
-    return await loginUser(req, grpcContext);
-  });
-
-  router.rpc({ service: "auth.v1.AuthService", method: "GetUserProfile" }, async (req) => {
-    return await getUserProfile(req, grpcContext);
+  router.service(AuthService, {
+    async registerUser(req) {
+      return await registerUser(req, grpcContext);
+    },
+    async loginUser(req) {
+      return await loginUser(req, grpcContext);
+    },
+    async getUserProfile(req) {
+      return await getUserProfile(req, grpcContext);
+    },
   });
 }
 
