@@ -30,6 +30,7 @@ type BattleStartedData struct {
 	LobbyID            string   `json:"lobby_id"`
 	BossPokemonID      string   `json:"boss_pokemon_id"`
 	ParticipantUserIDs []string `json:"participant_user_ids"`
+	SessionID          string   `json:"session_id"`
 }
 
 // --- 以下は main.go の補償ハンドラが使用。型名とフィールドは残すこと。 ---

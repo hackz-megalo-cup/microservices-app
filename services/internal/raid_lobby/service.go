@@ -172,7 +172,8 @@ func (s *Service) StartBattle(ctx context.Context, req *connect.Request[pb.Start
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to load lobby: %w", err))
 	}
 
-	agg.StartBattle()
+	battleSessionID := uuid.NewString()
+	agg.StartBattle(battleSessionID)
 
 	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, TopicMapper); err != nil {
 		slog.Error("failed to save aggregate", "error", err)
@@ -186,7 +187,7 @@ func (s *Service) StartBattle(ctx context.Context, req *connect.Request[pb.Start
 	}
 
 	return connect.NewResponse(&pb.StartBattleResponse{
-		BattleSessionId: uuid.NewString(),
+		BattleSessionId: battleSessionID,
 	}), nil
 }
 

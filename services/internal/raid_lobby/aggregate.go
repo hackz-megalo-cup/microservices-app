@@ -68,11 +68,12 @@ func (a *Aggregate) Join(userID, participantID string) {
 }
 
 // StartBattle transitions the lobby to in_battle status.
-func (a *Aggregate) StartBattle() {
+func (a *Aggregate) StartBattle(sessionID string) {
 	a.Raise(EventBattleStarted, BattleStartedData{
 		LobbyID:            a.AggregateID(),
 		BossPokemonID:      a.BossPokemonID,
 		ParticipantUserIDs: a.Participants,
+		SessionID:          sessionID,
 	})
 	a.Status = "in_battle"
 }
