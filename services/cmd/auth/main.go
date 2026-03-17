@@ -8,11 +8,13 @@ import (
 	"crypto/x509"
 	"database/sql"
 	"encoding/base64"
+	"encoding/json"
 	"encoding/pem"
 	"errors"
 	"fmt"
 	"io/fs"
 	"log/slog"
+	"math/big"
 	"net"
 	"net/http"
 	"os"
@@ -22,6 +24,7 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
@@ -59,14 +62,11 @@ func run() error {
 	}()
 
 	migrationsFS, _ := fs.Sub(auth.MigrationsFS, "migrations")
-	dbPool := platform.InitDB(ctx, os.Getenv("DATABASE_URL"), migrationsFS, serviceName)
+	dbPool, sqlDB := initDatabases(ctx, migrationsFS)
 	if dbPool != nil {
 		defer dbPool.Close()
 	}
-
-	var sqlDB *sql.DB
-	if dbPool != nil {
-		sqlDB = stdlib.OpenDBFromPool(dbPool)
+	if sqlDB != nil {
 		defer sqlDB.Close()
 	}
 
@@ -111,8 +111,33 @@ func run() error {
 		connectOpts,
 	)
 
+	mux := newServerMux(path, handler, dbPool, verifier, publicKey, kid)
+	startCaptureConsumer(ctx, brokers, repo)
+
+	port := resolvePort()
+	srv := newHTTPServer(ctx, mux, port)
+
+	return runHTTPServer(ctx, logger, srv, port)
+}
+
+func initDatabases(ctx context.Context, migrationsFS fs.FS) (*pgxpool.Pool, *sql.DB) {
+	dbPool := platform.InitDB(ctx, os.Getenv("DATABASE_URL"), migrationsFS, serviceName)
+	if dbPool == nil {
+		return nil, nil
+	}
+	return dbPool, stdlib.OpenDBFromPool(dbPool)
+}
+
+func newServerMux(path string, handler http.Handler, dbPool *pgxpool.Pool, verifier *platform.JWTVerifier, publicKey *rsa.PublicKey, kid string) *http.ServeMux {
 	mux := http.NewServeMux()
 	mux.Handle(path, handler)
+	registerHealthzHandler(mux, dbPool)
+	registerVerifyHandler(mux, verifier)
+	registerJWKSHandler(mux, publicKey, kid)
+	return mux
+}
+
+func registerHealthzHandler(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if dbPool != nil {
 			if err := dbPool.Ping(r.Context()); err != nil {
@@ -124,38 +149,112 @@ func run() error {
 		w.WriteHeader(http.StatusOK)
 		_, _ = w.Write([]byte("ok\n"))
 	})
+}
 
-	// Start Kafka consumer for capture.caught events
+func registerVerifyHandler(mux *http.ServeMux, verifier *platform.JWTVerifier) {
+	mux.HandleFunc("/verify", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		authHeader := r.Header.Get("Authorization")
+		if authHeader == "" {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		token := authHeader
+		if len(authHeader) > 7 && authHeader[:7] == "Bearer " {
+			token = authHeader[7:]
+		}
+
+		if verifier == nil {
+			w.WriteHeader(http.StatusOK)
+			return
+		}
+
+		claims, err := verifier.Verify(token)
+		if err != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+			return
+		}
+
+		if claims.Subject != "" {
+			w.Header().Set("X-User-Id", claims.Subject)
+		}
+		if claims.Role != "" {
+			w.Header().Set("X-User-Role", claims.Role)
+		}
+
+		w.WriteHeader(http.StatusOK)
+	})
+}
+
+func registerJWKSHandler(mux *http.ServeMux, publicKey *rsa.PublicKey, kid string) {
+	mux.HandleFunc("/.well-known/jwks.json", func(w http.ResponseWriter, r *http.Request) {
+		if r.Method != http.MethodGet {
+			w.WriteHeader(http.StatusMethodNotAllowed)
+			return
+		}
+
+		jwkSet := map[string]interface{}{
+			"keys": []map[string]interface{}{
+				{
+					"kty": "RSA",
+					"use": "sig",
+					"kid": kid,
+					"n":   extractRSAModulus(publicKey),
+					"e":   extractRSAExponent(publicKey),
+				},
+			},
+		}
+
+		w.Header().Set("Content-Type", "application/json")
+		_ = json.NewEncoder(w).Encode(jwkSet)
+	})
+}
+
+func startCaptureConsumer(ctx context.Context, brokers []string, repo *auth.UserRepository) {
 	kafkaConsumer, _ := platform.NewKafkaConsumer(
 		ctx,
 		brokers,
 		"auth-service-consumer",
 		[]string{platform.TopicCaptureCaught},
 	)
-	if kafkaConsumer != nil {
-		go func() {
-			if err := auth.RunConsumer(ctx, auth.ConsumerConfig{
-				Client: kafkaConsumer,
-				Repo:   repo,
-			}); err != nil && !errors.Is(err, context.Canceled) {
-				slog.Error("kafka consumer error", "error", err)
-			}
-		}()
+	if kafkaConsumer == nil {
+		return
 	}
 
+	go func() {
+		if err := auth.RunConsumer(ctx, auth.ConsumerConfig{
+			Client: kafkaConsumer,
+			Repo:   repo,
+		}); err != nil && !errors.Is(err, context.Canceled) {
+			slog.Error("kafka consumer error", "error", err)
+		}
+	}()
+}
+
+func resolvePort() string {
 	port := os.Getenv("PORT")
 	if port == "" {
-		port = "8090"
+		return "8090"
 	}
+	return port
+}
 
-	srv := &http.Server{
+func newHTTPServer(ctx context.Context, mux *http.ServeMux, port string) *http.Server {
+	return &http.Server{
 		Addr:         ":" + port,
 		BaseContext:  func(net.Listener) context.Context { return ctx },
 		ReadTimeout:  5 * time.Second,
 		WriteTimeout: 30 * time.Second,
 		Handler:      h2c.NewHandler(mux, &http2.Server{}),
 	}
+}
 
+func runHTTPServer(ctx context.Context, logger *slog.Logger, srv *http.Server, port string) error {
 	srvErr := make(chan error, 1)
 	go func() {
 		logger.InfoContext(ctx, "starting auth service", "port", port)
@@ -163,7 +262,7 @@ func run() error {
 	}()
 
 	select {
-	case err = <-srvErr:
+	case err := <-srvErr:
 		if errors.Is(err, http.ErrServerClosed) {
 			return nil
 		}
@@ -187,7 +286,8 @@ func (h *authHandler) RegisterUser(ctx context.Context, req *connect.Request[aut
 		Password: req.Msg.Password,
 	})
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+		code := mapServiceErrorCode(err)
+		return nil, connect.NewError(code, err)
 	}
 	return connect.NewResponse(&authv1.RegisterUserResponse{
 		User: userToProto(resp),
@@ -200,7 +300,8 @@ func (h *authHandler) LoginUser(ctx context.Context, req *connect.Request[authv1
 		Password: req.Msg.Password,
 	})
 	if err != nil {
-		return nil, connect.NewError(connect.CodeUnauthenticated, err)
+		code := mapServiceErrorCode(err)
+		return nil, connect.NewError(code, err)
 	}
 	return connect.NewResponse(&authv1.LoginUserResponse{
 		Token: resp.Token,
@@ -213,7 +314,8 @@ func (h *authHandler) GetUserProfile(ctx context.Context, req *connect.Request[a
 		UserID: req.Msg.UserId,
 	})
 	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, err)
+		code := mapServiceErrorCode(err)
+		return nil, connect.NewError(code, err)
 	}
 	return connect.NewResponse(&authv1.GetUserProfileResponse{
 		User: userToProto(resp),
@@ -310,4 +412,58 @@ func generateKeyID(publicKey *rsa.PublicKey) string {
 	pubBytes, _ := x509.MarshalPKIXPublicKey(publicKey)
 	hash := sha256.Sum256(pubBytes)
 	return base64.RawURLEncoding.EncodeToString(hash[:])
+}
+
+// extractRSAModulus extracts the modulus (n) from RSA public key as base64url
+func extractRSAModulus(publicKey *rsa.PublicKey) string {
+	return base64.RawURLEncoding.EncodeToString(publicKey.N.Bytes())
+}
+
+// extractRSAExponent extracts the exponent (e) from RSA public key as base64url
+func extractRSAExponent(publicKey *rsa.PublicKey) string {
+	eBytes := make([]byte, 3)
+	big.NewInt(int64(publicKey.E)).FillBytes(eBytes)
+	// Trim leading zeros
+	i := 0
+	for i < len(eBytes) && eBytes[i] == 0 {
+		i++
+	}
+	if i == len(eBytes) {
+		return base64.RawURLEncoding.EncodeToString([]byte{0})
+	}
+	return base64.RawURLEncoding.EncodeToString(eBytes[i:])
+}
+
+// mapServiceErrorCode converts service layer errors to gRPC error codes
+func mapServiceErrorCode(err error) connect.Code {
+	if err == nil {
+		return connect.CodeInternal
+	}
+
+	errMsg := err.Error()
+
+	// Validation errors
+	if errMsg == "email and password are required" ||
+		errMsg == "user_id is required" ||
+		errMsg == "user_id and pokemon_id are required" {
+		return connect.CodeInvalidArgument
+	}
+
+	// Duplicate key error
+	if errMsg == "email already exists" {
+		return connect.CodeAlreadyExists
+	}
+
+	// Authentication errors
+	if errMsg == "invalid email or password" {
+		return connect.CodeUnauthenticated
+	}
+
+	// Not found errors
+	if errMsg == "user not found" {
+		return connect.CodeNotFound
+	}
+
+	// Internal errors (default)
+	return connect.CodeInternal
 }
