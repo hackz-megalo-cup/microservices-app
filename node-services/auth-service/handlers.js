@@ -112,21 +112,32 @@ export async function loginUser(req, context) {
       lastLoginAtDate.getMonth() !== today.getMonth() ||
       lastLoginAtDate.getFullYear() !== today.getFullYear();
 
-    // Update last_login_at and get the updated value
-    const updateResult = await pool.query(
-      "UPDATE users SET last_login_at = NOW() WHERE id = $1 RETURNING last_login_at",
-      [user.id],
-    );
-    const lastLoginAt = updateResult.rows[0].last_login_at;
+    const client = await pool.connect();
+    let lastLoginAt;
+    try {
+      await client.query("BEGIN");
 
-    // Emit user.logged_in event via Outbox pattern
-    await context.outbox.insertEvent(null, "user.logged_in", {
-      payload: {
-        userId: user.id,
-        isFirstToday,
-        timestamp: new Date().toISOString(),
-      },
-    });
+      const updateResult = await client.query(
+        "UPDATE users SET last_login_at = NOW() WHERE id = $1 RETURNING last_login_at",
+        [user.id],
+      );
+      lastLoginAt = updateResult.rows[0].last_login_at;
+
+      await context.outbox.insertEvent(client, "user.logged_in", {
+        payload: {
+          userId: user.id,
+          isFirstToday,
+          timestamp: new Date().toISOString(),
+        },
+      });
+
+      await client.query("COMMIT");
+    } catch (innerErr) {
+      await client.query("ROLLBACK");
+      throw innerErr;
+    } finally {
+      client.release();
+    }
 
     const token = jwt.sign(
       {
