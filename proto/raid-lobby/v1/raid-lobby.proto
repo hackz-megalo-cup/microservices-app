@@ -1,0 +1,47 @@
+syntax = "proto3";
+
+package raid_lobby.v1;
+
+option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid-lobby/v1;raid_lobbyv1";
+
+service RaidLobbyService {
+  rpc CreateRaid(CreateRaidRequest) returns (CreateRaidResponse) {}
+  rpc JoinRaid(JoinRaidRequest) returns (JoinRaidResponse) {}
+  rpc StartBattle(StartBattleRequest) returns (StartBattleResponse) {}
+  rpc StreamLobby(StreamLobbyRequest) returns (stream LobbyEvent) {}
+}
+
+message CreateRaidRequest {
+  string boss_pokemon_id = 1;
+}
+
+message CreateRaidResponse {
+  string lobby_id = 1;
+}
+
+message JoinRaidRequest {
+  string lobby_id = 1;
+  string user_id = 2;
+}
+
+message JoinRaidResponse {
+  string participant_id = 1;
+}
+
+message StartBattleRequest {
+  string lobby_id = 1;
+}
+
+message StartBattleResponse {
+  string battle_session_id = 1;
+}
+
+message StreamLobbyRequest {
+  string lobby_id = 1;
+}
+
+message LobbyEvent {
+  string event_type = 1;
+  string lobby_id = 2;
+  string payload = 3;
+}

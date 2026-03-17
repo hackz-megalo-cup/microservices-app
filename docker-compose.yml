@@ -287,6 +287,25 @@ services:
       redpanda:
         condition: service_healthy
 
+  raid-lobby:
+    build:
+      context: .
+      dockerfile: deploy/docker/raid-lobby/Dockerfile
+    environment:
+      PORT: "8086"
+      DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/raid_lobby_db"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""
+      OTEL_SERVICE_NAME: "raid-lobby-service"
+      KAFKA_BROKERS: "redpanda:9092"
+      JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
+    networks:
+      - app
+    depends_on:
+      postgres-db-sync:
+        condition: service_completed_successfully
+      redpanda:
+        condition: service_healthy
+
 networks:
   app:
     driver: bridge
