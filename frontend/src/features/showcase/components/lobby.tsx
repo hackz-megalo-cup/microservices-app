@@ -1,6 +1,6 @@
 import type { Trainer } from "../types";
 import "../styles/global.css";
-import { NavBar } from "./ui/NavBar";
+import { NavBar } from "./ui/nav-bar";
 
 const mockTrainers: Trainer[] = [
   { name: "RustLover42", pokemon: "Ferris", online: true },
