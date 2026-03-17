@@ -4,6 +4,19 @@ import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 
 /**
+ * Convert a Date or ISO string to protobuf Timestamp format
+ * @param {Date | string | null} date
+ * @returns {{seconds: number, nanos: number} | null}
+ */
+function toTimestamp(date) {
+  if (!date) return null;
+  const d = typeof date === "string" ? new Date(date) : date;
+  const seconds = Math.floor(d.getTime() / 1000);
+  const nanos = (d.getTime() % 1000) * 1000000;
+  return { seconds, nanos };
+}
+
+/**
  * RegisterUser RPC ハンドラー
  * 既存の REST /auth/register と同じロジック
  */
@@ -48,7 +61,7 @@ export async function registerUser(req, context) {
         id: user.id,
         email: user.email,
         role: user.role,
-        createdAt: user.created_at,
+        createdAt: toTimestamp(user.created_at),
       };
     } catch (innerErr) {
       await client.query("ROLLBACK");
@@ -117,8 +130,8 @@ export async function loginUser(req, context) {
         id: user.id,
         email: user.email,
         role: user.role,
-        createdAt: user.created_at,
-        lastLoginAt,
+        createdAt: toTimestamp(user.created_at),
+        lastLoginAt: toTimestamp(lastLoginAt),
       },
     };
   } catch (err) {
@@ -156,8 +169,8 @@ export async function getUserProfile(req, _context) {
       id: user.id,
       email: user.email,
       role: user.role,
-      createdAt: user.created_at,
-      lastLoginAt: user.last_login_at || null,
+      createdAt: toTimestamp(user.created_at),
+      lastLoginAt: user.last_login_at ? toTimestamp(user.last_login_at) : null,
     };
   } catch (err) {
     console.error("getUserProfile error:", err);
