@@ -49,7 +49,41 @@
       perSystem =
         { pkgs, system, ... }:
         let
+          inherit (pkgs) lib;
           nix2containerPkgs = inputs.nix2container.packages.${system};
+          nodejs = pkgs.nodejs_24;
+          repoSrc = lib.cleanSourceWith {
+            src = ./.;
+            filter =
+              path: type:
+              let
+                pathStr = toString path;
+              in
+              lib.cleanSourceFilter path type
+              && !(lib.hasInfix "/node_modules/" pathStr || lib.hasSuffix "/node_modules" pathStr)
+              && !(lib.hasInfix "/dist/" pathStr || lib.hasSuffix "/dist" pathStr)
+              && !(lib.hasSuffix ".tsbuildinfo" pathStr)
+              && !(lib.hasSuffix ".DS_Store" pathStr)
+              && !(lib.hasInfix "/.agents/" pathStr || lib.hasSuffix "/.agents" pathStr);
+          };
+          nodeServicesRoot = repoSrc + "/node-services";
+          frontendRoot = repoSrc + "/frontend";
+          nodeServicesNodeModules = pkgs.importNpmLock.buildNodeModules {
+            npmRoot = nodeServicesRoot;
+            inherit nodejs;
+            derivationArgs = {
+              pname = "node-services-node-modules";
+              version = "0.1.0";
+            };
+          };
+          frontendNodeModules = pkgs.importNpmLock.buildNodeModules {
+            npmRoot = frontendRoot;
+            inherit nodejs;
+            derivationArgs = {
+              pname = "frontend-node-modules";
+              version = "0.1.0";
+            };
+          };
 
           # Microservices (connect-go) — go.mod requires go 1.26
           buildGoModule = pkgs.buildGo126Module;
@@ -101,6 +135,137 @@
 
           raid-lobby = buildGoService "raid-lobby";
           raid-lobby-image = buildGoServiceImage "raid-lobby" raid-lobby;
+
+          buildNodeService =
+            name:
+            pkgs.stdenv.mkDerivation {
+              pname = name;
+              version = "0.1.0";
+              src = repoSrc;
+              dontBuild = true;
+              installPhase = ''
+                runHook preInstall
+                mkdir -p $out/app
+                cp -r node-services/${name} $out/app/${name}
+                cp -r node-services/shared $out/app/shared
+                cp -r ${nodeServicesNodeModules}/node_modules $out/app/node_modules
+                runHook postInstall
+              '';
+            };
+
+          buildNodeServiceRunner =
+            name: package:
+            pkgs.writeShellApplication {
+              name = "${name}-run";
+              runtimeInputs = [ nodejs ];
+              text = ''
+                cd ${package}/app/${name}
+                if [ -n "''${DATABASE_URL:-}" ]; then
+                  ../node_modules/.bin/node-pg-migrate up --database-url "''${DATABASE_URL}" --migrations-dir ./migrations
+                fi
+                exec ${nodejs}/bin/node --import ./tracing.js server.js
+              '';
+            };
+
+          buildNodeServiceImage =
+            name: package:
+            let
+              runner = buildNodeServiceRunner name package;
+            in
+            nix2containerPkgs.nix2container.buildImage {
+              inherit name;
+              tag = "latest";
+              config = {
+                entrypoint = [ "${runner}/bin/${name}-run" ];
+              };
+              layers = [
+                (nix2containerPkgs.nix2container.buildLayer {
+                  deps = [
+                    package
+                    runner
+                  ];
+                })
+              ];
+            };
+
+          auth-service = buildNodeService "auth-service";
+          auth-service-image = buildNodeServiceImage "auth-service" auth-service;
+
+          custom-lang-service = buildNodeService "custom-lang-service";
+          custom-lang-service-image = buildNodeServiceImage "custom-lang-service" custom-lang-service;
+
+          frontend-assets = pkgs.stdenv.mkDerivation {
+            pname = "frontend-assets";
+            version = "0.1.0";
+            src = repoSrc;
+            nativeBuildInputs = [ nodejs ];
+            buildPhase = ''
+              runHook preBuild
+              ln -s ${frontendNodeModules}/node_modules frontend/node_modules
+              pushd frontend
+              npm run build
+              popd
+              runHook postBuild
+            '';
+            installPhase = ''
+              runHook preInstall
+              mkdir -p $out/share/frontend $out/etc/nginx
+              cp -r frontend/dist/. $out/share/frontend/
+              cp frontend/nginx.conf $out/etc/nginx/server.conf
+              runHook postInstall
+            '';
+          };
+
+          frontend-nginx-conf = pkgs.writeText "frontend-nginx.conf" ''
+            worker_processes 1;
+            error_log /dev/stderr info;
+            pid /tmp/nginx.pid;
+
+            events {}
+
+            http {
+              access_log /dev/stdout;
+              include ${pkgs.nginx}/conf/mime.types;
+              default_type application/octet-stream;
+              sendfile on;
+
+              server {
+                listen 80;
+                server_name _;
+                root ${frontend-assets}/share/frontend;
+                index index.html;
+
+                location / {
+                  try_files $uri $uri/ /index.html;
+                }
+              }
+            }
+          '';
+
+          frontend-runner = pkgs.writeShellApplication {
+            name = "frontend-run";
+            runtimeInputs = [ pkgs.nginx ];
+            text = ''
+              exec ${pkgs.nginx}/bin/nginx -c ${frontend-nginx-conf} -g 'daemon off;'
+            '';
+          };
+
+          frontend-image = nix2containerPkgs.nix2container.buildImage {
+            name = "frontend";
+            tag = "latest";
+            config = {
+              entrypoint = [ "${frontend-runner}/bin/frontend-run" ];
+            };
+            layers = [
+              (nix2containerPkgs.nix2container.buildLayer {
+                deps = [
+                  frontend-assets
+                  frontend-runner
+                  pkgs.nginx
+                ];
+              })
+            ];
+          };
         in
         {
           devenv.shells.default = {
@@ -133,6 +298,12 @@
           # Microservices
           packages.caller = caller;
           packages.caller-image = caller-image;
+          packages.auth-service = auth-service;
+          packages.auth-service-image = auth-service-image;
+          packages.custom-lang-service = custom-lang-service;
+          packages.custom-lang-service-image = custom-lang-service-image;
+          packages.frontend = frontend-assets;
+          packages.frontend-image = frontend-image;
           packages.gateway = gateway;
           packages.gateway-image = gateway-image;
           packages.greeter = greeter;
