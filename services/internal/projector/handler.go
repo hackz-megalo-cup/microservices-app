@@ -3,9 +3,11 @@ package projector
 import (
 	"context"
 	"encoding/json"
+	"errors"
 	"log/slog"
 
 	"github.com/ThreeDotsLabs/watermill/message"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
@@ -84,21 +86,29 @@ func (p *Projector) handleEvent(ctx context.Context, event platform.Event) error
 		return nil
 	}
 	data, _ := json.Marshal(event.Data)
-	_, err := p.pool.Exec(ctx,
+	var inserted bool
+	err := p.pool.QueryRow(ctx,
 		`INSERT INTO event_log (event_id, event_type, source, data, version, created_at)
 		 VALUES ($1, $2, $3, $4, $5, $6)
-		 ON CONFLICT (event_id) DO NOTHING`,
+		 ON CONFLICT (event_id) DO NOTHING
+		 RETURNING TRUE`,
 		event.ID, event.Type, event.Source, data, event.Version, event.Timestamp,
-	)
-	if err != nil {
+	).Scan(&inserted)
+	if err != nil && !errors.Is(err, pgx.ErrNoRows) {
 		return err
+	}
+
+	// Skip projection if this event was already processed (dedup).
+	if !inserted {
+		slog.Debug("duplicate event skipped", "event_id", event.ID, "type", event.Type)
+		return nil
 	}
 
 	// Update read model projections
 	if p.projection != nil {
 		if projErr := p.projection.HandleEvent(ctx, event); projErr != nil {
 			slog.Error("projection error", "type", event.Type, "error", projErr)
-			// Don't fail the whole event handling for projection errors
+			return projErr
 		}
 	}
 
