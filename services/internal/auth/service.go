@@ -167,14 +167,18 @@ func (s *Service) GetUserProfile(ctx context.Context, req *connect.Request[authv
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("user not found"))
 	}
 
+	user := &authv1.User{
+		Id:        agg.AggregateID(),
+		Email:     agg.Email,
+		Role:      agg.Role,
+		CreatedAt: timestampFromTime(agg.CreatedAt),
+	}
+	if agg.LastLoginAt != nil {
+		user.LastLoginAt = timestampFromTime(*agg.LastLoginAt)
+	}
+
 	return connect.NewResponse(&authv1.GetUserProfileResponse{
-		User: &authv1.User{
-			Id:          agg.AggregateID(),
-			Email:       agg.Email,
-			Role:        agg.Role,
-			CreatedAt:   timestampFromTime(agg.CreatedAt),
-			LastLoginAt: timestampFromTime(*agg.LastLoginAt),
-		},
+		User: user,
 	}), nil
 }
 
