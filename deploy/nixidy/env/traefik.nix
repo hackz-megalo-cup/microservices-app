@@ -204,6 +204,36 @@
             apiVersion = "traefik.io/v1alpha1";
             kind = "IngressRoute";
             metadata = {
+              name = "item-route";
+              namespace = "microservices";
+            };
+            spec = {
+              entryPoints = [ "web" ];
+              routes = [
+                {
+                  match = "PathPrefix(`/item.v1.ItemService`)";
+                  kind = "Rule";
+                  priority = 100;
+                  middlewares = [
+                    { name = "cors-middleware"; }
+                    { name = "rate-limit-middleware"; }
+                    { name = "retry-middleware"; }
+                  ];
+                  services = [
+                    {
+                      name = "item-service";
+                      port = 8080;
+                      scheme = "h2c";
+                    }
+                  ];
+                }
+              ];
+            };
+          }
+          {
+            apiVersion = "traefik.io/v1alpha1";
+            kind = "IngressRoute";
+            metadata = {
               name = "frontend-route";
               namespace = "microservices";
             };
