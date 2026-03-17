@@ -78,6 +78,7 @@ function timestamp(): string {
 // ---------------------------------------------------------------------------
 const gameServerUrl = import.meta.env.VITE_GAME_SERVER_URL || "https://localhost:7777";
 const parsedGameServer = new URL(gameServerUrl);
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL || "http://localhost:30081";
 
 export function RaidTestPage() {
   // --- Form state ---
@@ -340,24 +341,49 @@ export function RaidTestPage() {
 
     const autoConnect = async () => {
       try {
-        const res = await fetch(`${gameServerUrl}/cert-hash`, { signal: abort.signal });
-        if (!res.ok) {
-          return;
+        // Try Gateway allocate first (EKS)
+        const allocRes = await fetch(`${apiBaseUrl}/api/raid/allocate`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lobbyId: generateUuid(),
+            bossPokemonId: generateUuid(),
+          }),
+          signal: abort.signal,
+        });
+
+        let connectHost: string;
+        let connectPort: string;
+        let hash: string;
+
+        if (allocRes.ok) {
+          const data = await allocRes.json();
+          connectHost = data.host;
+          connectPort = String(data.port);
+          hash = data.certHash.trim();
+        } else {
+          // Fallback: direct game server (local dev)
+          const res = await fetch(`${gameServerUrl}/cert-hash`, { signal: abort.signal });
+          if (!res.ok) {
+            return;
+          }
+          connectHost = parsedGameServer.hostname;
+          connectPort = parsedGameServer.port;
+          hash = (await res.text()).trim();
         }
-        const hash = (await res.text()).trim();
+
+        setHost(connectHost);
+        setPort(connectPort);
         setCertHash(hash);
 
         const hashBytes = hexToUint8Array(hash);
         setConnectionState("connecting");
 
-        const transport = new WebTransport(
-          `https://${parsedGameServer.hostname}:${parsedGameServer.port}/wt`,
-          {
-            serverCertificateHashes: [
-              { algorithm: "sha-256", value: hashBytes.buffer as ArrayBuffer },
-            ],
-          },
-        );
+        const transport = new WebTransport(`https://${connectHost}:${connectPort}/wt`, {
+          serverCertificateHashes: [
+            { algorithm: "sha-256", value: hashBytes.buffer as ArrayBuffer },
+          ],
+        });
         await transport.ready;
         transportRef.current = transport;
 
