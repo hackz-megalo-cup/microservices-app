@@ -255,6 +255,14 @@ services:
       OTEL_SERVICE_NAME: "masterdata-service"
       KAFKA_BROKERS: "redpanda:9092"
       JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.masterdata.rule=PathPrefix(`/masterdata.v1.MasterdataService`)"
+      - "traefik.http.routers.masterdata.entrypoints=web"
+      - "traefik.http.routers.masterdata.priority=100"
+      - "traefik.http.routers.masterdata.middlewares=cors@file,rate-limit@file,retry@file"
+      - "traefik.http.services.masterdata.loadbalancer.server.port=8084"
+      - "traefik.http.services.masterdata.loadbalancer.server.scheme=h2c"
     networks:
       - app
     depends_on:
