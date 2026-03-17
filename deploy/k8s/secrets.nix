@@ -45,6 +45,13 @@ _: {
         };
       };
 
+      item-secrets = {
+        type = "Opaque";
+        stringData = {
+          DATABASE_URL = "postgresql://devuser:devpass@postgresql.database:5432/item_db";
+         };
+      };
+      
       masterdata-secrets = {
         type = "Opaque";
         stringData = {

@@ -204,6 +204,7 @@
             apiVersion = "traefik.io/v1alpha1";
             kind = "IngressRoute";
             metadata = {
+              name = "item-route";
               name = "masterdata-route";
               namespace = "microservices";
             };
@@ -211,6 +212,7 @@
               entryPoints = [ "web" ];
               routes = [
                 {
+                  match = "PathPrefix(`/item.v1.ItemService`)";
                   match = "PathPrefix(`/masterdata.v1.MasterdataService`)";
                   kind = "Rule";
                   priority = 100;
@@ -221,6 +223,8 @@
                   ];
                   services = [
                     {
+                      name = "item-service";
+                      port = 8080;
                       name = "masterdata-service";
                       port = 8084;
                       scheme = "h2c";
