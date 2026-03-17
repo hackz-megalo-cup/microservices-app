@@ -33,20 +33,29 @@ func (s *Service) CreatePokemon(ctx context.Context, req *connect.Request[pb.Cre
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	_, err = s.pool.Exec(ctx,
+	tx, txErr := s.outbox.BeginTx(ctx)
+	if txErr != nil {
+		return nil, connect.NewError(connect.CodeInternal, txErr)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	_, execErr := tx.Exec(ctx,
 		`INSERT INTO pokemon (id, name, type, hp, attack, speed, special_move_name, special_move_damage)
 		 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
 		id, req.Msg.Name, req.Msg.Type, req.Msg.Hp, req.Msg.Attack, req.Msg.Speed,
 		req.Msg.SpecialMoveName, req.Msg.SpecialMoveDamage,
 	)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+	if execErr != nil {
+		return nil, connect.NewError(connect.CodeInternal, execErr)
 	}
 
-	agg := NewAggregate(id.String())
-	agg.Create()
-	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, TopicMapper); err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+	event := platform.NewEvent(EventCreated, "masterdata-service", map[string]any{"stream_id": id.String()})
+	if outboxErr := s.outbox.InsertEvent(ctx, tx, platform.TopicMasterdataCreated, event); outboxErr != nil {
+		return nil, connect.NewError(connect.CodeInternal, outboxErr)
+	}
+
+	if commitErr := tx.Commit(ctx); commitErr != nil {
+		return nil, connect.NewError(connect.CodeInternal, commitErr)
 	}
 
 	return connect.NewResponse(&pb.CreatePokemonResponse{Id: id.String()}), nil
@@ -93,24 +102,32 @@ func (s *Service) ListPokemon(ctx context.Context, _ *connect.Request[pb.ListPok
 }
 
 func (s *Service) CreateTypeMatchup(ctx context.Context, req *connect.Request[pb.CreateTypeMatchupRequest]) (*connect.Response[pb.CreateTypeMatchupResponse], error) {
-	_, err := s.pool.Exec(ctx,
+	tx, txErr := s.outbox.BeginTx(ctx)
+	if txErr != nil {
+		return nil, connect.NewError(connect.CodeInternal, txErr)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	_, execErr := tx.Exec(ctx,
 		`INSERT INTO type_matchup (attacking_type, defending_type, effectiveness)
 		 VALUES ($1, $2, $3)
 		 ON CONFLICT (attacking_type, defending_type) DO UPDATE SET effectiveness = EXCLUDED.effectiveness`,
 		req.Msg.AttackingType, req.Msg.DefendingType, req.Msg.Effectiveness,
 	)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+	if execErr != nil {
+		return nil, connect.NewError(connect.CodeInternal, execErr)
 	}
 
-	streamID, err := uuid.NewV7()
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+	event := platform.NewEvent(EventCreated, "masterdata-service", map[string]any{
+		"attacking_type": req.Msg.AttackingType,
+		"defending_type": req.Msg.DefendingType,
+	})
+	if outboxErr := s.outbox.InsertEvent(ctx, tx, platform.TopicMasterdataCreated, event); outboxErr != nil {
+		return nil, connect.NewError(connect.CodeInternal, outboxErr)
 	}
-	agg := NewAggregate(streamID.String())
-	agg.Create()
-	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, TopicMapper); err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+
+	if commitErr := tx.Commit(ctx); commitErr != nil {
+		return nil, connect.NewError(connect.CodeInternal, commitErr)
 	}
 
 	return connect.NewResponse(&pb.CreateTypeMatchupResponse{}), nil
@@ -148,19 +165,28 @@ func (s *Service) CreateItem(ctx context.Context, req *connect.Request[pb.Create
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
-	_, err = s.pool.Exec(ctx,
+	tx, txErr := s.outbox.BeginTx(ctx)
+	if txErr != nil {
+		return nil, connect.NewError(connect.CodeInternal, txErr)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	_, execErr := tx.Exec(ctx,
 		`INSERT INTO item_master (id, name, effect_type, target_type, capture_rate_bonus)
 		 VALUES ($1, $2, $3, $4, $5)`,
 		id, req.Msg.Name, req.Msg.EffectType, nullableString(req.Msg.TargetType), req.Msg.CaptureRateBonus,
 	)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+	if execErr != nil {
+		return nil, connect.NewError(connect.CodeInternal, execErr)
 	}
 
-	agg := NewAggregate(id.String())
-	agg.Create()
-	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, TopicMapper); err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+	event := platform.NewEvent(EventCreated, "masterdata-service", map[string]any{"stream_id": id.String()})
+	if outboxErr := s.outbox.InsertEvent(ctx, tx, platform.TopicMasterdataCreated, event); outboxErr != nil {
+		return nil, connect.NewError(connect.CodeInternal, outboxErr)
+	}
+
+	if commitErr := tx.Commit(ctx); commitErr != nil {
+		return nil, connect.NewError(connect.CodeInternal, commitErr)
 	}
 
 	return connect.NewResponse(&pb.CreateItemResponse{Id: id.String()}), nil
