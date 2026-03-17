@@ -11,6 +11,7 @@ const (
 	TopicCallCompleted     = "call.completed"
 	TopicInvocationCreated = "invocation.created"
 	TopicUserRegistered    = "user.registered"
+	TopicUserLoggedIn      = "user.logged_in"
 
 	// Saga compensation topics.
 	TopicGreetingFailed        = "greeting.failed"
@@ -62,6 +63,7 @@ func DefaultTopics() map[string]int32 {
 		TopicCallCompleted:            3,
 		TopicInvocationCreated:        3,
 		TopicUserRegistered:           3,
+		TopicUserLoggedIn:             3,
 		TopicGreetingFailed:           1,
 		TopicInvocationFailed:         1,
 		TopicGreetingCompensated:      1,

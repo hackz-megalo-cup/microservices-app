@@ -211,9 +211,10 @@ func (h *ProjectionHandler) onInvocationCompensated(ctx context.Context, event p
 }
 
 func (h *ProjectionHandler) onUserLoggedIn(ctx context.Context, event platform.Event) error {
-	data, ok := event.Data.(map[string]any)
-	if !ok {
-		return nil
+	data, err := toMap(event.Data)
+	if err != nil {
+		slog.Warn("projection: invalid user.logged_in data", "event_id", event.ID)
+		return nil //nolint:nilerr // Intentionally skip malformed events.
 	}
 
 	// is_first_today = true の場合のみ付与
@@ -224,6 +225,11 @@ func (h *ProjectionHandler) onUserLoggedIn(ctx context.Context, event platform.E
 
 	userID, _ := data["user_id"].(string)
 	if userID == "" {
+		return nil
+	}
+
+	if h.eventStore == nil || h.outbox == nil {
+		slog.Warn("login bonus skipped: item event store not configured", "user_id", userID)
 		return nil
 	}
 
