@@ -49,9 +49,9 @@ _: {
         type = "Opaque";
         stringData = {
           DATABASE_URL = "postgresql://devuser:devpass@postgresql.database:5432/item_db";
-         };
+        };
       };
-      
+
       masterdata-secrets = {
         type = "Opaque";
         stringData = {
@@ -60,6 +60,13 @@ _: {
         };
       };
 
+      raid-lobby-secrets = {
+        type = "Opaque";
+        stringData = {
+          DATABASE_URL = "postgresql://devuser:devpass@postgresql.database:5432/raid_lobby_db";
+          KAFKA_BROKERS = "redpanda.messaging:9092";
+        };
+      };
     };
   };
 }
