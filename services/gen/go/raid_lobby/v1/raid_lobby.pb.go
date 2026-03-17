@@ -2,7 +2,7 @@
 // versions:
 // 	protoc-gen-go v1.36.11
 // 	protoc        (unknown)
-// source: raid-lobby/v1/raid-lobby.proto
+// source: raid_lobby/v1/raid_lobby.proto
 
 package raid_lobbyv1
 
@@ -337,7 +337,7 @@ func (x *StreamLobbyRequest) GetLobbyId() string {
 	return ""
 }
 
-type LobbyEvent struct {
+type StreamLobbyResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	EventType     string                 `protobuf:"bytes,1,opt,name=event_type,json=eventType,proto3" json:"event_type,omitempty"`
 	LobbyId       string                 `protobuf:"bytes,2,opt,name=lobby_id,json=lobbyId,proto3" json:"lobby_id,omitempty"`
@@ -346,20 +346,20 @@ type LobbyEvent struct {
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *LobbyEvent) Reset() {
-	*x = LobbyEvent{}
+func (x *StreamLobbyResponse) Reset() {
+	*x = StreamLobbyResponse{}
 	mi := &file_raid_lobby_v1_raid_lobby_proto_msgTypes[7]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *LobbyEvent) String() string {
+func (x *StreamLobbyResponse) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*LobbyEvent) ProtoMessage() {}
+func (*StreamLobbyResponse) ProtoMessage() {}
 
-func (x *LobbyEvent) ProtoReflect() protoreflect.Message {
+func (x *StreamLobbyResponse) ProtoReflect() protoreflect.Message {
 	mi := &file_raid_lobby_v1_raid_lobby_proto_msgTypes[7]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -371,26 +371,26 @@ func (x *LobbyEvent) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use LobbyEvent.ProtoReflect.Descriptor instead.
-func (*LobbyEvent) Descriptor() ([]byte, []int) {
+// Deprecated: Use StreamLobbyResponse.ProtoReflect.Descriptor instead.
+func (*StreamLobbyResponse) Descriptor() ([]byte, []int) {
 	return file_raid_lobby_v1_raid_lobby_proto_rawDescGZIP(), []int{7}
 }
 
-func (x *LobbyEvent) GetEventType() string {
+func (x *StreamLobbyResponse) GetEventType() string {
 	if x != nil {
 		return x.EventType
 	}
 	return ""
 }
 
-func (x *LobbyEvent) GetLobbyId() string {
+func (x *StreamLobbyResponse) GetLobbyId() string {
 	if x != nil {
 		return x.LobbyId
 	}
 	return ""
 }
 
-func (x *LobbyEvent) GetPayload() string {
+func (x *StreamLobbyResponse) GetPayload() string {
 	if x != nil {
 		return x.Payload
 	}
@@ -401,7 +401,7 @@ var File_raid_lobby_v1_raid_lobby_proto protoreflect.FileDescriptor
 
 const file_raid_lobby_v1_raid_lobby_proto_rawDesc = "" +
 	"\n" +
-	"\x1eraid-lobby/v1/raid-lobby.proto\x12\rraid_lobby.v1\";\n" +
+	"\x1eraid_lobby/v1/raid_lobby.proto\x12\rraid_lobby.v1\";\n" +
 	"\x11CreateRaidRequest\x12&\n" +
 	"\x0fboss_pokemon_id\x18\x01 \x01(\tR\rbossPokemonId\"/\n" +
 	"\x12CreateRaidResponse\x12\x19\n" +
@@ -416,19 +416,18 @@ const file_raid_lobby_v1_raid_lobby_proto_rawDesc = "" +
 	"\x13StartBattleResponse\x12*\n" +
 	"\x11battle_session_id\x18\x01 \x01(\tR\x0fbattleSessionId\"/\n" +
 	"\x12StreamLobbyRequest\x12\x19\n" +
-	"\blobby_id\x18\x01 \x01(\tR\alobbyId\"`\n" +
-	"\n" +
-	"LobbyEvent\x12\x1d\n" +
+	"\blobby_id\x18\x01 \x01(\tR\alobbyId\"i\n" +
+	"\x13StreamLobbyResponse\x12\x1d\n" +
 	"\n" +
 	"event_type\x18\x01 \x01(\tR\teventType\x12\x19\n" +
 	"\blobby_id\x18\x02 \x01(\tR\alobbyId\x12\x18\n" +
-	"\apayload\x18\x03 \x01(\tR\apayload2\xdf\x02\n" +
+	"\apayload\x18\x03 \x01(\tR\apayload2\xe8\x02\n" +
 	"\x10RaidLobbyService\x12S\n" +
 	"\n" +
 	"CreateRaid\x12 .raid_lobby.v1.CreateRaidRequest\x1a!.raid_lobby.v1.CreateRaidResponse\"\x00\x12M\n" +
 	"\bJoinRaid\x12\x1e.raid_lobby.v1.JoinRaidRequest\x1a\x1f.raid_lobby.v1.JoinRaidResponse\"\x00\x12V\n" +
-	"\vStartBattle\x12!.raid_lobby.v1.StartBattleRequest\x1a\".raid_lobby.v1.StartBattleResponse\"\x00\x12O\n" +
-	"\vStreamLobby\x12!.raid_lobby.v1.StreamLobbyRequest\x1a\x19.raid_lobby.v1.LobbyEvent\"\x000\x01BZZXgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/raid-lobby/v1;raid_lobbyv1b\x06proto3"
+	"\vStartBattle\x12!.raid_lobby.v1.StartBattleRequest\x1a\".raid_lobby.v1.StartBattleResponse\"\x00\x12X\n" +
+	"\vStreamLobby\x12!.raid_lobby.v1.StreamLobbyRequest\x1a\".raid_lobby.v1.StreamLobbyResponse\"\x000\x01BZZXgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1;raid_lobbyv1b\x06proto3"
 
 var (
 	file_raid_lobby_v1_raid_lobby_proto_rawDescOnce sync.Once
@@ -451,7 +450,7 @@ var file_raid_lobby_v1_raid_lobby_proto_goTypes = []any{
 	(*StartBattleRequest)(nil),  // 4: raid_lobby.v1.StartBattleRequest
 	(*StartBattleResponse)(nil), // 5: raid_lobby.v1.StartBattleResponse
 	(*StreamLobbyRequest)(nil),  // 6: raid_lobby.v1.StreamLobbyRequest
-	(*LobbyEvent)(nil),          // 7: raid_lobby.v1.LobbyEvent
+	(*StreamLobbyResponse)(nil), // 7: raid_lobby.v1.StreamLobbyResponse
 }
 var file_raid_lobby_v1_raid_lobby_proto_depIdxs = []int32{
 	0, // 0: raid_lobby.v1.RaidLobbyService.CreateRaid:input_type -> raid_lobby.v1.CreateRaidRequest
@@ -461,7 +460,7 @@ var file_raid_lobby_v1_raid_lobby_proto_depIdxs = []int32{
 	1, // 4: raid_lobby.v1.RaidLobbyService.CreateRaid:output_type -> raid_lobby.v1.CreateRaidResponse
 	3, // 5: raid_lobby.v1.RaidLobbyService.JoinRaid:output_type -> raid_lobby.v1.JoinRaidResponse
 	5, // 6: raid_lobby.v1.RaidLobbyService.StartBattle:output_type -> raid_lobby.v1.StartBattleResponse
-	7, // 7: raid_lobby.v1.RaidLobbyService.StreamLobby:output_type -> raid_lobby.v1.LobbyEvent
+	7, // 7: raid_lobby.v1.RaidLobbyService.StreamLobby:output_type -> raid_lobby.v1.StreamLobbyResponse
 	4, // [4:8] is the sub-list for method output_type
 	0, // [0:4] is the sub-list for method input_type
 	0, // [0:0] is the sub-list for extension type_name

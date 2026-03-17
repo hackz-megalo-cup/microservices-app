@@ -2,13 +2,13 @@ syntax = "proto3";
 
 package raid_lobby.v1;
 
-option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid-lobby/v1;raid_lobbyv1";
+option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1;raid_lobbyv1";
 
 service RaidLobbyService {
   rpc CreateRaid(CreateRaidRequest) returns (CreateRaidResponse) {}
   rpc JoinRaid(JoinRaidRequest) returns (JoinRaidResponse) {}
   rpc StartBattle(StartBattleRequest) returns (StartBattleResponse) {}
-  rpc StreamLobby(StreamLobbyRequest) returns (stream LobbyEvent) {}
+  rpc StreamLobby(StreamLobbyRequest) returns (stream StreamLobbyResponse) {}
 }
 
 message CreateRaidRequest {
@@ -40,7 +40,7 @@ message StreamLobbyRequest {
   string lobby_id = 1;
 }
 
-message LobbyEvent {
+message StreamLobbyResponse {
   string event_type = 1;
   string lobby_id = 2;
   string payload = 3;
