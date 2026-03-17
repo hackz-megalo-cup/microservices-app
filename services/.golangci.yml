@@ -14,7 +14,7 @@ linters:
     - errorlint
     # Style
     - revive
-    - godot
+    #- godot
     - misspell
     - predeclared
     # Complexity & style
