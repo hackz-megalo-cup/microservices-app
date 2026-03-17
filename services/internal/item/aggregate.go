@@ -2,6 +2,7 @@ package item
 
 import (
 	"encoding/json"
+	"fmt"
 	"log/slog"
 
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
@@ -14,7 +15,10 @@ import (
 
 type ItemAggregate struct {
 	platform.AggregateBase
-	Status string
+	UserID   string
+	ItemID   string
+	Quantity int32
+	Status   string
 }
 
 func NewItemAggregate(id string) *ItemAggregate {
@@ -29,17 +33,27 @@ func (a *ItemAggregate) StreamType() string { return "item" }
 // Created の case を書き換え、追加イベントの case を足す。
 func (a *ItemAggregate) ApplyEvent(eventType string, data json.RawMessage) {
 	switch eventType {
-	case EventItemCreated:
-		var d CreatedData
+	case EventItemGranted:
+		var d ItemGrantedData
 		if err := json.Unmarshal(data, &d); err != nil {
 			slog.Warn("failed to unmarshal created data", "error", err)
 		}
 		// ↓ フィールドの復元を書く（例: a.Title = d.Title）。
-		a.Status = "created"
+		a.UserID = d.UserID
+		a.ItemID = d.ItemID
+		a.Quantity += d.Quantity
+		a.Status = "granted"
 	// ↓ 追加イベントの case をここに足す。
 	// 例:。
 	// case EventItemCompleted:。
 	//     a.Status = "completed"。
+	case EventItemUsed:
+		var d ItemUsedData
+		if err := json.Unmarshal(data, &d); err != nil {
+			slog.Warn("failed to unmarshal used data", "error", err)
+		}
+		a.Quantity -= d.Quantity // 減算
+		a.Status = "used"
 	case EventItemFailed:
 		a.Status = "failed"
 	case EventItemCompensated:
@@ -56,14 +70,31 @@ func (a *ItemAggregate) ApplyEvent(eventType string, data json.RawMessage) {
 // ==========================================================.
 
 // Create — 引数をドメインに合わせて変更する（例: Create(title string)）。
-func (a *ItemAggregate) Create(userID, itemID string, quantity int32, reason string) {
-	a.Raise(EventItemCreated, CreatedData{
+func (a *ItemAggregate) Grant(userID, itemID string, quantity int32, reason string) {
+	a.Raise(EventItemGranted, ItemGrantedData{
 		UserID:   userID,
 		ItemID:   itemID,
 		Quantity: quantity,
 		Reason:   reason,
 	})
-	a.Status = "created"
+	a.UserID = userID
+	a.ItemID = itemID
+	a.Quantity += quantity
+	a.Status = "granted"
+}
+
+func (a *ItemAggregate) Use(quantity int32) error {
+	if a.Quantity < quantity {
+		return fmt.Errorf("insufficient quantity: have %d, want %d", a.Quantity, quantity)
+	}
+	a.Raise(EventItemUsed, ItemUsedData{
+		UserID:   a.UserID,
+		ItemID:   a.ItemID,
+		Quantity: quantity,
+	})
+	a.Quantity -= quantity
+	a.Status = "used"
+	return nil
 }
 
 // ↓ 追加コマンドをここに定義する。
@@ -96,10 +127,14 @@ func (a *ItemAggregate) Compensate(reason string) {
 // ItemTopicMapper maps event types to Kafka topics.
 func ItemTopicMapper(eventType string) string {
 	switch eventType {
-	case EventItemCreated:
-		return platform.TopicItemCreated
+	case EventItemGranted:
+		return platform.TopicItemGranted
+	case EventItemUsed:
+		return platform.TopicItemUsed
 	case EventItemFailed:
 		return platform.TopicItemFailed
+	case EventItemCompensated:
+		return platform.TopicItemCompensated
 	default:
 		return ""
 	}

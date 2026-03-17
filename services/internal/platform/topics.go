@@ -21,9 +21,11 @@ const (
 	TopicTodoTitleUpdated = "todo.title_updated"
 	TopicTodoDeleted      = "todo.deleted"
 
-	TopicItemCreated     = "item.created"
-	TopicItemFailed      = "item.failed"
-	TopicItemCompensated = "item.compensated"
+	TopicItemCreated           = "item.created"
+	TopicItemFailed            = "item.failed"
+	TopicItemGranted           = "item.granted"
+	TopicItemUsed              = "item.used"
+	TopicItemCompensated       = "item.compensated"
 	TopicMasterdataCreated     = "masterdata.created"
 	TopicMasterdataFailed      = "masterdata.failed"
 	TopicMasterdataCompensated = "masterdata.compensated"
@@ -73,6 +75,8 @@ func DefaultTopics() map[string]int32 {
 		TopicTodoDeleted:              1,
 		TopicItemCreated:              3,
 		TopicItemFailed:               1,
+		TopicItemGranted:              3,
+		TopicItemUsed:                 3,
 		TopicItemCompensated:          1,
 		TopicItemCreatedDLQ:           1,
 		TopicMasterdataCreated:        3,

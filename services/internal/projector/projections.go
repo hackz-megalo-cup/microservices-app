@@ -3,16 +3,21 @@ package projector
 import (
 	"context"
 	"encoding/json"
+	"fmt"
 	"log/slog"
+	"math/rand"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/item"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
 // ProjectionHandler updates read models based on events.
 type ProjectionHandler struct {
-	pool *pgxpool.Pool
+	pool       *pgxpool.Pool
+	eventStore *platform.EventStore
+	outbox     *platform.OutboxStore
 }
 
 // NewProjectionHandler creates a new ProjectionHandler.
@@ -41,6 +46,8 @@ func (h *ProjectionHandler) HandleEvent(ctx context.Context, event platform.Even
 		return h.onInvocationFailed(ctx, event)
 	case "invocation.compensated":
 		return h.onInvocationCompensated(ctx, event)
+	case "user.logged_in":
+		return h.onUserLoggedIn(ctx, event)
 	default:
 		return nil
 	}
@@ -201,6 +208,48 @@ func (h *ProjectionHandler) onInvocationCompensated(ctx context.Context, event p
 		slog.Error("projection: failed to update invocations_view (compensated)", "error", err)
 	}
 	return err
+}
+
+func (h *ProjectionHandler) onUserLoggedIn(ctx context.Context, event platform.Event) error {
+	data, ok := event.Data.(map[string]any)
+	if !ok {
+		return nil
+	}
+
+	// is_first_today = true の場合のみ付与
+	isFirstToday, _ := data["is_first_today"].(bool)
+	if !isFirstToday {
+		return nil // 今日初回ログインじゃない → スキップ
+	}
+
+	userID, _ := data["user_id"].(string)
+	if userID == "" {
+		return nil
+	}
+
+	// ランダムアイテムを選定（MVP: ハードコード）
+	itemID := selectRandomItem()
+	quantity := int32(1)
+
+	// 集約をロードして付与
+	aggID := fmt.Sprintf("%s:%s", userID, itemID)
+	agg := item.NewItemAggregate(aggID)
+	_ = platform.LoadAggregate(ctx, h.eventStore, agg)
+	agg.Grant(userID, itemID, quantity, "login_bonus")
+
+	if err := platform.SaveAggregate(ctx, h.eventStore, h.outbox, agg, item.ItemTopicMapper); err != nil {
+		slog.Error("failed to grant login bonus", "error", err)
+		return err
+	}
+
+	slog.Info("login bonus granted", "user_id", userID, "item_id", itemID)
+	return nil
+}
+
+// ランダムアイテム選定（MVP: ハードコード）
+func selectRandomItem() string {
+	items := []string{"potion", "super_ball", "revive", "lure"}
+	return items[rand.Intn(len(items))]
 }
 
 func toMap(data any) (map[string]any, error) {
