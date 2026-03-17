@@ -169,11 +169,12 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin
+          export REGISTRY_AUTH_FILE="$RUNNER_TEMP/containers-auth.json"
+          echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin --authfile "$REGISTRY_AUTH_FILE"
           for svc in caller greeter gateway; do
             nix run .#${svc}-image.copyToRegistry -- docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }}
             if [ "$GITHUB_REF" = "refs/heads/main" ]; then
-              skopeo copy \
+              skopeo copy --authfile "$REGISTRY_AUTH_FILE" \
                 docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }} \
                 docker://ghcr.io/hackz-megalo-cup/${svc}:latest
             fi
