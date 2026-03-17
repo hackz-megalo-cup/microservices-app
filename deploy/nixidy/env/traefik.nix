@@ -204,6 +204,36 @@
             apiVersion = "traefik.io/v1alpha1";
             kind = "IngressRoute";
             metadata = {
+              name = "masterdata-route";
+              namespace = "microservices";
+            };
+            spec = {
+              entryPoints = [ "web" ];
+              routes = [
+                {
+                  match = "PathPrefix(`/masterdata.v1.MasterdataService`)";
+                  kind = "Rule";
+                  priority = 100;
+                  middlewares = [
+                    { name = "cors-middleware"; }
+                    { name = "rate-limit-middleware"; }
+                    { name = "retry-middleware"; }
+                  ];
+                  services = [
+                    {
+                      name = "masterdata-service";
+                      port = 8084;
+                      scheme = "h2c";
+                    }
+                  ];
+                }
+              ];
+            };
+          }
+          {
+            apiVersion = "traefik.io/v1alpha1";
+            kind = "IngressRoute";
+            metadata = {
               name = "frontend-route";
               namespace = "microservices";
             };
