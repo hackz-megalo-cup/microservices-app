@@ -39,6 +39,8 @@ func (a *Aggregate) ApplyEvent(eventType string, data json.RawMessage) {
 		a.Participants = append(a.Participants, d.UserID)
 	case EventBattleStarted:
 		a.Status = "in_battle"
+	case EventFinished:
+		a.Status = "finished"
 	case EventFailed:
 		a.Status = "failed"
 	case EventCompensated:
@@ -75,6 +77,16 @@ func (a *Aggregate) StartBattle() {
 	a.Status = "in_battle"
 }
 
+// Finish marks the lobby as finished after battle completion.
+func (a *Aggregate) Finish(sessionID, result string) {
+	a.Raise(EventFinished, FinishedData{
+		LobbyID:   a.AggregateID(),
+		SessionID: sessionID,
+		Result:    result,
+	})
+	a.Status = "finished"
+}
+
 // Fail records a failed operation — main.go が参照、削除禁止。
 func (a *Aggregate) Fail(input string, reason string) {
 	a.Raise(EventFailed, FailedData{
@@ -104,6 +116,8 @@ func TopicMapper(eventType string) string {
 		return platform.TopicRaidUserJoined
 	case EventBattleStarted:
 		return platform.TopicRaidBattleStarted
+	case EventFinished:
+		return platform.TopicRaidLobbyFinished
 	case EventFailed:
 		return platform.TopicRaidLobbyFailed
 	default:

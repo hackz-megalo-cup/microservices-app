@@ -50,7 +50,6 @@ func (s *Service) CreateRaid(ctx context.Context, req *connect.Request[pb.Create
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("boss_pokemon_id is required"))
 	}
 
-	// マスターデータからボスポケモン情報を取得して存在確認
 	if s.masterdataClient != nil {
 		_, err := s.masterdataClient.GetPokemon(ctx, connect.NewRequest(&masterdatav1.GetPokemonRequest{
 			Id: bossPokemonID,
@@ -66,7 +65,6 @@ func (s *Service) CreateRaid(ctx context.Context, req *connect.Request[pb.Create
 
 	lobbyID := uuid.NewString()
 
-	// イベントソーシング: ロビー作成イベントを保存 + Kafka 発行
 	agg := NewAggregate(lobbyID)
 	agg.Create(bossPokemonID)
 	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, TopicMapper); err != nil {
@@ -74,15 +72,12 @@ func (s *Service) CreateRaid(ctx context.Context, req *connect.Request[pb.Create
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save"))
 	}
 
-	// 読み取りモデル: raid_lobby テーブルに直接挿入
 	if s.db != nil {
-		_, err := s.db.Exec(ctx,
+		if _, err := s.db.Exec(ctx,
 			`INSERT INTO raid_lobby (id, boss_pokemon_id, status, created_at) VALUES ($1, $2, 'waiting', $3)`,
 			lobbyID, bossPokemonID, time.Now().UTC(),
-		)
-		if err != nil {
+		); err != nil {
 			slog.Error("failed to insert raid_lobby", "error", err)
-			// イベントは既に保存済みのため、ここではエラーをログのみ
 		}
 	}
 
@@ -101,7 +96,6 @@ func (s *Service) JoinRaid(ctx context.Context, req *connect.Request[pb.JoinRaid
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id is required"))
 	}
 
-	// ロビー存在確認
 	if s.db != nil {
 		var status string
 		err := s.db.QueryRow(ctx, `SELECT status FROM raid_lobby WHERE id = $1`, lobbyID).Scan(&status)
@@ -119,7 +113,6 @@ func (s *Service) JoinRaid(ctx context.Context, req *connect.Request[pb.JoinRaid
 
 	participantID := uuid.NewString()
 
-	// 既存の集約を読み込んで参加イベントを発行
 	agg := NewAggregate(lobbyID)
 	if err := platform.LoadAggregate(ctx, s.eventStore, agg); err != nil {
 		slog.Error("failed to load aggregate", "error", err)
@@ -131,13 +124,11 @@ func (s *Service) JoinRaid(ctx context.Context, req *connect.Request[pb.JoinRaid
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to join lobby"))
 	}
 
-	// 読み取りモデル: raid_participant テーブルに挿入
 	if s.db != nil {
-		_, err := s.db.Exec(ctx,
+		if _, err := s.db.Exec(ctx,
 			`INSERT INTO raid_participant (id, lobby_id, user_id, joined_at) VALUES ($1, $2, $3, $4)`,
 			participantID, lobbyID, userID, time.Now().UTC(),
-		)
-		if err != nil {
+		); err != nil {
 			slog.Error("failed to insert raid_participant", "error", err)
 		}
 	}
@@ -199,9 +190,36 @@ func (s *Service) StartBattle(ctx context.Context, req *connect.Request[pb.Start
 	}), nil
 }
 
-// StreamLobby streams lobby participant changes.
-// On connect: sends existing participants as "raid.participant_snapshot" events.
-// Then: streams new raid.user_joined events in real time.
+// HandleBattleFinished is called by the battle.finished Kafka consumer.
+// Transitions the lobby to finished in event store + read model.
+func (s *Service) HandleBattleFinished(ctx context.Context, lobbyID, sessionID, result string) error {
+	agg := NewAggregate(lobbyID)
+	if err := platform.LoadAggregate(ctx, s.eventStore, agg); err != nil {
+		return fmt.Errorf("load aggregate: %w", err)
+	}
+	if agg.Status == "finished" {
+		return nil // idempotent
+	}
+
+	agg.Finish(sessionID, result)
+	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, TopicMapper); err != nil {
+		return fmt.Errorf("save aggregate: %w", err)
+	}
+
+	if s.db != nil {
+		if _, err := s.db.Exec(ctx,
+			`UPDATE raid_lobby SET status = 'finished' WHERE id = $1`,
+			lobbyID,
+		); err != nil {
+			slog.Error("failed to update raid_lobby status", "lobby_id", lobbyID, "error", err)
+		}
+	}
+	return nil
+}
+
+// StreamLobby streams lobby state changes to the client.
+// On connect: sends existing participants as snapshots.
+// Then: streams raid.user_joined, raid.battle_started, raid_lobby.finished events in real time.
 func (s *Service) StreamLobby(ctx context.Context, req *connect.Request[pb.StreamLobbyRequest], stream *connect.ServerStream[pb.StreamLobbyResponse]) error {
 	lobbyID := req.Msg.GetLobbyId()
 	if lobbyID == "" {
@@ -255,33 +273,37 @@ func (s *Service) sendParticipantSnapshots(ctx context.Context, lobbyID string, 
 	return nil
 }
 
+// newTopicSub creates a subscriber and subscribes to a topic.
+// Returns nil channel on failure (caller should treat as no-op).
+func (s *Service) newTopicSub(ctx context.Context, group, topic string) (*platform.EventSubscriber, <-chan *message.Message) {
+	sub, err := platform.NewEventSubscriber(s.brokers, group)
+	if err != nil || sub == nil {
+		slog.Warn("StreamLobby: failed to create subscriber", "topic", topic, "error", err)
+		return nil, nil
+	}
+	msgs, err := sub.Subscribe(ctx, topic)
+	if err != nil || msgs == nil {
+		slog.Warn("StreamLobby: failed to subscribe", "topic", topic, "error", err)
+		sub.Close()
+		return nil, nil
+	}
+	return sub, msgs
+}
+
 func (s *Service) streamKafkaEvents(ctx context.Context, lobbyID string, stream *connect.ServerStream[pb.StreamLobbyResponse]) error {
 	groupBase := "stream-lobby-" + uuid.NewString()
 
-	sub1, err := platform.NewEventSubscriber(s.brokers, groupBase+"-joined")
-	if err != nil || sub1 == nil {
-		slog.Warn("failed to create joined subscriber for StreamLobby", "error", err)
-		return nil
+	sub1, msgs1 := s.newTopicSub(ctx, groupBase+"-joined", platform.TopicRaidUserJoined)
+	if sub1 != nil {
+		defer sub1.Close()
 	}
-	defer sub1.Close()
-
-	msgs1, err := sub1.Subscribe(ctx, platform.TopicRaidUserJoined)
-	if err != nil || msgs1 == nil {
-		slog.Warn("failed to subscribe to raid.user_joined", "error", err)
-		return nil
+	sub2, msgs2 := s.newTopicSub(ctx, groupBase+"-battle", platform.TopicRaidBattleStarted)
+	if sub2 != nil {
+		defer sub2.Close()
 	}
-
-	sub2, err := platform.NewEventSubscriber(s.brokers, groupBase+"-battle")
-	if err != nil || sub2 == nil {
-		slog.Warn("failed to create battle subscriber for StreamLobby", "error", err)
-		return nil
-	}
-	defer sub2.Close()
-
-	msgs2, err := sub2.Subscribe(ctx, platform.TopicRaidBattleStarted)
-	if err != nil || msgs2 == nil {
-		slog.Warn("failed to subscribe to raid.battle_started", "error", err)
-		return nil
+	sub3, msgs3 := s.newTopicSub(ctx, groupBase+"-finished", platform.TopicRaidLobbyFinished)
+	if sub3 != nil {
+		defer sub3.Close()
 	}
 
 	for {
@@ -308,32 +330,20 @@ func (s *Service) streamKafkaEvents(ctx context.Context, lobbyID string, stream 
 			if matched {
 				return nil
 			}
+		case msg, ok := <-msgs3:
+			if !ok {
+				return nil
+			}
+			msg.Ack()
+			matched, err := s.handleFinishedEvent(msg, lobbyID, stream)
+			if err != nil {
+				return err
+			}
+			if matched {
+				return nil
+			}
 		}
 	}
-}
-
-func (s *Service) handleBattleStartedEvent(msg *message.Message, lobbyID string, stream *connect.ServerStream[pb.StreamLobbyResponse]) (bool, error) {
-	event, err := platform.ParseEvent(msg)
-	if err != nil {
-		slog.Warn("StreamLobby: failed to parse battle_started event", "error", err)
-		return false, nil
-	}
-
-	raw, _ := json.Marshal(event.Data)
-	var data BattleStartedData
-	if err := json.Unmarshal(raw, &data); err != nil {
-		slog.Warn("StreamLobby: failed to unmarshal battle_started data", "error", err)
-		return false, nil
-	}
-	if data.LobbyID != lobbyID {
-		return false, nil
-	}
-
-	return true, stream.Send(&pb.StreamLobbyResponse{
-		EventType: event.Type,
-		LobbyId:   data.LobbyID,
-		Payload:   string(raw),
-	})
 }
 
 func (s *Service) handleJoinedEvent(msg *message.Message, lobbyID string, stream *connect.ServerStream[pb.StreamLobbyResponse]) error {
@@ -342,18 +352,51 @@ func (s *Service) handleJoinedEvent(msg *message.Message, lobbyID string, stream
 		slog.Warn("StreamLobby: failed to parse event", "error", err)
 		return nil
 	}
-
 	raw, _ := json.Marshal(event.Data)
 	var data UserJoinedData
-	if err := json.Unmarshal(raw, &data); err != nil {
-		slog.Warn("StreamLobby: failed to unmarshal user_joined data", "error", err)
-		return nil
-	}
+	_ = json.Unmarshal(raw, &data)
 	if data.LobbyID != lobbyID {
 		return nil
 	}
-
 	return stream.Send(&pb.StreamLobbyResponse{
+		EventType: event.Type,
+		LobbyId:   data.LobbyID,
+		Payload:   string(raw),
+	})
+}
+
+func (s *Service) handleBattleStartedEvent(msg *message.Message, lobbyID string, stream *connect.ServerStream[pb.StreamLobbyResponse]) (bool, error) {
+	event, err := platform.ParseEvent(msg)
+	if err != nil {
+		slog.Warn("StreamLobby: failed to parse battle_started event", "error", err)
+		return false, nil
+	}
+	raw, _ := json.Marshal(event.Data)
+	var data BattleStartedData
+	_ = json.Unmarshal(raw, &data)
+	if data.LobbyID != lobbyID {
+		return false, nil
+	}
+	return true, stream.Send(&pb.StreamLobbyResponse{
+		EventType: event.Type,
+		LobbyId:   data.LobbyID,
+		Payload:   string(raw),
+	})
+}
+
+func (s *Service) handleFinishedEvent(msg *message.Message, lobbyID string, stream *connect.ServerStream[pb.StreamLobbyResponse]) (bool, error) {
+	event, err := platform.ParseEvent(msg)
+	if err != nil {
+		slog.Warn("StreamLobby: failed to parse finished event", "error", err)
+		return false, nil
+	}
+	raw, _ := json.Marshal(event.Data)
+	var data FinishedData
+	_ = json.Unmarshal(raw, &data)
+	if data.LobbyID != lobbyID {
+		return false, nil
+	}
+	return true, stream.Send(&pb.StreamLobbyResponse{
 		EventType: event.Type,
 		LobbyId:   data.LobbyID,
 		Payload:   string(raw),

@@ -120,6 +120,9 @@ func run() error {
 	// --- Service ---
 	svc := raidlobby.NewService(eventStore, outbox, dbPool, masterdataClient, brokers)
 
+	// --- Battle.finished Consumer ---
+	go runBattleFinishedConsumer(ctx, brokers, svc)
+
 	// --- Connect-RPC Handler with interceptors ---
 	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
 	if err != nil {
@@ -181,4 +184,60 @@ func run() error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	return srv.Shutdown(shutdownCtx)
+}
+
+func runBattleFinishedConsumer(ctx context.Context, brokers []string, svc *raidlobby.Service) {
+	sub, err := platform.NewEventSubscriber(brokers, "raid-lobby-battle-consumer")
+	if err != nil {
+		slog.Error("failed to create battle.finished subscriber", "error", err)
+		return
+	}
+	if sub == nil {
+		return
+	}
+	defer sub.Close()
+
+	ch, err := sub.Subscribe(ctx, platform.TopicBattleFinished)
+	if err != nil {
+		slog.Error("failed to subscribe to battle.finished", "error", err)
+		return
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg, ok := <-ch:
+			if !ok {
+				return
+			}
+			event, err := platform.ParseEvent(msg)
+			if err != nil {
+				slog.Error("battle consumer: failed to parse event", "error", err)
+				msg.Nack()
+				continue
+			}
+			data, ok := event.Data.(map[string]any)
+			if !ok {
+				slog.Warn("battle consumer: unexpected data type", "event_id", event.ID)
+				msg.Ack()
+				continue
+			}
+			lobbyID, _ := data["lobby_id"].(string)
+			if lobbyID == "" {
+				slog.Warn("battle consumer: missing lobby_id", "event_id", event.ID)
+				msg.Ack()
+				continue
+			}
+			sessionID, _ := data["session_id"].(string)
+			result, _ := data["result"].(string)
+
+			if err := svc.HandleBattleFinished(ctx, lobbyID, sessionID, result); err != nil {
+				slog.Error("battle consumer: failed to handle event", "lobby_id", lobbyID, "error", err)
+				msg.Nack()
+				continue
+			}
+			msg.Ack()
+		}
+	}
 }

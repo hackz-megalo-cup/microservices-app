@@ -2,6 +2,7 @@ package raidlobby
 
 const (
 	EventCreated       = "raid_lobby.created"
+	EventFinished      = "raid_lobby.finished"
 	EventUserJoined    = "raid.user_joined"
 	EventBattleStarted = "raid.battle_started"
 
@@ -11,6 +12,12 @@ const (
 
 type CreatedData struct {
 	BossPokemonID string `json:"boss_pokemon_id"`
+}
+
+type FinishedData struct {
+	LobbyID   string `json:"lobby_id"`
+	SessionID string `json:"session_id"`
+	Result    string `json:"result"`
 }
 
 type UserJoinedData struct {
