@@ -21,6 +21,9 @@ func NewUserRepository(db *sql.DB) *UserRepository {
 
 // GetByEmail retrieves a user by email
 func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*User, error) {
+	if r.db == nil {
+		return nil, ErrDatabaseNotConfigured
+	}
 	user := &User{}
 	err := r.db.QueryRowContext(
 		ctx,
@@ -41,6 +44,9 @@ func (r *UserRepository) GetByEmail(ctx context.Context, email string) (*User, e
 
 // GetByID retrieves a user by ID
 func (r *UserRepository) GetByID(ctx context.Context, id string) (*User, error) {
+	if r.db == nil {
+		return nil, ErrDatabaseNotConfigured
+	}
 	user := &User{}
 	err := r.db.QueryRowContext(
 		ctx,
@@ -61,6 +67,9 @@ func (r *UserRepository) GetByID(ctx context.Context, id string) (*User, error) 
 
 // Create inserts a new user
 func (r *UserRepository) Create(ctx context.Context, user *User) error {
+	if r.db == nil {
+		return ErrDatabaseNotConfigured
+	}
 	_, err := r.db.ExecContext(
 		ctx,
 		`INSERT INTO users (id, email, password_hash, role, created_at, updated_at)
@@ -83,6 +92,9 @@ func (r *UserRepository) CreateTx(ctx context.Context, tx pgx.Tx, user *User) er
 
 // UpdateLastLogin updates the user's last login timestamp
 func (r *UserRepository) UpdateLastLogin(ctx context.Context, userID string) (*time.Time, error) {
+	if r.db == nil {
+		return nil, ErrDatabaseNotConfigured
+	}
 	var lastLoginAt time.Time
 	err := r.db.QueryRowContext(
 		ctx,
@@ -113,6 +125,9 @@ func (r *UserRepository) UpdateLastLoginTx(ctx context.Context, tx pgx.Tx, userI
 
 // RegisterPokemon registers a caught pokemon for a user
 func (r *UserRepository) RegisterPokemon(ctx context.Context, userID, pokemonID string) error {
+	if r.db == nil {
+		return ErrDatabaseNotConfigured
+	}
 	_, err := r.db.ExecContext(
 		ctx,
 		`INSERT INTO user_pokemon (user_id, pokemon_id, caught_at)
@@ -125,6 +140,9 @@ func (r *UserRepository) RegisterPokemon(ctx context.Context, userID, pokemonID 
 
 // GetUserPokemon retrieves all pokemon caught by a user
 func (r *UserRepository) GetUserPokemon(ctx context.Context, userID string) ([]string, error) {
+	if r.db == nil {
+		return nil, ErrDatabaseNotConfigured
+	}
 	rows, err := r.db.QueryContext(
 		ctx,
 		`SELECT pokemon_id FROM user_pokemon WHERE user_id = $1 ORDER BY caught_at DESC`,

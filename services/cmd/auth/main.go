@@ -463,5 +463,9 @@ func mapServiceErrorCode(err error) connect.Code {
 		return connect.CodeNotFound
 	}
 
+	if errors.Is(err, auth.ErrDatabaseNotConfigured) {
+		return connect.CodeUnavailable
+	}
+
 	return connect.CodeInternal
 }

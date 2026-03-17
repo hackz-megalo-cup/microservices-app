@@ -23,6 +23,7 @@ var (
 	ErrInvalidCredentials       = errors.New("invalid email or password")
 	ErrEmailAlreadyExists       = errors.New("email already exists")
 	ErrUserNotFound             = errors.New("user not found")
+	ErrDatabaseNotConfigured    = errors.New("database not configured")
 )
 
 type userRepository interface {
@@ -178,6 +179,9 @@ func (s *Service) LoginUser(ctx context.Context, req LoginUserRequest) (*LoginUs
 
 	user, err := s.repo.GetByEmail(ctx, req.Email)
 	if err != nil {
+		if errors.Is(err, ErrDatabaseNotConfigured) {
+			return nil, ErrDatabaseNotConfigured
+		}
 		return nil, ErrInvalidCredentials
 	}
 
