@@ -37,10 +37,16 @@ func run() error {
 	publisher, _ := platform.NewEventPublisher(brokers)
 	defer publisher.Close()
 
-	itemEventStore, itemOutbox := initItemEventSourcing(ctx, publisher)
+	itemEventStore, itemOutbox, itemPool := initItemEventSourcing(ctx, publisher)
+	if itemPool != nil {
+		defer itemPool.Close()
+	}
 	projection := projector.NewProjectionHandler(pool, itemEventStore, itemOutbox)
 
-	rebuilder := initRebuilder(ctx, pool, projection)
+	rebuilder, greeterPool := initRebuilder(ctx, pool, projection)
+	if greeterPool != nil {
+		defer greeterPool.Close()
+	}
 
 	p, err := projector.New(brokers, pool, publisher, projection)
 	if err != nil {
@@ -88,40 +94,38 @@ func initDB(ctx context.Context, databaseURL string, migrations func() (fs.FS, e
 	return pool
 }
 
-func initItemEventSourcing(ctx context.Context, publisher *platform.EventPublisher) (*platform.EventStore, *platform.OutboxStore) {
+func initItemEventSourcing(ctx context.Context, publisher *platform.EventPublisher) (*platform.EventStore, *platform.OutboxStore, *pgxpool.Pool) {
 	itemDBURL := os.Getenv("ITEM_DATABASE_URL")
 	if itemDBURL == "" {
 		slog.Warn("ITEM_DATABASE_URL not set; login bonus will not be granted")
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	itemPool, _ := platform.NewDBPool(ctx, itemDBURL)
 	if itemPool == nil {
-		return nil, nil
+		return nil, nil, nil
 	}
 
 	itemEventStore := platform.NewEventStore(itemPool)
 	itemOutbox := platform.NewOutboxStore(itemPool, publisher)
 	itemOutbox.StartPoller(ctx, 500*time.Millisecond)
-	defer itemPool.Close()
 
-	return itemEventStore, itemOutbox
+	return itemEventStore, itemOutbox, itemPool
 }
 
-func initRebuilder(ctx context.Context, pool *pgxpool.Pool, projection *projector.ProjectionHandler) *projector.Rebuilder {
+func initRebuilder(ctx context.Context, pool *pgxpool.Pool, projection *projector.ProjectionHandler) (*projector.Rebuilder, *pgxpool.Pool) {
 	greeterDBURL := os.Getenv("GREETER_DATABASE_URL")
 	if greeterDBURL == "" {
-		return projector.NewRebuilder(pool, nil, projection)
+		return projector.NewRebuilder(pool, nil, projection), nil
 	}
 
 	greeterPool, _ := platform.NewDBPool(ctx, greeterDBURL)
 	if greeterPool == nil {
-		return projector.NewRebuilder(pool, nil, projection)
+		return projector.NewRebuilder(pool, nil, projection), nil
 	}
-	defer greeterPool.Close()
 
 	eventStore := platform.NewEventStore(greeterPool)
-	return projector.NewRebuilder(pool, eventStore, projection)
+	return projector.NewRebuilder(pool, eventStore, projection), greeterPool
 }
 
 func startHealthServer(pool *pgxpool.Pool, rebuilder *projector.Rebuilder) {
