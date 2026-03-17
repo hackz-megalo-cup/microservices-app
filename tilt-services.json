@@ -14,6 +14,11 @@
       "cmd_path": "cmd/gateway",
       "port": 8082,
       "k8s_resource": "gateway"
+    },
+    "masterdata": {
+      "cmd_path": "cmd/masterdata",
+      "port": 8084,
+      "k8s_resource": "masterdata-service"
     }
   },
   "custom_services": {
