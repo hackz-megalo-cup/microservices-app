@@ -26,7 +26,9 @@ func ReadWT(ctx context.Context, session *webtransport.Session) <-chan []byte {
 			if err != nil {
 				return
 			}
+			wg.Add(1)
 			go func() {
+				defer wg.Done()
 				defer stream.Close()
 				data, err := io.ReadAll(stream)
 				if err != nil {

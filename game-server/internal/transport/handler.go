@@ -83,7 +83,7 @@ func (h *Handler) handleTap(userID uuid.UUID) {
 		return
 	}
 
-	dmg, currentHP, maxHP := h.session.ApplyTap(userID)
+	dmg, currentHP, maxHP, justFinished := h.session.ApplyTap(userID)
 	if dmg == 0 {
 		return
 	}
@@ -102,7 +102,7 @@ func (h *Handler) handleTap(userID uuid.UUID) {
 	}
 	h.hub.Broadcast(data)
 
-	if h.session.IsFinished() {
+	if justFinished {
 		h.broadcastFinished()
 	}
 }
@@ -112,7 +112,7 @@ func (h *Handler) handleSpecial(userID uuid.UUID) {
 		return
 	}
 
-	dmg, currentHP, maxHP, ok := h.session.ApplySpecial(userID)
+	dmg, currentHP, maxHP, ok, justFinished := h.session.ApplySpecial(userID)
 	if !ok {
 		return
 	}
@@ -146,7 +146,7 @@ func (h *Handler) handleSpecial(userID uuid.UUID) {
 	}
 	h.hub.Broadcast(hpData)
 
-	if h.session.IsFinished() {
+	if justFinished {
 		h.broadcastFinished()
 	}
 }

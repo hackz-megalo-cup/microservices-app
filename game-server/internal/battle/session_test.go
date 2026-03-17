@@ -34,7 +34,7 @@ func TestSession_ApplyTap(t *testing.T) {
 		PokemonType:   "static_typing",
 	})
 
-	dmg, currentHP, _ := s.ApplyTap(userID)
+	dmg, currentHP, _, _ := s.ApplyTap(userID)
 	if dmg <= 0 {
 		t.Errorf("expected positive damage, got %d", dmg)
 	}
@@ -66,7 +66,7 @@ func TestSession_UnknownParticipant(t *testing.T) {
 	s := newTestSession(50000)
 	unknownID := uuid.New()
 
-	dmg, _, _ := s.ApplyTap(unknownID)
+	dmg, _, _, _ := s.ApplyTap(unknownID)
 	if dmg != 0 {
 		t.Errorf("expected 0 damage for unknown participant, got %d", dmg)
 	}

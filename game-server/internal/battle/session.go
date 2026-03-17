@@ -70,58 +70,60 @@ func (s *Session) HasParticipant(userID uuid.UUID) bool {
 	return ok
 }
 
-func (s *Session) ApplyTap(userID uuid.UUID) (int32, int32, int32) {
+func (s *Session) ApplyTap(userID uuid.UUID) (dmg, currentHP, maxHP int32, justFinished bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if s.finished {
-		return 0, s.BossHP, s.BossMaxHP
+		return 0, s.BossHP, s.BossMaxHP, false
 	}
 
 	p, ok := s.Participants[userID]
 	if !ok {
-		return 0, s.BossHP, s.BossMaxHP
+		return 0, s.BossHP, s.BossMaxHP, false
 	}
 
 	p.TapCount++
-	dmg := CalcTapDamage(p.PokemonAttack, p.PokemonType, s.BossType, s.TypeMatchups)
+	dmg = CalcTapDamage(p.PokemonAttack, p.PokemonType, s.BossType, s.TypeMatchups)
 	s.BossHP -= dmg
 	if s.BossHP <= 0 {
 		s.BossHP = 0
 		s.finished = true
 		s.result = "win"
 		close(s.doneCh)
+		return dmg, s.BossHP, s.BossMaxHP, true
 	}
-	return dmg, s.BossHP, s.BossMaxHP
+	return dmg, s.BossHP, s.BossMaxHP, false
 }
 
-func (s *Session) ApplySpecial(userID uuid.UUID) (int32, int32, int32, bool) {
+func (s *Session) ApplySpecial(userID uuid.UUID) (dmg, currentHP, maxHP int32, ok, justFinished bool) {
 	s.mu.Lock()
 	defer s.mu.Unlock()
 
 	if s.finished {
-		return 0, s.BossHP, s.BossMaxHP, false
+		return 0, s.BossHP, s.BossMaxHP, false, false
 	}
 
-	p, ok := s.Participants[userID]
-	if !ok {
-		return 0, s.BossHP, s.BossMaxHP, false
+	p, found := s.Participants[userID]
+	if !found {
+		return 0, s.BossHP, s.BossMaxHP, false, false
 	}
 
 	if p.TapCount < p.RequiredForSpecial {
-		return 0, s.BossHP, s.BossMaxHP, false
+		return 0, s.BossHP, s.BossMaxHP, false, false
 	}
 
 	p.TapCount = 0
-	dmg := CalcSpecialDamage(p.SpecialMoveDamage, p.PokemonType, s.BossType, s.TypeMatchups)
+	dmg = CalcSpecialDamage(p.SpecialMoveDamage, p.PokemonType, s.BossType, s.TypeMatchups)
 	s.BossHP -= dmg
 	if s.BossHP <= 0 {
 		s.BossHP = 0
 		s.finished = true
 		s.result = "win"
 		close(s.doneCh)
+		return dmg, s.BossHP, s.BossMaxHP, true, true
 	}
-	return dmg, s.BossHP, s.BossMaxHP, true
+	return dmg, s.BossHP, s.BossMaxHP, true, false
 }
 
 func (s *Session) Timeout() {
