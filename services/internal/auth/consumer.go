@@ -12,6 +12,12 @@ type pokemonRegistrar interface {
 	RegisterPokemon(ctx context.Context, userID, pokemonID string) error
 }
 
+// PokemonCaught represents a pokemon caught event from the capture service
+type PokemonCaught struct {
+	UserID    string `json:"user_id"`
+	PokemonID string `json:"pokemon_id"`
+}
+
 // ConsumerConfig holds Kafka consumer configuration
 type ConsumerConfig struct {
 	Client *kgo.Client

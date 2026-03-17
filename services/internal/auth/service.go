@@ -3,48 +3,26 @@ package auth
 import (
 	"context"
 	"crypto/rsa"
-	"errors"
 	"fmt"
+	"log/slog"
 	"time"
 
+	"connectrpc.com/connect"
 	"github.com/golang-jwt/jwt/v5"
 	"github.com/google/uuid"
-	"github.com/jackc/pgx/v5"
-	"github.com/jackc/pgx/v5/pgconn"
+	"github.com/jackc/pgx/v5/pgxpool"
 	"golang.org/x/crypto/bcrypt"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
+	authv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/auth/v1"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
-var (
-	ErrEmailAndPasswordRequired = errors.New("email and password are required")
-	ErrUserIDRequired           = errors.New("user_id is required")
-	ErrUserAndPokemonIDRequired = errors.New("user_id and pokemon_id are required")
-	ErrInvalidCredentials       = errors.New("invalid email or password")
-	ErrEmailAlreadyExists       = errors.New("email already exists")
-	ErrUserNotFound             = errors.New("user not found")
-	ErrDatabaseNotConfigured    = errors.New("database not configured")
-)
-
-type userRepository interface {
-	Create(ctx context.Context, user *User) error
-	GetByEmail(ctx context.Context, email string) (*User, error)
-	GetByID(ctx context.Context, id string) (*User, error)
-	UpdateLastLogin(ctx context.Context, userID string) (*time.Time, error)
-	RegisterPokemon(ctx context.Context, userID, pokemonID string) error
-	GetUserPokemon(ctx context.Context, userID string) ([]string, error)
-}
-
-type userRepositoryTx interface {
-	CreateTx(ctx context.Context, tx pgx.Tx, user *User) error
-	UpdateLastLoginTx(ctx context.Context, tx pgx.Tx, userID string) (*time.Time, error)
-}
-
 // Service handles authentication business logic
 type Service struct {
-	repo       userRepository
 	eventStore *platform.EventStore
 	outbox     *platform.OutboxStore
+	pool       *pgxpool.Pool
 	privateKey *rsa.PrivateKey
 	publicKey  *rsa.PublicKey
 	keyID      string
@@ -52,370 +30,192 @@ type Service struct {
 
 // NewService creates a new authentication service
 func NewService(
-	repo userRepository,
 	eventStore *platform.EventStore,
 	outbox *platform.OutboxStore,
+	pool *pgxpool.Pool,
 	privateKey *rsa.PrivateKey,
 	publicKey *rsa.PublicKey,
 	keyID string,
 ) *Service {
 	return &Service{
-		repo:       repo,
 		eventStore: eventStore,
 		outbox:     outbox,
+		pool:       pool,
 		privateKey: privateKey,
 		publicKey:  publicKey,
 		keyID:      keyID,
 	}
 }
 
-// RegisterUserRequest is the input for RegisterUser
-type RegisterUserRequest struct {
-	Email    string
-	Password string
-}
+// RegisterUser creates a new user
+func (s *Service) RegisterUser(ctx context.Context, req *connect.Request[authv1.RegisterUserRequest]) (*connect.Response[authv1.RegisterUserResponse], error) {
+	email := req.Msg.GetEmail()
+	password := req.Msg.GetPassword()
 
-// UserResponse is the response for user queries
-type UserResponse struct {
-	ID          string
-	Email       string
-	Role        string
-	CreatedAt   time.Time
-	LastLoginAt *time.Time
-}
-
-// RegisterUser creates a new user and emits UserRegistered event in a single transaction
-func (s *Service) RegisterUser(ctx context.Context, req RegisterUserRequest) (*UserResponse, error) {
-	if req.Email == "" || req.Password == "" {
-		return nil, ErrEmailAndPasswordRequired
+	if email == "" || password == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("email and password are required"))
 	}
 
-	passwordHash, err := bcrypt.GenerateFromPassword([]byte(req.Password), 10)
+	// Hash password
+	passwordHash, err := bcrypt.GenerateFromPassword([]byte(password), 10)
 	if err != nil {
-		return nil, fmt.Errorf("failed to hash password: %w", err)
+		slog.Error("failed to hash password", "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to register"))
 	}
 
-	userID := uuid.New().String()
-	now := time.Now()
+	// Create aggregate
+	agg := NewUserAggregate(uuid.NewString())
+	agg.RegisterUser(email, string(passwordHash))
 
-	user := &User{
-		ID:           userID,
-		Email:        req.Email,
-		PasswordHash: string(passwordHash),
-		Role:         "user",
-		CreatedAt:    now,
-		Version:      0,
+	// Save to EventStore + Outbox
+	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, UserTopicMapper); err != nil {
+		slog.Error("failed to save user", "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to register"))
 	}
 
-	// Emit UserRegistered event
-	event := UserRegistered{
-		UserID:    userID,
-		Email:     req.Email,
-		Role:      "user",
-		Timestamp: now,
+	// Write projection synchronously for immediate availability
+	_, err = s.pool.Exec(ctx,
+		`INSERT INTO users (id, email, password_hash, role, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, NOW(), NOW())`,
+		agg.AggregateID(), email, passwordHash, agg.Role,
+	)
+	if err != nil {
+		slog.Error("failed to write user projection", "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to register"))
 	}
 
-	if txRepo, ok := s.repo.(userRepositoryTx); ok && (s.eventStore != nil || s.outbox != nil) {
-		tx, err := s.beginManagedTx(ctx)
-		if err != nil {
-			return nil, fmt.Errorf("begin transaction: %w", err)
-		}
-		defer func() {
-			_ = tx.Rollback(ctx)
-		}()
-
-		if err := txRepo.CreateTx(ctx, tx, user); err != nil {
-			if isDuplicateKeyError(err) {
-				return nil, ErrEmailAlreadyExists
-			}
-			return nil, fmt.Errorf("failed to create user: %w", err)
-		}
-
-		if err := s.appendAndPublishEventInTx(ctx, tx, userID, 0, event.EventType(), event, platform.TopicUserRegistered); err != nil {
-			return nil, fmt.Errorf("failed to publish event: %w", err)
-		}
-
-		if err := tx.Commit(ctx); err != nil {
-			return nil, fmt.Errorf("commit transaction: %w", err)
-		}
-	} else {
-		if err := s.repo.Create(ctx, user); err != nil {
-			if isDuplicateKeyError(err) {
-				return nil, ErrEmailAlreadyExists
-			}
-			return nil, fmt.Errorf("failed to create user: %w", err)
-		}
-
-		if err := s.appendAndPublishEvent(ctx, userID, 0, event.EventType(), event, platform.TopicUserRegistered); err != nil {
-			return nil, fmt.Errorf("failed to publish event: %w", err)
-		}
-	}
-
-	return &UserResponse{
-		ID:        user.ID,
-		Email:     user.Email,
-		Role:      user.Role,
-		CreatedAt: user.CreatedAt,
-	}, nil
-}
-
-// LoginUserRequest is the input for LoginUser
-type LoginUserRequest struct {
-	Email    string
-	Password string
-}
-
-// LoginUserResponse is the response for LoginUser
-type LoginUserResponse struct {
-	Token string
-	User  *UserResponse
+	return connect.NewResponse(&authv1.RegisterUserResponse{
+		User: &authv1.User{
+			Id:        agg.AggregateID(),
+			Email:     agg.Email,
+			Role:      agg.Role,
+			CreatedAt: timestampFromTime(agg.CreatedAt),
+		},
+	}), nil
 }
 
 // LoginUser authenticates a user and returns JWT token
-func (s *Service) LoginUser(ctx context.Context, req LoginUserRequest) (*LoginUserResponse, error) {
-	if req.Email == "" || req.Password == "" {
-		return nil, ErrEmailAndPasswordRequired
+func (s *Service) LoginUser(ctx context.Context, req *connect.Request[authv1.LoginUserRequest]) (*connect.Response[authv1.LoginUserResponse], error) {
+	email := req.Msg.GetEmail()
+	password := req.Msg.GetPassword()
+
+	if email == "" || password == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("email and password are required"))
 	}
 
-	user, err := s.repo.GetByEmail(ctx, req.Email)
+	// Lookup user by email from projection table
+	var userID, passwordHash, role string
+	err := s.pool.QueryRow(ctx,
+		"SELECT id, password_hash, role FROM users WHERE email = $1",
+		email,
+	).Scan(&userID, &passwordHash, &role)
 	if err != nil {
-		if errors.Is(err, ErrDatabaseNotConfigured) {
-			return nil, ErrDatabaseNotConfigured
-		}
-		return nil, ErrInvalidCredentials
+		slog.Error("failed to lookup user by email", "email", email, "error", err)
+		return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("invalid email or password"))
 	}
 
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(req.Password)); err != nil {
-		return nil, ErrInvalidCredentials
+	// Verify password
+	if err := bcrypt.CompareHashAndPassword([]byte(passwordHash), []byte(password)); err != nil {
+		slog.Warn("invalid password", "email", email)
+		return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("invalid email or password"))
 	}
 
-	// Check if this is first login today
-	isFirstToday := user.IsFirstToday()
-
-	// Emit UserLoggedIn event
-	event := UserLoggedIn{
-		UserID:       user.ID,
-		IsFirstToday: isFirstToday,
-		Timestamp:    time.Now(),
+	// Load aggregate to trigger login event
+	agg := NewUserAggregate(userID)
+	if err := platform.LoadAggregate(ctx, s.eventStore, agg); err != nil {
+		slog.Error("failed to load user aggregate", "user_id", userID, "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to login"))
 	}
 
-	var lastLoginAt *time.Time
-	if txRepo, ok := s.repo.(userRepositoryTx); ok && (s.eventStore != nil || s.outbox != nil) {
-		tx, txErr := s.beginManagedTx(ctx)
-		if txErr != nil {
-			return nil, fmt.Errorf("begin transaction: %w", txErr)
-		}
-		defer func() {
-			_ = tx.Rollback(ctx)
-		}()
-
-		lastLoginAt, err = txRepo.UpdateLastLoginTx(ctx, tx, user.ID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to update last login: %w", err)
-		}
-
-		if err := s.appendAndPublishEventInTx(ctx, tx, user.ID, user.Version, event.EventType(), event, platform.TopicUserLoggedIn); err != nil {
-			return nil, fmt.Errorf("failed to publish event: %w", err)
-		}
-
-		if err := tx.Commit(ctx); err != nil {
-			return nil, fmt.Errorf("commit transaction: %w", err)
-		}
-	} else {
-		lastLoginAt, err = s.repo.UpdateLastLogin(ctx, user.ID)
-		if err != nil {
-			return nil, fmt.Errorf("failed to update last login: %w", err)
-		}
-
-		if err := s.appendAndPublishEvent(ctx, user.ID, user.Version, event.EventType(), event, platform.TopicUserLoggedIn); err != nil {
-			return nil, fmt.Errorf("failed to publish event: %w", err)
-		}
+	// Record login
+	agg.LoggedIn()
+	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, UserTopicMapper); err != nil {
+		slog.Error("failed to save login event", "user_id", userID, "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to login"))
 	}
 
-	// Generate JWT token
+	// Generate JWT token (24 hour expiry)
+	token, err := s.issueJWT(userID, email, role, 24*time.Hour)
+	if err != nil {
+		slog.Error("failed to generate token", "user_id", userID, "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to login"))
+	}
+
+	return connect.NewResponse(&authv1.LoginUserResponse{
+		User: &authv1.User{
+			Id:          userID,
+			Email:       email,
+			Role:        role,
+			CreatedAt:   timestampFromTime(agg.CreatedAt),
+			LastLoginAt: timestampFromTime(*agg.LastLoginAt),
+		},
+		Token: token,
+	}), nil
+}
+
+// GetUserProfile retrieves user profile by ID
+func (s *Service) GetUserProfile(ctx context.Context, req *connect.Request[authv1.GetUserProfileRequest]) (*connect.Response[authv1.GetUserProfileResponse], error) {
+	userID := req.Msg.GetUserId()
+	if userID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id is required"))
+	}
+
+	// Load aggregate from EventStore
+	agg := NewUserAggregate(userID)
+	if err := platform.LoadAggregate(ctx, s.eventStore, agg); err != nil {
+		slog.Error("failed to load user", "user_id", userID, "error", err)
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("user not found"))
+	}
+
+	return connect.NewResponse(&authv1.GetUserProfileResponse{
+		User: &authv1.User{
+			Id:          agg.AggregateID(),
+			Email:       agg.Email,
+			Role:        agg.Role,
+			CreatedAt:   timestampFromTime(agg.CreatedAt),
+			LastLoginAt: timestampFromTime(*agg.LastLoginAt),
+		},
+	}), nil
+}
+
+// Helper functions
+
+// timestampFromTime converts time.Time to protobuf Timestamp
+func timestampFromTime(t time.Time) *timestamppb.Timestamp {
+	if t.IsZero() {
+		return nil
+	}
+	return timestamppb.New(t)
+}
+
+// issueJWT generates a JWT token for the user
+func (s *Service) issueJWT(userID, email, role string, expiresIn time.Duration) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodRS256, jwt.MapClaims{
-		"sub":  user.ID,
-		"role": user.Role,
-		"iss":  "auth-service",
-		"exp":  time.Now().Add(24 * time.Hour).Unix(),
+		"sub":   userID,
+		"email": email,
+		"role":  role,
+		"iss":   "auth-service",
+		"exp":   time.Now().Add(expiresIn).Unix(),
 	})
 	token.Header["kid"] = s.keyID
 
 	tokenString, err := token.SignedString(s.privateKey)
 	if err != nil {
-		return nil, fmt.Errorf("failed to sign token: %w", err)
+		return "", fmt.Errorf("failed to sign token: %w", err)
 	}
-
-	return &LoginUserResponse{
-		Token: tokenString,
-		User: &UserResponse{
-			ID:          user.ID,
-			Email:       user.Email,
-			Role:        user.Role,
-			CreatedAt:   user.CreatedAt,
-			LastLoginAt: lastLoginAt,
-		},
-	}, nil
+	return tokenString, nil
 }
 
-// GetUserProfileRequest is the input for GetUserProfile
-type GetUserProfileRequest struct {
-	UserID string
-}
-
-// GetUserProfile retrieves user profile by ID
-func (s *Service) GetUserProfile(ctx context.Context, req GetUserProfileRequest) (*UserResponse, error) {
-	if req.UserID == "" {
-		return nil, ErrUserIDRequired
+// RegisterPokemon implements the pokemonRegistrar interface for Kafka consumer
+func (s *Service) RegisterPokemon(ctx context.Context, userID, pokemonID string) error {
+	if userID == "" || pokemonID == "" {
+		return fmt.Errorf("user_id and pokemon_id are required")
 	}
 
-	user, err := s.repo.GetByID(ctx, req.UserID)
-	if err != nil {
-		if errors.Is(err, ErrUserNotFound) {
-			return nil, ErrUserNotFound
-		}
-		return nil, fmt.Errorf("failed to get user: %w", err)
-	}
-
-	return &UserResponse{
-		ID:          user.ID,
-		Email:       user.Email,
-		Role:        user.Role,
-		CreatedAt:   user.CreatedAt,
-		LastLoginAt: user.LastLoginAt,
-	}, nil
-}
-
-// RegisterPokemonRequest is the input for RegisterPokemon
-type RegisterPokemonRequest struct {
-	UserID    string
-	PokemonID string
-}
-
-// RegisterPokemon registers a caught pokemon for a user
-func (s *Service) RegisterPokemon(ctx context.Context, req RegisterPokemonRequest) error {
-	if req.UserID == "" || req.PokemonID == "" {
-		return ErrUserAndPokemonIDRequired
-	}
-
-	return s.repo.RegisterPokemon(ctx, req.UserID, req.PokemonID)
-}
-
-// GetUserPokemonRequest is the input for GetUserPokemon
-type GetUserPokemonRequest struct {
-	UserID string
-}
-
-// GetUserPokemon retrieves all pokemon caught by a user
-func (s *Service) GetUserPokemon(ctx context.Context, req GetUserPokemonRequest) ([]string, error) {
-	if req.UserID == "" {
-		return nil, ErrUserIDRequired
-	}
-
-	return s.repo.GetUserPokemon(ctx, req.UserID)
-}
-
-func (s *Service) beginManagedTx(ctx context.Context) (pgx.Tx, error) {
-	if s.eventStore != nil {
-		return s.eventStore.BeginTx(ctx)
-	}
-	return s.outbox.BeginTx(ctx)
-}
-
-func (s *Service) appendAndPublishEventInTx(
-	ctx context.Context,
-	tx pgx.Tx,
-	streamID string,
-	expectedVersion int,
-	eventType string,
-	data any,
-	topic string,
-) error {
-	if s.eventStore != nil {
-		_, err := s.eventStore.AppendToStream(ctx, tx, streamID, "auth.user", expectedVersion, []platform.UnsavedEvent{{
-			Type: eventType,
-			Data: data,
-		}})
-		if err != nil {
-			return fmt.Errorf("append to stream: %w", err)
-		}
-	}
-
-	if s.outbox != nil {
-		event := platform.NewEvent(eventType, "auth-service", data)
-		if err := s.outbox.InsertEvent(ctx, tx, topic, event); err != nil {
-			return fmt.Errorf("insert outbox event: %w", err)
-		}
-	}
-
-	return nil
-}
-
-func isDuplicateKeyError(err error) bool {
-	var pgErr *pgconn.PgError
-	if errors.As(err, &pgErr) {
-		return pgErr.Code == "23505"
-	}
-	return false
-}
-
-func (s *Service) appendAndPublishEvent(
-	ctx context.Context,
-	streamID string,
-	expectedVersion int,
-	eventType string,
-	data any,
-	topic string,
-) error {
-	if s.eventStore == nil && s.outbox == nil {
-		return nil
-	}
-
-	if s.eventStore == nil {
-		tx, err := s.outbox.BeginTx(ctx)
-		if err != nil {
-			return fmt.Errorf("begin outbox tx: %w", err)
-		}
-		defer func() {
-			_ = tx.Rollback(ctx)
-		}()
-
-		event := platform.NewEvent(eventType, "auth-service", data)
-		if err := s.outbox.InsertEvent(ctx, tx, topic, event); err != nil {
-			return fmt.Errorf("insert outbox event: %w", err)
-		}
-		if err := tx.Commit(ctx); err != nil {
-			return fmt.Errorf("commit outbox tx: %w", err)
-		}
-		return nil
-	}
-
-	tx, err := s.eventStore.BeginTx(ctx)
-	if err != nil {
-		return fmt.Errorf("begin event tx: %w", err)
-	}
-	defer func() {
-		_ = tx.Rollback(ctx)
-	}()
-
-	_, err = s.eventStore.AppendToStream(ctx, tx, streamID, "auth.user", expectedVersion, []platform.UnsavedEvent{{
-		Type: eventType,
-		Data: data,
-	}})
-	if err != nil {
-		return fmt.Errorf("append to stream: %w", err)
-	}
-
-	if s.outbox != nil {
-		event := platform.NewEvent(eventType, "auth-service", data)
-		if err := s.outbox.InsertEvent(ctx, tx, topic, event); err != nil {
-			return fmt.Errorf("insert outbox event: %w", err)
-		}
-	}
-
-	if err := tx.Commit(ctx); err != nil {
-		return fmt.Errorf("commit event tx: %w", err)
-	}
-
-	return nil
+	_, err := s.pool.Exec(ctx,
+		`INSERT INTO user_pokemon (user_id, pokemon_id) VALUES ($1, $2)
+		 ON CONFLICT (user_id, pokemon_id) DO NOTHING`,
+		userID, pokemonID,
+	)
+	return err
 }

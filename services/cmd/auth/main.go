@@ -28,9 +28,7 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
-	"google.golang.org/protobuf/types/known/timestamppb"
 
-	authv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/auth/v1"
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/auth/v1/authv1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/auth"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
@@ -91,8 +89,7 @@ func run() error {
 		return err
 	}
 
-	repo := auth.NewUserRepository(sqlDB)
-	authSvc := auth.NewService(repo, eventStore, outbox, privateKey, publicKey, kid)
+	authSvc := auth.NewService(eventStore, outbox, dbPool, privateKey, publicKey, kid)
 
 	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
 	if err != nil {
@@ -111,12 +108,12 @@ func run() error {
 	)
 
 	path, handler := authv1connect.NewAuthServiceHandler(
-		&authHandler{svc: authSvc},
+		authSvc,
 		connectOpts,
 	)
 
 	mux := newServerMux(path, handler, dbPool, verifier, publicKey, kid)
-	startCaptureConsumer(ctx, brokers, repo)
+	startCaptureConsumer(ctx, brokers, authSvc)
 
 	port := resolvePort()
 	srv := newHTTPServer(ctx, mux, port)
@@ -220,7 +217,7 @@ func registerJWKSHandler(mux *http.ServeMux, publicKey *rsa.PublicKey, kid strin
 	})
 }
 
-func startCaptureConsumer(ctx context.Context, brokers []string, repo *auth.UserRepository) {
+func startCaptureConsumer(ctx context.Context, brokers []string, svc *auth.Service) {
 	kafkaConsumer, _ := platform.NewKafkaConsumer(
 		ctx,
 		brokers,
@@ -234,7 +231,7 @@ func startCaptureConsumer(ctx context.Context, brokers []string, repo *auth.User
 	go func() {
 		if err := auth.RunConsumer(ctx, auth.ConsumerConfig{
 			Client: kafkaConsumer,
-			Repo:   repo,
+			Repo:   svc,
 		}); err != nil && !errors.Is(err, context.Canceled) {
 			slog.Error("kafka consumer error", "error", err)
 		}
@@ -278,72 +275,6 @@ func runHTTPServer(ctx context.Context, logger *slog.Logger, srv *http.Server, p
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	return srv.Shutdown(shutdownCtx)
-}
-
-// authHandler implements authv1connect.AuthServiceHandler
-type authHandler struct {
-	svc *auth.Service
-}
-
-func (h *authHandler) RegisterUser(ctx context.Context, req *connect.Request[authv1.RegisterUserRequest]) (*connect.Response[authv1.RegisterUserResponse], error) {
-	resp, err := h.svc.RegisterUser(ctx, auth.RegisterUserRequest{
-		Email:    req.Msg.Email,
-		Password: req.Msg.Password,
-	})
-	if err != nil {
-		code := mapServiceErrorCode(err)
-		return nil, connect.NewError(code, err)
-	}
-	return connect.NewResponse(&authv1.RegisterUserResponse{
-		User: userToProto(resp),
-	}), nil
-}
-
-func (h *authHandler) LoginUser(ctx context.Context, req *connect.Request[authv1.LoginUserRequest]) (*connect.Response[authv1.LoginUserResponse], error) {
-	resp, err := h.svc.LoginUser(ctx, auth.LoginUserRequest{
-		Email:    req.Msg.Email,
-		Password: req.Msg.Password,
-	})
-	if err != nil {
-		code := mapServiceErrorCode(err)
-		return nil, connect.NewError(code, err)
-	}
-	return connect.NewResponse(&authv1.LoginUserResponse{
-		Token: resp.Token,
-		User:  userToProto(resp.User),
-	}), nil
-}
-
-func (h *authHandler) GetUserProfile(ctx context.Context, req *connect.Request[authv1.GetUserProfileRequest]) (*connect.Response[authv1.GetUserProfileResponse], error) {
-	resp, err := h.svc.GetUserProfile(ctx, auth.GetUserProfileRequest{
-		UserID: req.Msg.UserId,
-	})
-	if err != nil {
-		code := mapServiceErrorCode(err)
-		return nil, connect.NewError(code, err)
-	}
-	return connect.NewResponse(&authv1.GetUserProfileResponse{
-		User: userToProto(resp),
-	}), nil
-}
-
-// userToProto converts UserResponse to protobuf User message
-func userToProto(user *auth.UserResponse) *authv1.User {
-	proto := &authv1.User{
-		Id:        user.ID,
-		Email:     user.Email,
-		Role:      user.Role,
-		CreatedAt: timestampFromTime(user.CreatedAt),
-	}
-	if user.LastLoginAt != nil {
-		proto.LastLoginAt = timestampFromTime(*user.LastLoginAt)
-	}
-	return proto
-}
-
-// timestampFromTime converts time.Time to protobuf Timestamp
-func timestampFromTime(t time.Time) *timestamppb.Timestamp {
-	return timestamppb.New(t)
 }
 
 // loadRSAKeys loads RSA keys from environment or generates them dynamically
@@ -437,35 +368,4 @@ func extractRSAExponent(publicKey *rsa.PublicKey) string {
 		return base64.RawURLEncoding.EncodeToString([]byte{0})
 	}
 	return base64.RawURLEncoding.EncodeToString(eBytes[i:])
-}
-
-// mapServiceErrorCode converts service layer errors to gRPC error codes
-func mapServiceErrorCode(err error) connect.Code {
-	if err == nil {
-		return connect.CodeInternal
-	}
-
-	if errors.Is(err, auth.ErrEmailAndPasswordRequired) ||
-		errors.Is(err, auth.ErrUserIDRequired) ||
-		errors.Is(err, auth.ErrUserAndPokemonIDRequired) {
-		return connect.CodeInvalidArgument
-	}
-
-	if errors.Is(err, auth.ErrEmailAlreadyExists) {
-		return connect.CodeAlreadyExists
-	}
-
-	if errors.Is(err, auth.ErrInvalidCredentials) {
-		return connect.CodeUnauthenticated
-	}
-
-	if errors.Is(err, auth.ErrUserNotFound) {
-		return connect.CodeNotFound
-	}
-
-	if errors.Is(err, auth.ErrDatabaseNotConfigured) {
-		return connect.CodeUnavailable
-	}
-
-	return connect.CodeInternal
 }
