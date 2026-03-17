@@ -12,50 +12,50 @@ export async function startCaptureConsumer(kafkaClient) {
   }
 
   try {
-    const consumer = await kafkaClient.getConsumer("auth-service-consumer");
+    const eachMessageHandler = async ({ message }) => {
+      try {
+        const payload =
+          typeof message.value === "string"
+            ? JSON.parse(message.value)
+            : JSON.parse(message.value.toString());
 
-    await consumer.subscribe({ topic: "capture.completed", fromBeginning: false });
-
-    await consumer.run({
-      eachMessage: async ({ message }) => {
-        try {
-          const payload =
-            typeof message.value === "string"
-              ? JSON.parse(message.value)
-              : JSON.parse(message.value.toString());
-
-          // Only process successful captures
-          if (payload.result !== "success") {
-            return;
-          }
-
-          const { user_id, pokemon_id } = payload;
-
-          if (!user_id || !pokemon_id) {
-            console.warn("Invalid payload: missing user_id or pokemon_id", payload);
-            return;
-          }
-
-          if (!pool) {
-            console.warn("Database pool not available");
-            return;
-          }
-
-          // Insert into user_pokemon (or ignore on duplicate)
-          await pool.query(
-            `INSERT INTO user_pokemon (user_id, pokemon_id, caught_at)
-             VALUES ($1, $2, NOW())
-             ON CONFLICT (user_id, pokemon_id) DO NOTHING`,
-            [user_id, pokemon_id],
-          );
-
-          console.log(`Registered pokemon ${pokemon_id} for user ${user_id}`);
-        } catch (err) {
-          console.error("Error processing capture event:", err);
-          // Let Kafka retry the message
+        // Only process successful captures
+        if (payload.result !== "success") {
+          return;
         }
-      },
-    });
+
+        const { user_id, pokemon_id } = payload;
+
+        if (!user_id || !pokemon_id) {
+          console.warn("Invalid payload: missing user_id or pokemon_id", payload);
+          return;
+        }
+
+        if (!pool) {
+          console.warn("Database pool not available");
+          return;
+        }
+
+        // Insert into user_pokemon (or ignore on duplicate)
+        await pool.query(
+          `INSERT INTO user_pokemon (user_id, pokemon_id, caught_at)
+           VALUES ($1, $2, NOW())
+           ON CONFLICT (user_id, pokemon_id) DO NOTHING`,
+          [user_id, pokemon_id],
+        );
+
+        console.log(`Registered pokemon ${pokemon_id} for user ${user_id}`);
+      } catch (err) {
+        console.error("Error processing capture event:", err);
+        // Let Kafka retry the message
+      }
+    };
+
+    await kafkaClient.getConsumer(
+      "auth-service-consumer",
+      ["capture.completed"],
+      eachMessageHandler,
+    );
   } catch (err) {
     console.error("Failed to start capture consumer:", err);
   }
