@@ -14,9 +14,18 @@ import (
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
+type userRepository interface {
+	Create(ctx context.Context, user *User) error
+	GetByEmail(ctx context.Context, email string) (*User, error)
+	GetByID(ctx context.Context, id string) (*User, error)
+	UpdateLastLogin(ctx context.Context, userID string) (*time.Time, error)
+	RegisterPokemon(ctx context.Context, userID, pokemonID string) error
+	GetUserPokemon(ctx context.Context, userID string) ([]string, error)
+}
+
 // Service handles authentication business logic
 type Service struct {
-	repo       *UserRepository
+	repo       userRepository
 	eventStore *platform.EventStore
 	outbox     *platform.OutboxStore
 	privateKey *rsa.PrivateKey
@@ -26,7 +35,7 @@ type Service struct {
 
 // NewService creates a new authentication service
 func NewService(
-	repo *UserRepository,
+	repo userRepository,
 	eventStore *platform.EventStore,
 	outbox *platform.OutboxStore,
 	privateKey *rsa.PrivateKey,

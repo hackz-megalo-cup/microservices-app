@@ -8,10 +8,14 @@ import (
 	"github.com/twmb/franz-go/pkg/kgo"
 )
 
+type pokemonRegistrar interface {
+	RegisterPokemon(ctx context.Context, userID, pokemonID string) error
+}
+
 // ConsumerConfig holds Kafka consumer configuration
 type ConsumerConfig struct {
 	Client *kgo.Client
-	Repo   *UserRepository
+	Repo   pokemonRegistrar
 }
 
 // RunConsumer starts consuming capture.caught events and registers pokemon
@@ -49,7 +53,7 @@ func RunConsumer(ctx context.Context, cfg ConsumerConfig) error {
 }
 
 // handleCaughtPokemon processes a PokemonCaught event and registers the pokemon
-func handleCaughtPokemon(ctx context.Context, repo *UserRepository, data []byte) error {
+func handleCaughtPokemon(ctx context.Context, repo pokemonRegistrar, data []byte) error {
 	var event PokemonCaught
 	if err := json.Unmarshal(data, &event); err != nil {
 		slog.Error("failed to unmarshal capture.caught event", "error", err)
