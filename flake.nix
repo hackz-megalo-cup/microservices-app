@@ -53,78 +53,54 @@
 
           # Microservices (connect-go) — go.mod requires go 1.26
           buildGoModule = pkgs.buildGo126Module;
-
-          caller = buildGoModule {
-            pname = "caller";
-            version = "0.1.0";
-            src = ./services;
-            vendorHash = "sha256-fzgNa+0Y5biTxqcK6VelnCzzIElzxeiLb653GhKKR7E=";
-            env.CGO_ENABLED = 0;
-            ldflags = [
-              "-s"
-              "-w"
-            ];
-            subPackages = [ "cmd/caller" ];
-          };
-
-          caller-image = nix2containerPkgs.nix2container.buildImage {
-            name = "caller";
-            tag = "latest";
-            config = {
-              entrypoint = [ "${caller}/bin/caller" ];
+          buildGoService =
+            name:
+            buildGoModule {
+              pname = name;
+              version = "0.1.0";
+              src = ./services;
+              vendorHash = "sha256-fzgNa+0Y5biTxqcK6VelnCzzIElzxeiLb653GhKKR7E=";
+              env.CGO_ENABLED = 0;
+              ldflags = [
+                "-s"
+                "-w"
+              ];
+              subPackages = [ "cmd/${name}" ];
             };
-            layers = [
-              (nix2containerPkgs.nix2container.buildLayer { deps = [ caller ]; })
-            ];
-          };
 
-          greeter = buildGoModule {
-            pname = "greeter";
-            version = "0.1.0";
-            src = ./services;
-            vendorHash = "sha256-fzgNa+0Y5biTxqcK6VelnCzzIElzxeiLb653GhKKR7E=";
-            env.CGO_ENABLED = 0;
-            ldflags = [
-              "-s"
-              "-w"
-            ];
-            subPackages = [ "cmd/greeter" ];
-          };
-
-          greeter-image = nix2containerPkgs.nix2container.buildImage {
-            name = "greeter";
-            tag = "latest";
-            config = {
-              entrypoint = [ "${greeter}/bin/greeter" ];
+          buildGoServiceImage =
+            name: package:
+            nix2containerPkgs.nix2container.buildImage {
+              inherit name;
+              tag = "latest";
+              config = {
+                entrypoint = [ "${package}/bin/${name}" ];
+              };
+              layers = [
+                (nix2containerPkgs.nix2container.buildLayer { deps = [ package ]; })
+              ];
             };
-            layers = [
-              (nix2containerPkgs.nix2container.buildLayer { deps = [ greeter ]; })
-            ];
-          };
 
-          gateway = buildGoModule {
-            pname = "gateway";
-            version = "0.1.0";
-            src = ./services;
-            vendorHash = "sha256-fzgNa+0Y5biTxqcK6VelnCzzIElzxeiLb653GhKKR7E=";
-            env.CGO_ENABLED = 0;
-            ldflags = [
-              "-s"
-              "-w"
-            ];
-            subPackages = [ "cmd/gateway" ];
-          };
+          caller = buildGoService "caller";
+          caller-image = buildGoServiceImage "caller" caller;
 
-          gateway-image = nix2containerPkgs.nix2container.buildImage {
-            name = "gateway";
-            tag = "latest";
-            config = {
-              entrypoint = [ "${gateway}/bin/gateway" ];
-            };
-            layers = [
-              (nix2containerPkgs.nix2container.buildLayer { deps = [ gateway ]; })
-            ];
-          };
+          gateway = buildGoService "gateway";
+          gateway-image = buildGoServiceImage "gateway" gateway;
+
+          greeter = buildGoService "greeter";
+          greeter-image = buildGoServiceImage "greeter" greeter;
+
+          item = buildGoService "item";
+          item-image = buildGoServiceImage "item" item;
+
+          masterdata = buildGoService "masterdata";
+          masterdata-image = buildGoServiceImage "masterdata" masterdata;
+
+          projector = buildGoService "projector";
+          projector-image = buildGoServiceImage "projector" projector;
+
+          raid-lobby = buildGoService "raid-lobby";
+          raid-lobby-image = buildGoServiceImage "raid-lobby" raid-lobby;
         in
         {
           devenv.shells.default = {
@@ -157,10 +133,18 @@
           # Microservices
           packages.caller = caller;
           packages.caller-image = caller-image;
-          packages.greeter = greeter;
-          packages.greeter-image = greeter-image;
           packages.gateway = gateway;
           packages.gateway-image = gateway-image;
+          packages.greeter = greeter;
+          packages.greeter-image = greeter-image;
+          packages.item = item;
+          packages.item-image = item-image;
+          packages.masterdata = masterdata;
+          packages.masterdata-image = masterdata-image;
+          packages.projector = projector;
+          packages.projector-image = projector-image;
+          packages.raid-lobby = raid-lobby;
+          packages.raid-lobby-image = raid-lobby-image;
         };
     };
 }

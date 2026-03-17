@@ -158,10 +158,16 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Build service binaries
-        run: nix build .#caller .#greeter .#gateway
+        run: >
+          nix build
+          .#caller .#gateway .#greeter
+          .#item .#masterdata .#projector .#raid-lobby
 
       - name: Build service images
-        run: nix build .#caller-image .#greeter-image .#gateway-image
+        run: >
+          nix build
+          .#caller-image .#gateway-image .#greeter-image
+          .#item-image .#masterdata-image .#projector-image .#raid-lobby-image
 
       - name: Push images to ghcr.io
         if: >-
@@ -170,9 +176,10 @@ jobs:
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
+          services=(caller gateway greeter item masterdata projector raid-lobby)
           export REGISTRY_AUTH_FILE="$RUNNER_TEMP/containers-auth.json"
           echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin --authfile "$REGISTRY_AUTH_FILE"
-          for svc in caller greeter gateway; do
+          for svc in "${services[@]}"; do
             nix run .#${svc}-image.copyTo -- \
               --authfile "$REGISTRY_AUTH_FILE" \
               docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }}
