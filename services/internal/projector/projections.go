@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log/slog"
-	"math/rand"
+	"hash/fnv"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -233,8 +233,8 @@ func (h *ProjectionHandler) onUserLoggedIn(ctx context.Context, event platform.E
 		return nil
 	}
 
-	// ランダムアイテムを選定（MVP: ハードコード）
-	itemID := selectRandomItem()
+	// アイテムを選定（イベントIDから決定的に選ぶ → リプレイ安全）
+	itemID := selectItem(event.ID)
 	quantity := int32(1)
 
 	// 集約をロードして付与
@@ -254,10 +254,13 @@ func (h *ProjectionHandler) onUserLoggedIn(ctx context.Context, event platform.E
 	return nil
 }
 
-// ランダムアイテム選定（MVP: ハードコード）
-func selectRandomItem() string {
+// selectItem はイベントIDから決定的にアイテムを選ぶ。
+// 同じイベントIDなら常に同じアイテムを返すため、リプレイ時も安全。
+func selectItem(eventID string) string {
 	items := []string{"potion", "super_ball", "revive", "lure"}
-	return items[rand.Intn(len(items))]
+	h := fnv.New32a()
+	_, _ = h.Write([]byte(eventID)) //nolint:errcheck // hash.Write never fails.
+	return items[h.Sum32()%uint32(len(items))]
 }
 
 func toMap(data any) (map[string]any, error) {
