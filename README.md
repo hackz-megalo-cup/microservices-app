@@ -151,6 +151,23 @@ docker compose up
 | http://localhost:8888 | Redpanda Console (Kafka UI) |
 | http://localhost:19092 | Redpanda Kafka (外部アクセス) |
 
+### 4. game-server の TLS セットアップ（初回のみ）
+
+game-server は WebSocket 接続にブラウザが信頼する TLS 証明書が必要。初回に一度だけセットアップスクリプトを実行する:
+
+```zsh
+./scripts/setup-tls.sh
+```
+
+これにより:
+- mkcert の CA がシステムにインストールされる（パスワードを聞かれる場合がある）
+- `deploy/tls/` に localhost 用証明書が生成される（docker compose 用、`.gitignore` 済み）
+- `/tmp/tls.{crt,key}` にもコピーされる（ローカル起動用）
+
+セットアップ後は `docker compose up --build -d` で game-server の WebSocket がブラウザから信頼される。
+
+> **Note**: mkcert がインストールされていない場合は `brew install mkcert` または devenv に入った状態で利用可能。
+
 ## フロントエンド開発
 
 ### 概要

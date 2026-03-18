@@ -51,3 +51,6 @@ docs/plans/
 
 # Misc caches
 .cache/
+
+# mkcert local dev certs
+deploy/tls/
