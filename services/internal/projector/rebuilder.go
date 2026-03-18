@@ -10,11 +10,7 @@ import (
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
-const (
-	// ProjectionGreetingsView is the name of the greetings view projection.
-	ProjectionGreetingsView = "greetings_view"
-	rebuildBatchSize        = 500
-)
+const rebuildBatchSize = 500
 
 // Rebuilder replays events from the event store to rebuild projections.
 type Rebuilder struct {
@@ -38,13 +34,6 @@ func (r *Rebuilder) Rebuild(ctx context.Context, projectionName string) error {
 	}
 
 	slog.Info("rebuild: starting", "projection", projectionName)
-
-	// Truncate the target view.
-	if projectionName == ProjectionGreetingsView {
-		if _, err := r.pool.Exec(ctx, "TRUNCATE greetings_view"); err != nil {
-			return err
-		}
-	}
 
 	// Reset checkpoint.
 	if _, err := r.pool.Exec(ctx,
