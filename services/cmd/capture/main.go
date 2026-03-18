@@ -12,12 +12,16 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/ThreeDotsLabs/watermill/message"
+
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/capture/v1/capturev1connect"
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/item/v1/itemv1connect"
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1/masterdatav1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/capture"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
@@ -102,13 +106,34 @@ func run() error {
 		}
 	}()
 
+	// --- Masterdata client ---
+	var masterdataClient masterdatav1connect.MasterdataServiceClient
+	if masterdataURL := os.Getenv("MASTERDATA_URL"); masterdataURL != "" {
+		masterdataClient = masterdatav1connect.NewMasterdataServiceClient(
+			platform.NewInstrumentedHTTPClient(3*time.Second),
+			masterdataURL,
+		)
+	}
+
+	// --- Item client ---
+	var itemClient itemv1connect.ItemServiceClient
+	if itemURL := os.Getenv("ITEM_URL"); itemURL != "" {
+		itemClient = itemv1connect.NewItemServiceClient(
+			platform.NewInstrumentedHTTPClient(3*time.Second),
+			itemURL,
+		)
+	}
+
 	// --- Auth & Idempotency ---
 	verifier := platform.NewJWTVerifier(os.Getenv("JWKS_URL"))
 	idempotencyStore := platform.NewIdempotencyStore(dbPool)
 	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
 
 	// --- Service ---
-	svc := capture.NewService(eventStore, outbox)
+	svc := capture.NewService(eventStore, outbox, dbPool, masterdataClient, itemClient)
+
+	// --- Battle.finished Consumer ---
+	go runBattleFinishedConsumer(ctx, brokers, svc)
 
 	// --- Connect-RPC Handler with interceptors ---
 	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
@@ -171,4 +196,80 @@ func run() error {
 	shutdownCtx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
 	defer cancel()
 	return srv.Shutdown(shutdownCtx)
+}
+
+func runBattleFinishedConsumer(ctx context.Context, brokers []string, svc *capture.Service) {
+	sub, err := platform.NewEventSubscriber(brokers, "capture-battle-consumer")
+	if err != nil {
+		slog.Error("failed to create battle.finished subscriber", "error", err)
+		return
+	}
+	if sub == nil {
+		return
+	}
+	defer sub.Close()
+
+	ch, err := sub.Subscribe(ctx, platform.TopicBattleFinished)
+	if err != nil {
+		slog.Error("failed to subscribe to battle.finished", "error", err)
+		return
+	}
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case msg, ok := <-ch:
+			if !ok {
+				return
+			}
+			handleBattleMessage(ctx, msg, svc)
+		}
+	}
+}
+
+func handleBattleMessage(ctx context.Context, msg *message.Message, svc *capture.Service) {
+	event, err := platform.ParseEvent(msg)
+	if err != nil {
+		slog.Error("capture battle consumer: failed to parse event", "error", err)
+		msg.Nack()
+		return
+	}
+	data, ok := event.Data.(map[string]any)
+	if !ok {
+		slog.Warn("capture battle consumer: unexpected data type", "event_id", event.ID)
+		msg.Ack()
+		return
+	}
+
+	result, _ := data["result"].(string)
+	if result != "win" {
+		msg.Ack()
+		return
+	}
+
+	battleSessionID, _ := data["session_id"].(string)
+	bossPokemonID, _ := data["boss_pokemon_id"].(string)
+	participantUserIDs := extractParticipantIDs(data)
+
+	if err := svc.HandleBattleFinished(ctx, battleSessionID, bossPokemonID, participantUserIDs); err != nil {
+		slog.Error("capture battle consumer: failed to handle event", "error", err)
+		msg.Nack()
+		return
+	}
+	msg.Ack()
+}
+
+func extractParticipantIDs(data map[string]any) []string {
+	var ids []string
+	rawIDs, ok := data["participant_user_ids"].([]any)
+	if !ok {
+		return ids
+	}
+	for _, id := range rawIDs {
+		if s, ok := id.(string); ok {
+			ids = append(ids, s)
+		}
+	}
+	return ids
 }
