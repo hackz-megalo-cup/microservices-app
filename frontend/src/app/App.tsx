@@ -1,4 +1,15 @@
 import { BrowserRouter, Route, Routes } from "react-router";
+import {
+  AdminDashboard,
+  AdminLayout,
+  ItemForm,
+  ItemList,
+  PokemonForm,
+  PokemonList,
+  RaidForm,
+  RaidList,
+  TypeMatchupList,
+} from "../features/admin";
 import { ApiTestPage } from "../features/api-test/components/api-test-page";
 import { LoginPage } from "../features/auth/components/login-page";
 import { RequireAuth } from "../features/auth/components/require-auth";
@@ -81,6 +92,25 @@ export function App() {
             </RequireAuth>
           }
         />
+        <Route
+          path="/admin"
+          element={
+            <RequireAuth>
+              <AdminLayout />
+            </RequireAuth>
+          }
+        >
+          <Route index element={<AdminDashboard />} />
+          <Route path="pokemon" element={<PokemonList />} />
+          <Route path="pokemon/new" element={<PokemonForm mode="create" />} />
+          <Route path="pokemon/:id/edit" element={<PokemonForm mode="edit" />} />
+          <Route path="items" element={<ItemList />} />
+          <Route path="items/new" element={<ItemForm mode="create" />} />
+          <Route path="items/:id/edit" element={<ItemForm mode="edit" />} />
+          <Route path="type-chart" element={<TypeMatchupList />} />
+          <Route path="raids" element={<RaidList />} />
+          <Route path="raids/new" element={<RaidForm />} />
+        </Route>
         <Route path="/api-test" element={<ApiTestPage />} />
         <Route path="/raid-test" element={<RaidTestPage />} />
       </Routes>
