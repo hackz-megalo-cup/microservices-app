@@ -16,7 +16,14 @@ export function useSetActivePokemon() {
       if (!user?.id) {
         throw new Error("User not authenticated");
       }
-      return client.setActivePokemon({ userId: user.id, pokemonId });
+      return client.setActivePokemon(
+        { userId: user.id, pokemonId },
+        {
+          headers: new Headers({
+            "idempotency-key": crypto.randomUUID(),
+          }),
+        },
+      );
     },
     onSuccess: () => {
       void queryClient.invalidateQueries();
