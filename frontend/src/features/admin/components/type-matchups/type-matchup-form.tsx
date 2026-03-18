@@ -1,4 +1,5 @@
 import { useState } from "react";
+import type { FormEvent } from "react";
 import { useAdminTypeMatchups } from "../../hooks/use-admin-type-matchups";
 
 const POKEMON_TYPES = [
@@ -28,7 +29,7 @@ export function TypeMatchupForm() {
   const [defendingType, setDefendingType] = useState("");
   const [effectiveness, setEffectiveness] = useState("");
 
-  function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  function handleSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     createMutation.mutate(
       {

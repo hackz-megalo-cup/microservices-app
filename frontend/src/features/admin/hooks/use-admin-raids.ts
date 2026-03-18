@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { listPokemon } from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 import { RaidLobbyService } from "../../../gen/raid_lobby/v1/raid_lobby_pb";
 import { listOpenRaids } from "../../../gen/raid_lobby/v1/raid_lobby-RaidLobbyService_connectquery";
+import type { AdminRaid } from "../types";
 
 function toEpochMs(createdAt: { seconds: bigint; nanos: number } | undefined): number | null {
   if (!createdAt) {
@@ -12,15 +13,6 @@ function toEpochMs(createdAt: { seconds: bigint; nanos: number } | undefined): n
   }
   const seconds = Number(createdAt.seconds);
   return Number.isFinite(seconds) ? seconds * 1000 + Math.floor(createdAt.nanos / 1_000_000) : null;
-}
-
-export interface AdminRaid {
-  id: string;
-  bossName: string;
-  currentParticipants: number;
-  maxParticipants: number;
-  status: string;
-  createdAtMs: number | null;
 }
 
 export function useAdminRaids() {

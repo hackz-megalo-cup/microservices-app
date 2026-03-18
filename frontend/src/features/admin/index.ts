@@ -1,2 +1,10 @@
 export { AdminDashboard } from "./components/admin-dashboard";
 export { AdminLayout } from "./components/admin-layout";
+export { ItemForm } from "./components/items/item-form";
+export { ItemList } from "./components/items/item-list";
+export { PokemonForm } from "./components/pokemon/pokemon-form";
+export { PokemonList } from "./components/pokemon/pokemon-list";
+export { RaidForm } from "./components/raids/raid-form";
+export { RaidList } from "./components/raids/raid-list";
+export { TypeMatchupList } from "./components/type-matchups/type-matchup-list";
+export type { AdminRaid } from "./types";

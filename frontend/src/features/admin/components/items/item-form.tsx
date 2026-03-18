@@ -1,5 +1,6 @@
 import { useQuery } from "@connectrpc/connect-query";
 import { useEffect, useState } from "react";
+import type { FormEvent } from "react";
 import { useNavigate, useParams } from "react-router";
 import { getItem } from "../../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 import { useAdminItems } from "../../hooks/use-admin-items";
@@ -41,7 +42,7 @@ export function ItemForm({ mode }: ItemFormProps) {
     }
   }, [mode, itemQuery.data]);
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
 
     const apiEffects = effects.map(({ effectType, targetType, captureRateBonus, flavorText }) => ({
@@ -126,6 +127,12 @@ export function ItemForm({ mode }: ItemFormProps) {
             キャンセル
           </button>
         </div>
+
+        {(createMutation.error ?? updateMutation.error) && (
+          <p className="text-red-400 text-sm">
+            {(createMutation.error ?? updateMutation.error)?.message}
+          </p>
+        )}
       </form>
     </div>
   );

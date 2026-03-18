@@ -1,5 +1,6 @@
 import { useQuery } from "@connectrpc/connect-query";
 import { useState } from "react";
+import type { FormEvent } from "react";
 import { useNavigate } from "react-router";
 import { listPokemon } from "../../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 import { useAdminRaids } from "../../hooks/use-admin-raids";
@@ -12,7 +13,7 @@ export function RaidForm() {
 
   const [bossPokemonId, setBossPokemonId] = useState("");
 
-  async function handleSubmit(e: React.FormEvent) {
+  async function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!bossPokemonId) {
       return;
