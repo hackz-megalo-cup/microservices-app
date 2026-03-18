@@ -72,8 +72,13 @@
 }
 
 @keyframes pokemon-idle-bob {
-  0%, 100% { transform: translateY(0px) scale(1); }
-  50% { transform: translateY(-7px) scale(1.02); }
+  0%,
+  100% {
+    transform: translateY(0px) scale(1);
+  }
+  50% {
+    transform: translateY(-7px) scale(1.02);
+  }
 }
 
 .capture-pokemon-idle {
@@ -81,10 +86,24 @@
 }
 
 @keyframes pokemon-absorb {
-  0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.35)); }
-  25% { transform: scale(1.15); opacity: 1; filter: brightness(2) drop-shadow(0 0 30px #fff); }
-  60% { transform: scale(0.25); opacity: 0.6; }
-  100% { transform: scale(0); opacity: 0; }
+  0% {
+    transform: scale(1);
+    opacity: 1;
+    filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.35));
+  }
+  25% {
+    transform: scale(1.15);
+    opacity: 1;
+    filter: brightness(2) drop-shadow(0 0 30px #fff);
+  }
+  60% {
+    transform: scale(0.25);
+    opacity: 0.6;
+  }
+  100% {
+    transform: scale(0);
+    opacity: 0;
+  }
 }
 
 .capture-pokemon-absorb {
@@ -93,9 +112,18 @@
 }
 
 @keyframes pokemon-escape-anim {
-  0% { transform: scale(1) rotate(0deg); opacity: 1; }
-  40% { transform: scale(1.2) rotate(160deg); opacity: 0.8; }
-  100% { transform: scale(0) rotate(360deg); opacity: 0; }
+  0% {
+    transform: scale(1) rotate(0deg);
+    opacity: 1;
+  }
+  40% {
+    transform: scale(1.2) rotate(160deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: scale(0) rotate(360deg);
+    opacity: 0;
+  }
 }
 
 .capture-pokemon-escape {
@@ -104,10 +132,21 @@
 
 /* Wobble re-appear after break-free */
 @keyframes pokemon-breakfree {
-  0% { transform: scale(0.1); opacity: 0; }
-  60% { transform: scale(1.15); opacity: 1; }
-  80% { transform: scale(0.95); }
-  100% { transform: scale(1); opacity: 1; }
+  0% {
+    transform: scale(0.1);
+    opacity: 0;
+  }
+  60% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+  80% {
+    transform: scale(0.95);
+  }
+  100% {
+    transform: scale(1);
+    opacity: 1;
+  }
 }
 
 .capture-pokemon-breakfree {
@@ -138,10 +177,7 @@
     opacity: 1;
   }
   100% {
-    transform: translate(
-      calc(-50% + var(--px)),
-      calc(-50% + var(--py))
-    ) scale(0);
+    transform: translate(calc(-50% + var(--px)), calc(-50% + var(--py))) scale(0);
     opacity: 0;
   }
 }
@@ -167,9 +203,18 @@
 
 /* === THROW BONUS LABEL === */
 @keyframes bonus-pop {
-  0% { transform: scale(0.4) translateY(8px); opacity: 0; }
-  55% { transform: scale(1.25) translateY(-4px); opacity: 1; }
-  100% { transform: scale(1) translateY(0); opacity: 1; }
+  0% {
+    transform: scale(0.4) translateY(8px);
+    opacity: 0;
+  }
+  55% {
+    transform: scale(1.25) translateY(-4px);
+    opacity: 1;
+  }
+  100% {
+    transform: scale(1) translateY(0);
+    opacity: 1;
+  }
 }
 
 .capture-bonus-label {
@@ -219,7 +264,8 @@
     transform: translateY(-150px) translateX(var(--ball-dx, 0px)) scale(0.85) rotate(180deg);
   }
   70% {
-    transform: translateY(-270px) translateX(calc(var(--ball-dx, 0px) * 0.5)) scale(0.6) rotate(420deg);
+    transform: translateY(-270px) translateX(calc(var(--ball-dx, 0px) * 0.5)) scale(0.6)
+      rotate(420deg);
   }
   100% {
     transform: translateY(-230px) translateX(0) scale(0.45) rotate(540deg);
@@ -233,41 +279,99 @@
 
 /* Wobble animations (1, 2, 3 times) */
 @keyframes ball-wobble-1 {
-  0%   { transform: translateY(-225px) scale(0.45) rotate(0deg); }
-  15%  { transform: translateY(-225px) scale(0.45) rotate(22deg); }
-  30%  { transform: translateY(-225px) scale(0.45) rotate(-16deg); }
-  45%  { transform: translateY(-225px) scale(0.45) rotate(10deg); }
-  60%  { transform: translateY(-225px) scale(0.45) rotate(-6deg); }
-  75%  { transform: translateY(-225px) scale(0.45) rotate(3deg); }
-  100% { transform: translateY(-225px) scale(0.45) rotate(0deg); }
+  0% {
+    transform: translateY(-225px) scale(0.45) rotate(0deg);
+  }
+  15% {
+    transform: translateY(-225px) scale(0.45) rotate(22deg);
+  }
+  30% {
+    transform: translateY(-225px) scale(0.45) rotate(-16deg);
+  }
+  45% {
+    transform: translateY(-225px) scale(0.45) rotate(10deg);
+  }
+  60% {
+    transform: translateY(-225px) scale(0.45) rotate(-6deg);
+  }
+  75% {
+    transform: translateY(-225px) scale(0.45) rotate(3deg);
+  }
+  100% {
+    transform: translateY(-225px) scale(0.45) rotate(0deg);
+  }
 }
 
 @keyframes ball-wobble-2 {
-  0%   { transform: translateY(-225px) scale(0.45) rotate(0deg); }
-  10%  { transform: translateY(-225px) scale(0.45) rotate(24deg); }
-  20%  { transform: translateY(-225px) scale(0.45) rotate(-20deg); }
-  30%  { transform: translateY(-225px) scale(0.45) rotate(18deg); }
-  40%  { transform: translateY(-225px) scale(0.45) rotate(-15deg); }
-  50%  { transform: translateY(-225px) scale(0.45) rotate(18deg); }
-  60%  { transform: translateY(-225px) scale(0.45) rotate(-15deg); }
-  75%  { transform: translateY(-225px) scale(0.45) rotate(6deg); }
-  90%  { transform: translateY(-225px) scale(0.45) rotate(-3deg); }
-  100% { transform: translateY(-225px) scale(0.45) rotate(0deg); }
+  0% {
+    transform: translateY(-225px) scale(0.45) rotate(0deg);
+  }
+  10% {
+    transform: translateY(-225px) scale(0.45) rotate(24deg);
+  }
+  20% {
+    transform: translateY(-225px) scale(0.45) rotate(-20deg);
+  }
+  30% {
+    transform: translateY(-225px) scale(0.45) rotate(18deg);
+  }
+  40% {
+    transform: translateY(-225px) scale(0.45) rotate(-15deg);
+  }
+  50% {
+    transform: translateY(-225px) scale(0.45) rotate(18deg);
+  }
+  60% {
+    transform: translateY(-225px) scale(0.45) rotate(-15deg);
+  }
+  75% {
+    transform: translateY(-225px) scale(0.45) rotate(6deg);
+  }
+  90% {
+    transform: translateY(-225px) scale(0.45) rotate(-3deg);
+  }
+  100% {
+    transform: translateY(-225px) scale(0.45) rotate(0deg);
+  }
 }
 
 @keyframes ball-wobble-3 {
-  0%   { transform: translateY(-225px) scale(0.45) rotate(0deg); }
-  8%   { transform: translateY(-225px) scale(0.45) rotate(25deg); }
-  16%  { transform: translateY(-225px) scale(0.45) rotate(-22deg); }
-  24%  { transform: translateY(-225px) scale(0.45) rotate(20deg); }
-  32%  { transform: translateY(-225px) scale(0.45) rotate(-20deg); }
-  40%  { transform: translateY(-225px) scale(0.45) rotate(20deg); }
-  48%  { transform: translateY(-225px) scale(0.45) rotate(-18deg); }
-  56%  { transform: translateY(-225px) scale(0.45) rotate(15deg); }
-  64%  { transform: translateY(-225px) scale(0.45) rotate(-12deg); }
-  76%  { transform: translateY(-225px) scale(0.45) rotate(7deg); }
-  88%  { transform: translateY(-225px) scale(0.45) rotate(-4deg); }
-  100% { transform: translateY(-225px) scale(0.45) rotate(0deg); }
+  0% {
+    transform: translateY(-225px) scale(0.45) rotate(0deg);
+  }
+  8% {
+    transform: translateY(-225px) scale(0.45) rotate(25deg);
+  }
+  16% {
+    transform: translateY(-225px) scale(0.45) rotate(-22deg);
+  }
+  24% {
+    transform: translateY(-225px) scale(0.45) rotate(20deg);
+  }
+  32% {
+    transform: translateY(-225px) scale(0.45) rotate(-20deg);
+  }
+  40% {
+    transform: translateY(-225px) scale(0.45) rotate(20deg);
+  }
+  48% {
+    transform: translateY(-225px) scale(0.45) rotate(-18deg);
+  }
+  56% {
+    transform: translateY(-225px) scale(0.45) rotate(15deg);
+  }
+  64% {
+    transform: translateY(-225px) scale(0.45) rotate(-12deg);
+  }
+  76% {
+    transform: translateY(-225px) scale(0.45) rotate(7deg);
+  }
+  88% {
+    transform: translateY(-225px) scale(0.45) rotate(-4deg);
+  }
+  100% {
+    transform: translateY(-225px) scale(0.45) rotate(0deg);
+  }
 }
 
 .capture-ball-wobble-1 {
@@ -287,10 +391,23 @@
 
 /* Ball burst open (failed) */
 @keyframes ball-burst {
-  0%   { transform: translateY(-225px) scale(0.45) rotate(0deg); opacity: 1; }
-  30%  { transform: translateY(-225px) scale(0.7) rotate(-30deg); opacity: 1; }
-  60%  { transform: translateY(-225px) scale(1.1) rotate(10deg); opacity: 0.7; filter: brightness(2); }
-  100% { transform: translateY(-225px) scale(0.1) rotate(0deg); opacity: 0; }
+  0% {
+    transform: translateY(-225px) scale(0.45) rotate(0deg);
+    opacity: 1;
+  }
+  30% {
+    transform: translateY(-225px) scale(0.7) rotate(-30deg);
+    opacity: 1;
+  }
+  60% {
+    transform: translateY(-225px) scale(1.1) rotate(10deg);
+    opacity: 0.7;
+    filter: brightness(2);
+  }
+  100% {
+    transform: translateY(-225px) scale(0.1) rotate(0deg);
+    opacity: 0;
+  }
 }
 
 .capture-ball-burst {
@@ -400,9 +517,18 @@
 
 /* === RESULT OVERLAY === */
 @keyframes result-appear {
-  0% { opacity: 0; transform: scale(0.85) translateY(18px); }
-  70% { opacity: 1; transform: scale(1.03) translateY(-3px); }
-  100% { opacity: 1; transform: scale(1) translateY(0); }
+  0% {
+    opacity: 0;
+    transform: scale(0.85) translateY(18px);
+  }
+  70% {
+    opacity: 1;
+    transform: scale(1.03) translateY(-3px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .capture-result {
@@ -469,7 +595,9 @@
   font-size: 1rem;
   font-weight: 700;
   cursor: pointer;
-  transition: opacity 0.15s, transform 0.1s;
+  transition:
+    opacity 0.15s,
+    transform 0.1s;
 }
 
 .capture-result-btn:hover {

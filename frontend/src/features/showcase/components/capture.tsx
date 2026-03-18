@@ -1,19 +1,14 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { useAuthContext } from "../../../lib/auth";
 import "../../../styles/global.css";
 import "./capture.css";
+import { useCaptureItems } from "../hooks/use-capture-items";
 import { NavBar } from "./ui/nav-bar";
 
 // ── Types ────────────────────────────────────────────────────────────────────
 
-type Phase =
-  | "idle"
-  | "throwing"
-  | "wobbling"
-  | "burst"
-  | "success"
-  | "failed"
-  | "escaped";
+type Phase = "idle" | "throwing" | "wobbling" | "burst" | "success" | "failed" | "escaped";
 
 type ThrowBonus = "excellent" | "great" | "nice" | "normal";
 
@@ -31,32 +26,68 @@ const BASE_CATCH_RATE = 0.45;
 const CIRCLE_CYCLE_MS = 2500;
 const PARTICLE_COLORS = ["#06b6d4", "#22c55e", "#f59e0b", "#ec4899", "#a855f7", "#f97316"];
 
+// Animation timing constants (in milliseconds)
+const THROW_DURATION_MS = 870;
+const WOBBLE_DELAY_MS = 200;
+const BURST_DURATION_MS = 550;
+const WOBBLE_DURATIONS: Record<number, number> = {
+  1: 900,
+  2: 1450,
+  3: 2000,
+};
+
+// Interaction constants
+const THROW_VELOCITY_THRESHOLD = 250;
+const THROW_DRAG_THRESHOLD = 55;
+
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function getCatchBonus(bonus: ThrowBonus): number {
-  if (bonus === "excellent") return 1.85;
-  if (bonus === "great") return 1.5;
-  if (bonus === "nice") return 1.15;
+  if (bonus === "excellent") {
+    return 1.85;
+  }
+  if (bonus === "great") {
+    return 1.5;
+  }
+  if (bonus === "nice") {
+    return 1.15;
+  }
   return 1.0;
 }
 
 function getThrowBonus(scale: number): ThrowBonus {
-  if (scale < 0.35) return "excellent";
-  if (scale < 0.6) return "great";
-  if (scale < 0.8) return "nice";
+  if (scale < 0.35) {
+    return "excellent";
+  }
+  if (scale < 0.6) {
+    return "great";
+  }
+  if (scale < 0.8) {
+    return "nice";
+  }
   return "normal";
 }
 
 function getRingColor(rate: number): string {
-  if (rate > 0.5) return "#22c55e";
-  if (rate > 0.3) return "#f59e0b";
+  if (rate > 0.5) {
+    return "#22c55e";
+  }
+  if (rate > 0.3) {
+    return "#f59e0b";
+  }
   return "#ef4444";
 }
 
 function makeBonusLabel(bonus: ThrowBonus): string {
-  if (bonus === "excellent") return "EXCELLENT!";
-  if (bonus === "great") return "GREAT!";
-  if (bonus === "nice") return "NICE!";
+  if (bonus === "excellent") {
+    return "EXCELLENT!";
+  }
+  if (bonus === "great") {
+    return "GREAT!";
+  }
+  if (bonus === "nice") {
+    return "NICE!";
+  }
   return "";
 }
 
@@ -77,6 +108,16 @@ function makeParticles(): Particle[] {
 
 export function Capture() {
   const navigate = useNavigate();
+  const { user } = useAuthContext();
+  const userId = user?.id ?? "";
+  const {
+    availableItems,
+    isLoading,
+    error,
+    handleUseItem: handleUseItemApi,
+    isPending: isMutationPending,
+    refetch,
+  } = useCaptureItems(userId);
 
   // Game state
   const [phase, setPhase] = useState<Phase>("idle");
@@ -92,6 +133,13 @@ export function Capture() {
   const [ballDragOffset, setBallDragOffset] = useState({ x: 0, y: 0 });
   const dragStart = useRef({ x: 0, y: 0, time: 0 });
 
+  // Item modal state
+  const [showItemModal, setShowItemModal] = useState(false);
+  const [selectedItemForThrow, setSelectedItemForThrow] = useState<{
+    itemId: string;
+    bonus: number;
+  } | null>(null);
+
   // CSS custom property for ball horizontal offset during throw
   const ballDxRef = useRef(0);
 
@@ -105,12 +153,16 @@ export function Capture() {
 
   // ── Circle shrink animation ──
   useEffect(() => {
-    if (phase !== "idle") return;
+    if (phase !== "idle") {
+      return;
+    }
 
     circleStartRef.current = Date.now();
 
     const tick = () => {
-      if (phaseRef.current !== "idle") return;
+      if (phaseRef.current !== "idle") {
+        return;
+      }
       const elapsed = (Date.now() - circleStartRef.current) % CIRCLE_CYCLE_MS;
       const t = elapsed / CIRCLE_CYCLE_MS;
       // 1.0 → 0.18, then reset (creates the shrinking ring effect)
@@ -124,12 +176,20 @@ export function Capture() {
 
   // ── Throw logic ──
   const doThrow = useCallback(
-    (dx: number) => {
-      if (phaseRef.current !== "idle") return;
+    (bonus: number, itemId?: string) => {
+      if (phaseRef.current !== "idle") {
+        return;
+      }
 
-      const bonus = getThrowBonus(circleScale);
-      setThrowBonus(bonus);
-      ballDxRef.current = dx * 0.4; // Subtle horizontal arc
+      const throwBonus = getThrowBonus(circleScale);
+      setThrowBonus(throwBonus);
+      const ballDx = 0; // Subtle horizontal arc
+      ballDxRef.current = ballDx * 0.4;
+
+      // If item is selected, use it
+      if (itemId) {
+        handleUseItemApi(itemId, bonus);
+      }
 
       // Start throw phase
       setPokemonClass("capture-pokemon-absorb");
@@ -142,9 +202,12 @@ export function Capture() {
         setPhase("wobbling");
 
         // After wobbling → result
-        const wobbleDuration = wobbles === 1 ? 900 : wobbles === 2 ? 1450 : 2000;
+        const wobbleDuration = WOBBLE_DURATIONS[wobbles];
         setTimeout(() => {
-          const effectiveRate = BASE_CATCH_RATE * getCatchBonus(bonus);
+          const effectiveBonus = itemId
+            ? getCatchBonus(throwBonus) * (1 + bonus)
+            : getCatchBonus(throwBonus);
+          const effectiveRate = BASE_CATCH_RATE * effectiveBonus;
           const success = Math.random() < effectiveRate;
 
           if (success) {
@@ -157,24 +220,28 @@ export function Capture() {
               const fled = Math.random() < 0.35;
               setPokemonClass(fled ? "capture-pokemon-escape" : "capture-pokemon-breakfree");
               setPhase(fled ? "escaped" : "failed");
-            }, 550);
+            }, BURST_DURATION_MS);
           }
-        }, wobbleDuration + 200);
-      }, 870);
+        }, wobbleDuration + WOBBLE_DELAY_MS);
+      }, THROW_DURATION_MS);
     },
-    [circleScale],
+    [circleScale, handleUseItemApi],
   );
 
   // ── Pointer handlers ──
   const handlePointerDown = (e: React.PointerEvent) => {
-    if (phase !== "idle") return;
+    if (phase !== "idle") {
+      return;
+    }
     dragStart.current = { x: e.clientX, y: e.clientY, time: Date.now() };
     setIsDragging(true);
     (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
   };
 
   const handlePointerMove = (e: React.PointerEvent) => {
-    if (!isDragging) return;
+    if (!isDragging) {
+      return;
+    }
     setBallDragOffset({
       x: e.clientX - dragStart.current.x,
       y: e.clientY - dragStart.current.y,
@@ -182,19 +249,33 @@ export function Capture() {
   };
 
   const handlePointerUp = (e: React.PointerEvent) => {
-    if (!isDragging) return;
+    if (!isDragging) {
+      return;
+    }
     setIsDragging(false);
     setBallDragOffset({ x: 0, y: 0 });
 
     const dy = e.clientY - dragStart.current.y;
-    const dx = e.clientX - dragStart.current.x;
     const dt = Math.max((Date.now() - dragStart.current.time) / 1000, 0.05);
     const vy = dy / dt;
 
     // Throw when swiped upward fast enough or dragged up far enough
-    if (vy < -250 || dy < -55) {
-      doThrow(dx);
+    if (vy < -THROW_VELOCITY_THRESHOLD || dy < -THROW_DRAG_THRESHOLD) {
+      // Check if item is selected
+      if (selectedItemForThrow) {
+        doThrow(selectedItemForThrow.bonus, selectedItemForThrow.itemId);
+        setSelectedItemForThrow(null);
+      } else {
+        // Just throw without item
+        doThrow(0);
+      }
     }
+  };
+
+  // ── Item selection handler ──
+  const handleSelectItem = (itemId: string, bonus: number) => {
+    setSelectedItemForThrow({ itemId, bonus });
+    setShowItemModal(false);
   };
 
   // ── Retry ──
@@ -206,7 +287,38 @@ export function Capture() {
     setBallDragOffset({ x: 0, y: 0 });
     setParticles([]);
     setPokemonClass("capture-pokemon-idle");
+    setSelectedItemForThrow(null);
   };
+
+  // ── Loading / Error states ──
+  if (isLoading) {
+    return (
+      <div className="showcase-screen">
+        <NavBar title="CAPTURE" />
+        <div className="flex-1 flex items-center justify-center text-text-secondary text-sm">
+          Loading...
+        </div>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="showcase-screen">
+        <NavBar title="CAPTURE" />
+        <div className="flex-1 flex flex-col items-center justify-center gap-3 px-6">
+          <p className="text-sm text-text-secondary m-0">{error.message}</p>
+          <button
+            type="button"
+            className="bg-bg-card text-text-primary rounded-full px-4 py-2 border-none cursor-pointer"
+            onClick={() => void refetch()}
+          >
+            Retry
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   // ── Derived values ──
   const ringColor = getRingColor(BASE_CATCH_RATE);
@@ -214,10 +326,7 @@ export function Capture() {
   const bonusLabel = makeBonusLabel(throwBonus);
   const showRings = phase === "idle" || phase === "throwing";
   const showBall =
-    phase === "idle" ||
-    phase === "throwing" ||
-    phase === "wobbling" ||
-    phase === "burst";
+    phase === "idle" || phase === "throwing" || phase === "wobbling" || phase === "burst";
 
   const ballWrapperClass = [
     "capture-ball-wrapper",
@@ -306,7 +415,11 @@ export function Capture() {
         {/* Pokéball */}
         {showBall && (
           <div className="capture-ball-container">
-            {phase === "idle" && <span className="capture-hint">Swipe up to throw!</span>}
+            {phase === "idle" && (
+              <span className="capture-hint">
+                {selectedItemForThrow ? "🎯 Ready!" : "Swipe up to throw!"}
+              </span>
+            )}
 
             {/* Wrap div handles animation class; inner div handles drag transform */}
             <div
@@ -330,7 +443,9 @@ export function Capture() {
                 onPointerMove={handlePointerMove}
                 onPointerUp={handlePointerUp}
               >
-                <div className={`capture-pokeball ${isDragging ? "capture-pokeball-dragging" : ""}`}>
+                <div
+                  className={`capture-pokeball ${isDragging ? "capture-pokeball-dragging" : ""}`}
+                >
                   <div className="pokeball-top" />
                   <div className="pokeball-bottom" />
                   <div className="pokeball-band" />
@@ -391,8 +506,13 @@ export function Capture() {
         {/* Item & Run buttons (idle only) */}
         {phase === "idle" && (
           <div className="capture-item-row">
-            <button type="button" className="capture-item-btn">
-              🍓 Use Berry
+            <button
+              type="button"
+              className="capture-item-btn"
+              onClick={() => setShowItemModal(true)}
+              disabled={isMutationPending}
+            >
+              {selectedItemForThrow ? "✓ Item Ready" : "🍓 Use Item"}
             </button>
             <button
               type="button"
@@ -401,6 +521,58 @@ export function Capture() {
             >
               ✕ Run
             </button>
+          </div>
+        )}
+
+        {/* Item selection modal */}
+        {showItemModal && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
+            <div className="bg-bg-primary rounded-3xl p-6 max-w-sm w-[90%] max-h-[80vh] flex flex-col">
+              <h2 className="text-xl font-bold text-text-primary mb-4">Select Item</h2>
+
+              {availableItems.length === 0 && (
+                <p className="text-sm text-text-secondary text-center flex-1 flex items-center justify-center">
+                  No items available
+                </p>
+              )}
+
+              <div className="flex-1 overflow-y-auto space-y-2">
+                {availableItems.map((item) => (
+                  <button
+                    key={item.id}
+                    type="button"
+                    className={`w-full rounded-2xl p-4 text-left border-none cursor-pointer transition ${
+                      selectedItemForThrow?.itemId === item.id
+                        ? "bg-accent text-text-primary"
+                        : "bg-bg-card hover:bg-bg-hover text-text-primary"
+                    }`}
+                    onClick={() => handleSelectItem(item.id, item.captureRateBonus)}
+                    disabled={isMutationPending}
+                  >
+                    <div className="flex items-center justify-between">
+                      <div className="flex-1">
+                        <p className="text-sm font-bold text-text-primary m-0">{item.name}</p>
+                        <p className="text-xs text-text-secondary m-0">
+                          Capture Rate +{Math.round(item.captureRateBonus * 100)}%
+                        </p>
+                      </div>
+                      <span className="text-xs font-bold text-text-secondary bg-bg-primary px-2 py-1 rounded">
+                        x{item.quantity}
+                      </span>
+                    </div>
+                  </button>
+                ))}
+              </div>
+
+              <button
+                type="button"
+                className="mt-4 w-full bg-bg-card rounded-2xl px-4 py-2 border-none text-sm font-bold text-text-secondary cursor-pointer hover:bg-bg-hover"
+                onClick={() => setShowItemModal(false)}
+                disabled={isMutationPending}
+              >
+                Cancel
+              </button>
+            </div>
           </div>
         )}
       </div>
