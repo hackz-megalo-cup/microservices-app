@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -148,6 +149,36 @@ func (h *Handler) handleSpecial(userID uuid.UUID) {
 
 	if justFinished {
 		h.broadcastFinished()
+	}
+}
+
+func (h *Handler) StartTimeSync(ctx context.Context) {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-h.session.Done():
+			return
+		case <-ticker.C:
+			elapsed := time.Since(h.session.StartedAt)
+			remaining := h.session.TimeoutDuration - elapsed
+			if remaining < 0 {
+				remaining = 0
+			}
+
+			msg := TimeSyncMessage{
+				T:            "time_sync",
+				RemainingSec: int(remaining.Seconds()),
+			}
+			data, err := MarshalJSON(msg)
+			if err != nil {
+				continue
+			}
+			h.hub.Broadcast(data)
+		}
 	}
 }
 

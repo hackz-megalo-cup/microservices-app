@@ -2,8 +2,8 @@ import { BrowserRouter, Route, Routes } from "react-router";
 import { ApiTestPage } from "../features/api-test/components/api-test-page";
 import { LoginPage } from "../features/auth/components/login-page";
 import { RequireAuth } from "../features/auth/components/require-auth";
+import { BattlePage } from "../features/battle/components/battle-page";
 import { RaidTestPage } from "../features/raid-test/components/raid-test-page";
-import { Battle } from "../features/showcase/components/battle";
 import { Capture } from "../features/showcase/components/capture";
 import { Collection } from "../features/showcase/components/collection";
 import { Detail } from "../features/showcase/components/detail";
@@ -28,7 +28,7 @@ export function App() {
           path="/battle/:id"
           element={
             <RequireAuth>
-              <Battle />
+              <BattlePage />
             </RequireAuth>
           }
         />

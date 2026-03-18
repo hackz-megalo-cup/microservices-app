@@ -44,6 +44,11 @@ type FinishedMessage struct {
 	Elapsed int    `json:"elapsed"`
 }
 
+type TimeSyncMessage struct {
+	T            string `json:"t"` // "time_sync"
+	RemainingSec int    `json:"remainingSec"`
+}
+
 // Conn abstracts a client connection (WebTransport session or WebSocket conn).
 type Conn interface {
 	// SendReliable sends a message that must be delivered (stream/websocket frame).
