@@ -254,7 +254,10 @@
 
           frontend-runner = pkgs.writeShellApplication {
             name = "frontend-run";
-            runtimeInputs = [ pkgs.nginx ];
+            runtimeInputs = [
+              pkgs.coreutils
+              pkgs.nginx
+            ];
             text = ''
               mkdir -p /etc /var/log/nginx
               cat > /etc/passwd <<'EOF'
