@@ -5,6 +5,7 @@ import "../../../styles/global.css";
 import { useAuthContext } from "../../../lib/auth";
 import { useGameConnection } from "../hooks/use-game-connection";
 import type { ServerMessage } from "../types";
+import { RaidBossModel } from "./raid-boss-model";
 import "./battle-page.css";
 
 interface FloatingDmg {
@@ -193,12 +194,9 @@ export function BattlePage() {
         disabled={!isConnected || result !== null}
         className="flex-1 relative flex items-center justify-center cursor-pointer select-none overflow-hidden disabled:cursor-not-allowed"
       >
-        <img
-          src="/images/capture-python.png"
-          alt="Raid Boss"
-          className="w-[280px] h-[280px] object-cover rounded-2xl pointer-events-none"
-          style={squashing ? { animation: "boss-nudge 0.1s ease-out" } : undefined}
-        />
+        <div className="w-[280px] h-[280px] rounded-2xl pointer-events-none overflow-hidden">
+          <RaidBossModel squashing={squashing} />
+        </div>
 
         {ripples.map((r) => (
           <span

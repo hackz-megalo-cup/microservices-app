@@ -26,13 +26,16 @@
     "@opentelemetry/sdk-trace-base": "^2.6.0",
     "@opentelemetry/sdk-trace-web": "^2.6.0",
     "@opentelemetry/semantic-conventions": "^1.40.0",
+    "@react-three/drei": "^10.7.7",
+    "@react-three/fiber": "^9.5.0",
     "@tailwindcss/vite": "^0.0.0-insiders.d24b112",
     "@tanstack/react-query": "^5.66.8",
     "@tanstack/react-query-devtools": "^5.66.8",
     "react": "^19.0.0",
     "react-dom": "^19.0.0",
     "react-router": "^7.13.1",
-    "tailwindcss": "^4.2.1"
+    "tailwindcss": "^4.2.1",
+    "three": "^0.183.2"
   },
   "devDependencies": {
     "@biomejs/biome": "^2.0.0",
@@ -41,6 +44,7 @@
     "@playwright/test": "^1.58.2",
     "@types/react": "^19.0.8",
     "@types/react-dom": "^19.0.3",
+    "@types/three": "^0.183.1",
     "@vitejs/plugin-react": "^6.0.1",
     "msw": "^2.11.2",
     "typescript": "^5.9.0",
