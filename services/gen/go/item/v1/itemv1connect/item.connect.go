@@ -37,12 +37,16 @@ const (
 	ItemServiceGrantItemProcedure = "/item.v1.ItemService/GrantItem"
 	// ItemServiceUseItemProcedure is the fully-qualified name of the ItemService's UseItem RPC.
 	ItemServiceUseItemProcedure = "/item.v1.ItemService/UseItem"
+	// ItemServiceGetUserItemsProcedure is the fully-qualified name of the ItemService's GetUserItems
+	// RPC.
+	ItemServiceGetUserItemsProcedure = "/item.v1.ItemService/GetUserItems"
 )
 
 // ItemServiceClient is a client for the item.v1.ItemService service.
 type ItemServiceClient interface {
 	GrantItem(context.Context, *connect.Request[v1.GrantItemRequest]) (*connect.Response[v1.GrantItemResponse], error)
 	UseItem(context.Context, *connect.Request[v1.UseItemRequest]) (*connect.Response[v1.UseItemResponse], error)
+	GetUserItems(context.Context, *connect.Request[v1.GetUserItemsRequest]) (*connect.Response[v1.GetUserItemsResponse], error)
 }
 
 // NewItemServiceClient constructs a client for the item.v1.ItemService service. By default, it uses
@@ -68,13 +72,20 @@ func NewItemServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(itemServiceMethods.ByName("UseItem")),
 			connect.WithClientOptions(opts...),
 		),
+		getUserItems: connect.NewClient[v1.GetUserItemsRequest, v1.GetUserItemsResponse](
+			httpClient,
+			baseURL+ItemServiceGetUserItemsProcedure,
+			connect.WithSchema(itemServiceMethods.ByName("GetUserItems")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // itemServiceClient implements ItemServiceClient.
 type itemServiceClient struct {
-	grantItem *connect.Client[v1.GrantItemRequest, v1.GrantItemResponse]
-	useItem   *connect.Client[v1.UseItemRequest, v1.UseItemResponse]
+	grantItem    *connect.Client[v1.GrantItemRequest, v1.GrantItemResponse]
+	useItem      *connect.Client[v1.UseItemRequest, v1.UseItemResponse]
+	getUserItems *connect.Client[v1.GetUserItemsRequest, v1.GetUserItemsResponse]
 }
 
 // GrantItem calls item.v1.ItemService.GrantItem.
@@ -87,10 +98,16 @@ func (c *itemServiceClient) UseItem(ctx context.Context, req *connect.Request[v1
 	return c.useItem.CallUnary(ctx, req)
 }
 
+// GetUserItems calls item.v1.ItemService.GetUserItems.
+func (c *itemServiceClient) GetUserItems(ctx context.Context, req *connect.Request[v1.GetUserItemsRequest]) (*connect.Response[v1.GetUserItemsResponse], error) {
+	return c.getUserItems.CallUnary(ctx, req)
+}
+
 // ItemServiceHandler is an implementation of the item.v1.ItemService service.
 type ItemServiceHandler interface {
 	GrantItem(context.Context, *connect.Request[v1.GrantItemRequest]) (*connect.Response[v1.GrantItemResponse], error)
 	UseItem(context.Context, *connect.Request[v1.UseItemRequest]) (*connect.Response[v1.UseItemResponse], error)
+	GetUserItems(context.Context, *connect.Request[v1.GetUserItemsRequest]) (*connect.Response[v1.GetUserItemsResponse], error)
 }
 
 // NewItemServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -112,12 +129,20 @@ func NewItemServiceHandler(svc ItemServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(itemServiceMethods.ByName("UseItem")),
 		connect.WithHandlerOptions(opts...),
 	)
+	itemServiceGetUserItemsHandler := connect.NewUnaryHandler(
+		ItemServiceGetUserItemsProcedure,
+		svc.GetUserItems,
+		connect.WithSchema(itemServiceMethods.ByName("GetUserItems")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/item.v1.ItemService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case ItemServiceGrantItemProcedure:
 			itemServiceGrantItemHandler.ServeHTTP(w, r)
 		case ItemServiceUseItemProcedure:
 			itemServiceUseItemHandler.ServeHTTP(w, r)
+		case ItemServiceGetUserItemsProcedure:
+			itemServiceGetUserItemsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -133,4 +158,8 @@ func (UnimplementedItemServiceHandler) GrantItem(context.Context, *connect.Reque
 
 func (UnimplementedItemServiceHandler) UseItem(context.Context, *connect.Request[v1.UseItemRequest]) (*connect.Response[v1.UseItemResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("item.v1.ItemService.UseItem is not implemented"))
+}
+
+func (UnimplementedItemServiceHandler) GetUserItems(context.Context, *connect.Request[v1.GetUserItemsRequest]) (*connect.Response[v1.GetUserItemsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("item.v1.ItemService.GetUserItems is not implemented"))
 }

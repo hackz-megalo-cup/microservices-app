@@ -322,6 +322,9 @@ services:
     environment:
       PORT: "8089"
       DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/lobby_db"
+      ITEM_DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/item_db"
+      RAID_LOBBY_DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/raid_lobby_db"
+      MASTERDATA_URL: "http://masterdata:8084"
       OTEL_EXPORTER_OTLP_ENDPOINT: ""
       OTEL_SERVICE_NAME: "lobby-service"
       KAFKA_BROKERS: "redpanda:9092"
