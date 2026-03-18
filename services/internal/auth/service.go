@@ -286,6 +286,37 @@ func (s *Service) issueJWT(userID, email, role string, expiresIn time.Duration) 
 	return tokenString, nil
 }
 
+// GetUserPokemon returns all pokemon IDs owned by the user.
+func (s *Service) GetUserPokemon(ctx context.Context, req *connect.Request[authv1.GetUserPokemonRequest]) (*connect.Response[authv1.GetUserPokemonResponse], error) {
+	userID := req.Msg.GetUserId()
+	if userID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id is required"))
+	}
+	if s.pool == nil {
+		return nil, connect.NewError(connect.CodeUnavailable, fmt.Errorf("database not configured"))
+	}
+
+	rows, err := s.pool.Query(ctx, `SELECT pokemon_id FROM user_pokemon WHERE user_id = $1`, userID)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get user pokemon: %w", err))
+	}
+	defer rows.Close()
+
+	var pokemonIDs []string
+	for rows.Next() {
+		var pid string
+		if err := rows.Scan(&pid); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to scan pokemon_id: %w", err))
+		}
+		pokemonIDs = append(pokemonIDs, pid)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to iterate pokemon_ids: %w", err))
+	}
+
+	return connect.NewResponse(&authv1.GetUserPokemonResponse{PokemonIds: pokemonIDs}), nil
+}
+
 // RegisterPokemon implements the pokemonRegistrar interface for Kafka consumer
 func (s *Service) RegisterPokemon(ctx context.Context, userID, pokemonID string) error {
 	if userID == "" || pokemonID == "" {

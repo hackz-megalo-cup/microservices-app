@@ -22,7 +22,7 @@ func (s *stubPokemonRegistrar) RegisterPokemon(_ context.Context, userID, pokemo
 
 func TestHandleCaughtPokemon_SuccessResultRegistersPokemon(t *testing.T) {
 	repo := &stubPokemonRegistrar{}
-	data := []byte(`{"user_id":"u1","pokemon_id":"p25","result":"success"}`)
+	data := []byte(`{"data":{"user_id":"u1","pokemon_id":"p25","result":"success"}}`)
 
 	err := handleCaughtPokemon(context.Background(), repo, data)
 	if err != nil {
@@ -38,7 +38,7 @@ func TestHandleCaughtPokemon_SuccessResultRegistersPokemon(t *testing.T) {
 
 func TestHandleCaughtPokemon_FailedResultSkipsRegistration(t *testing.T) {
 	repo := &stubPokemonRegistrar{}
-	data := []byte(`{"user_id":"u1","pokemon_id":"p25","result":"failed"}`)
+	data := []byte(`{"data":{"user_id":"u1","pokemon_id":"p25","result":"failed"}}`)
 
 	err := handleCaughtPokemon(context.Background(), repo, data)
 	if err != nil {
@@ -51,7 +51,7 @@ func TestHandleCaughtPokemon_FailedResultSkipsRegistration(t *testing.T) {
 
 func TestHandleCaughtPokemon_EmptyResultBackCompatRegisters(t *testing.T) {
 	repo := &stubPokemonRegistrar{}
-	data := []byte(`{"user_id":"u1","pokemon_id":"p25"}`)
+	data := []byte(`{"data":{"user_id":"u1","pokemon_id":"p25"}}`)
 
 	err := handleCaughtPokemon(context.Background(), repo, data)
 	if err != nil {
@@ -64,7 +64,7 @@ func TestHandleCaughtPokemon_EmptyResultBackCompatRegisters(t *testing.T) {
 
 func TestHandleCaughtPokemon_RepoErrorReturnsError(t *testing.T) {
 	repo := &stubPokemonRegistrar{err: errors.New("boom")}
-	data := []byte(`{"user_id":"u1","pokemon_id":"p25","result":"success"}`)
+	data := []byte(`{"data":{"user_id":"u1","pokemon_id":"p25","result":"success"}}`)
 
 	err := handleCaughtPokemon(context.Background(), repo, data)
 	if err == nil {

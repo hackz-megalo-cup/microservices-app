@@ -10,6 +10,7 @@
     ../../k8s/item.nix
     ../../k8s/masterdata.nix
     ../../k8s/raid-lobby.nix
+    ../../k8s/lobby.nix
     ../../k8s/capture.nix
     ../../k8s/secrets.nix
     ./traefik.nix

@@ -41,6 +41,9 @@ const (
 	// AuthServiceGetUserProfileProcedure is the fully-qualified name of the AuthService's
 	// GetUserProfile RPC.
 	AuthServiceGetUserProfileProcedure = "/auth.v1.AuthService/GetUserProfile"
+	// AuthServiceGetUserPokemonProcedure is the fully-qualified name of the AuthService's
+	// GetUserPokemon RPC.
+	AuthServiceGetUserPokemonProcedure = "/auth.v1.AuthService/GetUserPokemon"
 )
 
 // AuthServiceClient is a client for the auth.v1.AuthService service.
@@ -51,6 +54,8 @@ type AuthServiceClient interface {
 	LoginUser(context.Context, *connect.Request[v1.LoginUserRequest]) (*connect.Response[v1.LoginUserResponse], error)
 	// ユーザープロフィール取得
 	GetUserProfile(context.Context, *connect.Request[v1.GetUserProfileRequest]) (*connect.Response[v1.GetUserProfileResponse], error)
+	// ユーザーが所持するポケモンID一覧取得
+	GetUserPokemon(context.Context, *connect.Request[v1.GetUserPokemonRequest]) (*connect.Response[v1.GetUserPokemonResponse], error)
 }
 
 // NewAuthServiceClient constructs a client for the auth.v1.AuthService service. By default, it uses
@@ -82,6 +87,12 @@ func NewAuthServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(authServiceMethods.ByName("GetUserProfile")),
 			connect.WithClientOptions(opts...),
 		),
+		getUserPokemon: connect.NewClient[v1.GetUserPokemonRequest, v1.GetUserPokemonResponse](
+			httpClient,
+			baseURL+AuthServiceGetUserPokemonProcedure,
+			connect.WithSchema(authServiceMethods.ByName("GetUserPokemon")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -90,6 +101,7 @@ type authServiceClient struct {
 	registerUser   *connect.Client[v1.RegisterUserRequest, v1.RegisterUserResponse]
 	loginUser      *connect.Client[v1.LoginUserRequest, v1.LoginUserResponse]
 	getUserProfile *connect.Client[v1.GetUserProfileRequest, v1.GetUserProfileResponse]
+	getUserPokemon *connect.Client[v1.GetUserPokemonRequest, v1.GetUserPokemonResponse]
 }
 
 // RegisterUser calls auth.v1.AuthService.RegisterUser.
@@ -107,6 +119,11 @@ func (c *authServiceClient) GetUserProfile(ctx context.Context, req *connect.Req
 	return c.getUserProfile.CallUnary(ctx, req)
 }
 
+// GetUserPokemon calls auth.v1.AuthService.GetUserPokemon.
+func (c *authServiceClient) GetUserPokemon(ctx context.Context, req *connect.Request[v1.GetUserPokemonRequest]) (*connect.Response[v1.GetUserPokemonResponse], error) {
+	return c.getUserPokemon.CallUnary(ctx, req)
+}
+
 // AuthServiceHandler is an implementation of the auth.v1.AuthService service.
 type AuthServiceHandler interface {
 	// ユーザー登録
@@ -115,6 +132,8 @@ type AuthServiceHandler interface {
 	LoginUser(context.Context, *connect.Request[v1.LoginUserRequest]) (*connect.Response[v1.LoginUserResponse], error)
 	// ユーザープロフィール取得
 	GetUserProfile(context.Context, *connect.Request[v1.GetUserProfileRequest]) (*connect.Response[v1.GetUserProfileResponse], error)
+	// ユーザーが所持するポケモンID一覧取得
+	GetUserPokemon(context.Context, *connect.Request[v1.GetUserPokemonRequest]) (*connect.Response[v1.GetUserPokemonResponse], error)
 }
 
 // NewAuthServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -142,6 +161,12 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(authServiceMethods.ByName("GetUserProfile")),
 		connect.WithHandlerOptions(opts...),
 	)
+	authServiceGetUserPokemonHandler := connect.NewUnaryHandler(
+		AuthServiceGetUserPokemonProcedure,
+		svc.GetUserPokemon,
+		connect.WithSchema(authServiceMethods.ByName("GetUserPokemon")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/auth.v1.AuthService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AuthServiceRegisterUserProcedure:
@@ -150,6 +175,8 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 			authServiceLoginUserHandler.ServeHTTP(w, r)
 		case AuthServiceGetUserProfileProcedure:
 			authServiceGetUserProfileHandler.ServeHTTP(w, r)
+		case AuthServiceGetUserPokemonProcedure:
+			authServiceGetUserPokemonHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -169,4 +196,8 @@ func (UnimplementedAuthServiceHandler) LoginUser(context.Context, *connect.Reque
 
 func (UnimplementedAuthServiceHandler) GetUserProfile(context.Context, *connect.Request[v1.GetUserProfileRequest]) (*connect.Response[v1.GetUserProfileResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.GetUserProfile is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) GetUserPokemon(context.Context, *connect.Request[v1.GetUserPokemonRequest]) (*connect.Response[v1.GetUserPokemonResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.GetUserPokemon is not implemented"))
 }

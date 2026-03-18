@@ -66,9 +66,17 @@ func RunConsumer(ctx context.Context, cfg ConsumerConfig) error {
 
 // handleCaughtPokemon processes a PokemonCaught event and registers the pokemon
 func handleCaughtPokemon(ctx context.Context, repo pokemonRegistrar, data []byte) error {
+	var envelope struct {
+		Data json.RawMessage `json:"data"`
+	}
+	if err := json.Unmarshal(data, &envelope); err != nil {
+		slog.Error("failed to unmarshal capture.completed event envelope", "error", err)
+		return err
+	}
+
 	var event PokemonCaught
-	if err := json.Unmarshal(data, &event); err != nil {
-		slog.Error("failed to unmarshal capture.completed event", "error", err)
+	if err := json.Unmarshal(envelope.Data, &event); err != nil {
+		slog.Error("failed to unmarshal capture.completed event data", "error", err)
 		return err
 	}
 
