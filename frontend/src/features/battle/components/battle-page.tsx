@@ -194,7 +194,7 @@ export function BattlePage() {
         className="flex-1 relative flex items-center justify-center cursor-pointer select-none overflow-hidden disabled:cursor-not-allowed"
       >
         <img
-          src="/images/battle-python.png"
+          src="/images/capture-python.png"
           alt="Raid Boss"
           className="w-[280px] h-[280px] object-cover rounded-2xl pointer-events-none"
           style={squashing ? { animation: "boss-nudge 0.1s ease-out" } : undefined}
