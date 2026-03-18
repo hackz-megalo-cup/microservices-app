@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"connectrpc.com/connect"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	pb "github.com/hackz-megalo-cup/microservices-app/services/gen/go/item/v1"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
@@ -14,12 +15,14 @@ import (
 type Service struct {
 	eventStore *platform.EventStore
 	outbox     *platform.OutboxStore
+	dbPool     *pgxpool.Pool
 }
 
-func NewService(eventStore *platform.EventStore, outbox *platform.OutboxStore) *Service {
+func NewService(eventStore *platform.EventStore, outbox *platform.OutboxStore, dbPool *pgxpool.Pool) *Service {
 	return &Service{
 		eventStore: eventStore,
 		outbox:     outbox,
+		dbPool:     dbPool,
 	}
 }
 
@@ -92,4 +95,55 @@ func (s *Service) UseItem(ctx context.Context, req *connect.Request[pb.UseItemRe
 	}
 
 	return connect.NewResponse(&pb.UseItemResponse{}), nil
+}
+
+// GetUserItems — ユーザーが所持しているアイテムの一覧を取得する
+func (s *Service) GetUserItems(ctx context.Context, req *connect.Request[pb.GetUserItemsRequest]) (*connect.Response[pb.GetUserItemsResponse], error) {
+	userID := req.Msg.GetUserId()
+	if userID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id is required"))
+	}
+
+	// EventStore から user_id にマッチする全ストリームを取得
+	// stream_id パターン: "user_id:item_id"
+	rows, err := s.dbPool.Query(ctx, `
+		SELECT DISTINCT stream_id
+		FROM event_store
+		WHERE stream_type = 'item'
+		  AND stream_id LIKE $1 || ':%'
+		ORDER BY stream_id
+	`, userID)
+	if err != nil {
+		slog.Error("failed to query user items", "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to query items"))
+	}
+	defer rows.Close()
+
+	var items []*pb.UserItem
+	for rows.Next() {
+		var streamID string
+		if err := rows.Scan(&streamID); err != nil {
+			continue
+		}
+
+		// 各集約をロードして現在の状態を取得
+		agg := NewItemAggregate(streamID)
+		if err := platform.LoadAggregate(ctx, s.eventStore, agg); err != nil {
+			slog.Warn("failed to load aggregate", "stream_id", streamID, "error", err)
+			continue
+		}
+
+		// quantity が 0 より大きいもののみ返す
+		if agg.Quantity > 0 {
+			items = append(items, &pb.UserItem{
+				ItemId:   agg.ItemID,
+				Quantity: agg.Quantity,
+				Status:   agg.Status,
+			})
+		}
+	}
+
+	return connect.NewResponse(&pb.GetUserItemsResponse{
+		Items: items,
+	}), nil
 }
