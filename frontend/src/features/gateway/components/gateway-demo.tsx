@@ -29,14 +29,9 @@ export function GatewayDemo() {
     <section style={{ border: "1px solid #ddd", padding: 16, borderRadius: 8, marginTop: 16 }}>
       <h2>
         Gateway Mutation Demo{" "}
-        <span style={{ fontSize: 12, color: "#666" }}>
-          → gateway_db.invocations + lang_db.executions
-        </span>
+        <span style={{ fontSize: 12, color: "#666" }}>→ gateway_db.invocations</span>
       </h2>
-      <p>
-        Gateway が invocations テーブルへ同期 INSERT、custom-lang-service が executions テーブルへ
-        INSERT します。
-      </p>
+      <p>Gateway が invocations テーブルへ INSERT します。</p>
 
       <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
         <input
