@@ -127,7 +127,7 @@ PathPrefix でサービスを振り分け。ミドルウェア: cors, auth, rate
 - Frontend: `/` (priority=1, catch-all)
 
 ### データベース
-サービスごとに独立 DB (`greeter_db`, `caller_db`, `gateway_db`, `lang_db`, `auth_db`)。
+サービスごとに独立 DB (`greeter_db`, `caller_db`, `gateway_db`, `auth_db`)。
 マイグレーションは `golang-migrate` (Go) / `node-pg-migrate` (Node)。
 
 ## コミット規約
