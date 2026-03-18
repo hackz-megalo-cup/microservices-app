@@ -133,7 +133,7 @@ func (h *AllocateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 
 func (h *AllocateHandler) resolveCertHash(ctx context.Context, result *allocationv1.GameServerAllocation) (string, error) {
 	if metadata := result.Status.Metadata; metadata != nil {
-		if certHash := strings.TrimSpace(metadata.Annotations["cert-hash"]); certHash != "" {
+		if certHash := firstCertHash(metadata.Annotations); certHash != "" {
 			return certHash, nil
 		}
 	}
@@ -143,7 +143,7 @@ func (h *AllocateHandler) resolveCertHash(ctx context.Context, result *allocatio
 		if err != nil {
 			return "", fmt.Errorf("get game server %q: %w", name, err)
 		}
-		if certHash := strings.TrimSpace(gs.Annotations["cert-hash"]); certHash != "" {
+		if certHash := firstCertHash(gs.Annotations); certHash != "" {
 			return certHash, nil
 		}
 	}
@@ -161,6 +161,15 @@ func (h *AllocateHandler) resolveCertHash(ctx context.Context, result *allocatio
 		return "", fmt.Errorf("cert hash is empty")
 	}
 	return certHash, nil
+}
+
+func firstCertHash(annotations map[string]string) string {
+	for _, key := range []string{"cert-hash", "agones.dev/sdk-cert-hash"} {
+		if certHash := strings.TrimSpace(annotations[key]); certHash != "" {
+			return certHash
+		}
+	}
+	return ""
 }
 
 func (h *AllocateHandler) fetchCertHash(ctx context.Context, address string, port int32) (string, error) {
