@@ -121,8 +121,8 @@ func isFirstToday(lastTime *time.Time) bool {
 	if lastTime == nil {
 		return true
 	}
-	lastDate := lastTime.Local()
-	today := time.Now().Local()
+	lastDate := lastTime.UTC()
+	today := time.Now().UTC()
 	return lastDate.Year() != today.Year() ||
 		lastDate.Month() != today.Month() ||
 		lastDate.Day() != today.Day()
