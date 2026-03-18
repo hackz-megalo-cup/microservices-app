@@ -7,6 +7,7 @@ import (
 	"crypto/rand"
 	"crypto/rsa"
 	"errors"
+	"io/fs"
 	"testing"
 	"time"
 
@@ -19,74 +20,6 @@ import (
 	authv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/auth/v1"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
-
-const createTablesSQL = `
-CREATE TABLE IF NOT EXISTS event_store (
-    id BIGSERIAL,
-    stream_id TEXT NOT NULL,
-    stream_type TEXT NOT NULL,
-    version INTEGER NOT NULL,
-    event_id TEXT NOT NULL,
-    event_type TEXT NOT NULL,
-    data JSONB NOT NULL,
-    metadata JSONB,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (stream_id, version)
-);
-
-CREATE INDEX IF NOT EXISTS idx_event_store_stream ON event_store (stream_id, version);
-CREATE INDEX IF NOT EXISTS idx_event_store_type ON event_store (event_type);
-CREATE INDEX IF NOT EXISTS idx_event_store_created ON event_store (created_at);
-
-CREATE TABLE IF NOT EXISTS idempotency_keys (
-    key TEXT PRIMARY KEY,
-    response BYTEA,
-    status_code INTEGER NOT NULL DEFAULT 0,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    expires_at TIMESTAMPTZ NOT NULL DEFAULT NOW() + INTERVAL '24 hours'
-);
-
-CREATE INDEX IF NOT EXISTS idx_idempotency_keys_expires ON idempotency_keys(expires_at);
-
-CREATE TABLE IF NOT EXISTS outbox_events (
-    id            UUID PRIMARY KEY,
-    event_type    TEXT NOT NULL,
-    topic         TEXT NOT NULL,
-    payload       JSONB NOT NULL,
-    created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    published     BOOLEAN NOT NULL DEFAULT FALSE,
-    published_at  TIMESTAMPTZ
-);
-
-CREATE TABLE IF NOT EXISTS snapshots (
-    stream_id TEXT PRIMARY KEY,
-    stream_type TEXT NOT NULL,
-    version INTEGER NOT NULL,
-    state JSONB NOT NULL,
-    created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
-CREATE TABLE IF NOT EXISTS users (
-    id uuid PRIMARY KEY,
-    email varchar UNIQUE NOT NULL,
-    password_hash text NOT NULL,
-    role varchar DEFAULT 'user',
-    created_at timestamptz NOT NULL,
-    last_login_at timestamptz,
-    updated_at timestamptz NOT NULL
-);
-
-CREATE INDEX IF NOT EXISTS idx_users_email ON users(email);
-
-CREATE TABLE IF NOT EXISTS user_pokemon (
-    user_id uuid NOT NULL,
-    pokemon_id varchar NOT NULL,
-    caught_at timestamptz NOT NULL DEFAULT NOW(),
-    PRIMARY KEY (user_id, pokemon_id)
-);
-
-CREATE INDEX IF NOT EXISTS idx_user_pokemon_user_id ON user_pokemon(user_id);
-`
 
 func setupPostgres(t *testing.T) *pgxpool.Pool {
 	t.Helper()
@@ -122,8 +55,13 @@ func setupPostgres(t *testing.T) *pgxpool.Pool {
 	}
 	t.Cleanup(func() { pool.Close() })
 
-	if _, err := pool.Exec(ctx, createTablesSQL); err != nil {
-		t.Fatalf("failed to create tables: %v", err)
+	migrationsFS, err := fs.Sub(MigrationsFS, "migrations")
+	if err != nil {
+		t.Fatalf("failed to prepare migrations fs: %v", err)
+	}
+
+	if err := platform.RunMigrations(connStr, migrationsFS); err != nil {
+		t.Fatalf("failed to run migrations: %v", err)
 	}
 
 	return pool
