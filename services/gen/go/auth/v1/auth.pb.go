@@ -499,6 +499,96 @@ func (x *GetUserPokemonResponse) GetPokemonIds() []string {
 	return nil
 }
 
+// スターターポケモン選択リクエスト
+type ChooseStarterRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	PokemonId     string                 `protobuf:"bytes,2,opt,name=pokemon_id,json=pokemonId,proto3" json:"pokemon_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChooseStarterRequest) Reset() {
+	*x = ChooseStarterRequest{}
+	mi := &file_auth_v1_auth_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChooseStarterRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChooseStarterRequest) ProtoMessage() {}
+
+func (x *ChooseStarterRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChooseStarterRequest.ProtoReflect.Descriptor instead.
+func (*ChooseStarterRequest) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ChooseStarterRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *ChooseStarterRequest) GetPokemonId() string {
+	if x != nil {
+		return x.PokemonId
+	}
+	return ""
+}
+
+// スターターポケモン選択レスポンス
+type ChooseStarterResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ChooseStarterResponse) Reset() {
+	*x = ChooseStarterResponse{}
+	mi := &file_auth_v1_auth_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ChooseStarterResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ChooseStarterResponse) ProtoMessage() {}
+
+func (x *ChooseStarterResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_auth_v1_auth_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ChooseStarterResponse.ProtoReflect.Descriptor instead.
+func (*ChooseStarterResponse) Descriptor() ([]byte, []int) {
+	return file_auth_v1_auth_proto_rawDescGZIP(), []int{10}
+}
+
 var File_auth_v1_auth_proto protoreflect.FileDescriptor
 
 const file_auth_v1_auth_proto_rawDesc = "" +
@@ -532,12 +622,18 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"9\n" +
 	"\x16GetUserPokemonResponse\x12\x1f\n" +
 	"\vpokemon_ids\x18\x01 \x03(\tR\n" +
-	"pokemonIds2\xcc\x02\n" +
+	"pokemonIds\"N\n" +
+	"\x14ChooseStarterRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"pokemon_id\x18\x02 \x01(\tR\tpokemonId\"\x17\n" +
+	"\x15ChooseStarterResponse2\x9e\x03\n" +
 	"\vAuthService\x12M\n" +
 	"\fRegisterUser\x12\x1c.auth.v1.RegisterUserRequest\x1a\x1d.auth.v1.RegisterUserResponse\"\x00\x12D\n" +
 	"\tLoginUser\x12\x19.auth.v1.LoginUserRequest\x1a\x1a.auth.v1.LoginUserResponse\"\x00\x12S\n" +
 	"\x0eGetUserProfile\x12\x1e.auth.v1.GetUserProfileRequest\x1a\x1f.auth.v1.GetUserProfileResponse\"\x00\x12S\n" +
-	"\x0eGetUserPokemon\x12\x1e.auth.v1.GetUserPokemonRequest\x1a\x1f.auth.v1.GetUserPokemonResponse\"\x00BNZLgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/auth/v1;authv1b\x06proto3"
+	"\x0eGetUserPokemon\x12\x1e.auth.v1.GetUserPokemonRequest\x1a\x1f.auth.v1.GetUserPokemonResponse\"\x00\x12P\n" +
+	"\rChooseStarter\x12\x1d.auth.v1.ChooseStarterRequest\x1a\x1e.auth.v1.ChooseStarterResponse\"\x00BNZLgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/auth/v1;authv1b\x06proto3"
 
 var (
 	file_auth_v1_auth_proto_rawDescOnce sync.Once
@@ -551,7 +647,7 @@ func file_auth_v1_auth_proto_rawDescGZIP() []byte {
 	return file_auth_v1_auth_proto_rawDescData
 }
 
-var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
+var file_auth_v1_auth_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_auth_v1_auth_proto_goTypes = []any{
 	(*RegisterUserRequest)(nil),    // 0: auth.v1.RegisterUserRequest
 	(*LoginUserRequest)(nil),       // 1: auth.v1.LoginUserRequest
@@ -562,27 +658,31 @@ var file_auth_v1_auth_proto_goTypes = []any{
 	(*GetUserProfileResponse)(nil), // 6: auth.v1.GetUserProfileResponse
 	(*GetUserPokemonRequest)(nil),  // 7: auth.v1.GetUserPokemonRequest
 	(*GetUserPokemonResponse)(nil), // 8: auth.v1.GetUserPokemonResponse
-	(*timestamppb.Timestamp)(nil),  // 9: google.protobuf.Timestamp
+	(*ChooseStarterRequest)(nil),   // 9: auth.v1.ChooseStarterRequest
+	(*ChooseStarterResponse)(nil),  // 10: auth.v1.ChooseStarterResponse
+	(*timestamppb.Timestamp)(nil),  // 11: google.protobuf.Timestamp
 }
 var file_auth_v1_auth_proto_depIdxs = []int32{
-	9, // 0: auth.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	9, // 1: auth.v1.User.last_login_at:type_name -> google.protobuf.Timestamp
-	3, // 2: auth.v1.RegisterUserResponse.user:type_name -> auth.v1.User
-	3, // 3: auth.v1.LoginUserResponse.user:type_name -> auth.v1.User
-	3, // 4: auth.v1.GetUserProfileResponse.user:type_name -> auth.v1.User
-	0, // 5: auth.v1.AuthService.RegisterUser:input_type -> auth.v1.RegisterUserRequest
-	1, // 6: auth.v1.AuthService.LoginUser:input_type -> auth.v1.LoginUserRequest
-	2, // 7: auth.v1.AuthService.GetUserProfile:input_type -> auth.v1.GetUserProfileRequest
-	7, // 8: auth.v1.AuthService.GetUserPokemon:input_type -> auth.v1.GetUserPokemonRequest
-	4, // 9: auth.v1.AuthService.RegisterUser:output_type -> auth.v1.RegisterUserResponse
-	5, // 10: auth.v1.AuthService.LoginUser:output_type -> auth.v1.LoginUserResponse
-	6, // 11: auth.v1.AuthService.GetUserProfile:output_type -> auth.v1.GetUserProfileResponse
-	8, // 12: auth.v1.AuthService.GetUserPokemon:output_type -> auth.v1.GetUserPokemonResponse
-	9, // [9:13] is the sub-list for method output_type
-	5, // [5:9] is the sub-list for method input_type
-	5, // [5:5] is the sub-list for extension type_name
-	5, // [5:5] is the sub-list for extension extendee
-	0, // [0:5] is the sub-list for field type_name
+	11, // 0: auth.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	11, // 1: auth.v1.User.last_login_at:type_name -> google.protobuf.Timestamp
+	3,  // 2: auth.v1.RegisterUserResponse.user:type_name -> auth.v1.User
+	3,  // 3: auth.v1.LoginUserResponse.user:type_name -> auth.v1.User
+	3,  // 4: auth.v1.GetUserProfileResponse.user:type_name -> auth.v1.User
+	0,  // 5: auth.v1.AuthService.RegisterUser:input_type -> auth.v1.RegisterUserRequest
+	1,  // 6: auth.v1.AuthService.LoginUser:input_type -> auth.v1.LoginUserRequest
+	2,  // 7: auth.v1.AuthService.GetUserProfile:input_type -> auth.v1.GetUserProfileRequest
+	7,  // 8: auth.v1.AuthService.GetUserPokemon:input_type -> auth.v1.GetUserPokemonRequest
+	9,  // 9: auth.v1.AuthService.ChooseStarter:input_type -> auth.v1.ChooseStarterRequest
+	4,  // 10: auth.v1.AuthService.RegisterUser:output_type -> auth.v1.RegisterUserResponse
+	5,  // 11: auth.v1.AuthService.LoginUser:output_type -> auth.v1.LoginUserResponse
+	6,  // 12: auth.v1.AuthService.GetUserProfile:output_type -> auth.v1.GetUserProfileResponse
+	8,  // 13: auth.v1.AuthService.GetUserPokemon:output_type -> auth.v1.GetUserPokemonResponse
+	10, // 14: auth.v1.AuthService.ChooseStarter:output_type -> auth.v1.ChooseStarterResponse
+	10, // [10:15] is the sub-list for method output_type
+	5,  // [5:10] is the sub-list for method input_type
+	5,  // [5:5] is the sub-list for extension type_name
+	5,  // [5:5] is the sub-list for extension extendee
+	0,  // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_auth_v1_auth_proto_init() }
@@ -596,7 +696,7 @@ func file_auth_v1_auth_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_auth_v1_auth_proto_rawDesc), len(file_auth_v1_auth_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   9,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
