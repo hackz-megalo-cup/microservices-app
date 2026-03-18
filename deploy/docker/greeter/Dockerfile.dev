@@ -1,3 +1,0 @@
-FROM alpine:3.20
-COPY build/greeter /greeter
-ENTRYPOINT ["/greeter"]

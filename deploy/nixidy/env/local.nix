@@ -1,8 +1,6 @@
 { ... }:
 {
   imports = [
-    ../../k8s/greeter.nix
-    ../../k8s/caller.nix
     ../../k8s/gateway.nix
     ../../k8s/custom-lang-service.nix
     ../../k8s/auth-service.nix

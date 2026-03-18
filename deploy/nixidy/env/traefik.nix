@@ -100,53 +100,6 @@
             apiVersion = "traefik.io/v1alpha1";
             kind = "IngressRoute";
             metadata = {
-              name = "greeter-route";
-              namespace = "microservices";
-            };
-            spec = {
-              entryPoints = [ "web" ];
-              routes = [
-                {
-                  match = "PathPrefix(`/greeter.v1.GreeterService`)";
-                  kind = "Rule";
-                  priority = 100;
-                  middlewares = [
-                    { name = "cors-middleware"; }
-                    { name = "rate-limit-middleware"; }
-                    { name = "retry-middleware"; }
-                  ];
-                  services = [
-                    {
-                      name = "greeter-service";
-                      port = 80;
-                      scheme = "h2c";
-                    }
-                  ];
-                }
-                {
-                  match = "PathPrefix(`/greeter.v2.GreeterService`)";
-                  kind = "Rule";
-                  priority = 100;
-                  middlewares = [
-                    { name = "cors-middleware"; }
-                    { name = "rate-limit-middleware"; }
-                    { name = "retry-middleware"; }
-                  ];
-                  services = [
-                    {
-                      name = "greeter-service";
-                      port = 80;
-                      scheme = "h2c";
-                    }
-                  ];
-                }
-              ];
-            };
-          }
-          {
-            apiVersion = "traefik.io/v1alpha1";
-            kind = "IngressRoute";
-            metadata = {
               name = "gateway-route";
               namespace = "microservices";
             };

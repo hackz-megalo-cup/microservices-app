@@ -5,4 +5,3 @@
 
 export { AuthPanel } from "../features/auth/components/auth-panel";
 export { GatewayDemo } from "../features/gateway/components/gateway-demo";
-export { GreeterDemo } from "../features/greeter/components/greeter-demo";

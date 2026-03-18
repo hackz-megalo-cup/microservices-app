@@ -102,20 +102,9 @@
               internals = [ "auth" ];
               gen = [ "auth" ];
             };
-            caller = {
-              internals = [ "caller" ];
-              gen = [ "caller" ];
-            };
             gateway = {
               internals = [ "gateway" ];
               gen = [ "gateway" ];
-            };
-            greeter = {
-              internals = [ "greeter" ];
-              gen = [
-                "caller"
-                "greeter"
-              ];
             };
             item = {
               internals = [ "item" ];
@@ -183,9 +172,7 @@
             vendorHash = goVendorHash;
             subPackages = [
               "cmd/auth"
-              "cmd/caller"
               "cmd/gateway"
-              "cmd/greeter"
               "cmd/item"
               "cmd/masterdata"
               "cmd/projector"
@@ -237,17 +224,9 @@
           auth-image = buildGoServiceImage "auth" auth;
           auth-release-image = buildGoServiceImage "auth" go-services;
 
-          caller = buildGoService "caller";
-          caller-image = buildGoServiceImage "caller" caller;
-          caller-release-image = buildGoServiceImage "caller" go-services;
-
           gateway = buildGoService "gateway";
           gateway-image = buildGoServiceImage "gateway" gateway;
           gateway-release-image = buildGoServiceImage "gateway" go-services;
-
-          greeter = buildGoService "greeter";
-          greeter-image = buildGoServiceImage "greeter" greeter;
-          greeter-release-image = buildGoServiceImage "greeter" go-services;
 
           item = buildGoService "item";
           item-image = buildGoServiceImage "item" item;
@@ -442,9 +421,6 @@
           packages.nixidy = inputs.nixidy.packages.${system}.default;
 
           # Microservices
-          packages.caller = caller;
-          packages.caller-image = caller-image;
-          packages.caller-release-image = caller-release-image;
           packages.auth = auth;
           packages.auth-service-image = auth-image;
           packages.auth-image = auth-image;
@@ -457,9 +433,6 @@
           packages.gateway = gateway;
           packages.gateway-image = gateway-image;
           packages.gateway-release-image = gateway-release-image;
-          packages.greeter = greeter;
-          packages.greeter-image = greeter-image;
-          packages.greeter-release-image = greeter-release-image;
           packages.item = item;
           packages.item-image = item-image;
           packages.item-release-image = item-release-image;

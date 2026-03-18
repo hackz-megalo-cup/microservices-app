@@ -1,15 +1,5 @@
 {
   "go_services": {
-    "greeter": {
-      "cmd_path": "cmd/greeter",
-      "port": 8080,
-      "k8s_resource": "greeter-service"
-    },
-    "caller": {
-      "cmd_path": "cmd/caller",
-      "port": 8081,
-      "k8s_resource": "caller-service"
-    },
     "gateway": {
       "cmd_path": "cmd/gateway",
       "port": 8082,

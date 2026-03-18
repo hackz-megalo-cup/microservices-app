@@ -1,4 +1,4 @@
-import { AuthPanel, GatewayDemo, GreeterDemo } from "../../../lib/demo-components";
+import { AuthPanel, GatewayDemo } from "../../../lib/demo-components";
 
 export function ApiTestPage() {
   return (
@@ -15,7 +15,6 @@ export function ApiTestPage() {
     >
       <h1>connect-query Frontend Sample</h1>
       <AuthPanel />
-      <GreeterDemo />
       <GatewayDemo />
     </main>
   );
