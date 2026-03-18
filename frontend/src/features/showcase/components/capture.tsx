@@ -124,9 +124,9 @@ export function Capture() {
     isLoading: isSessionLoading,
     error: sessionError,
     refetch: refetchSession,
-    useItemMutation,
-    throwBallMutation,
-    endSessionMutation,
+    itemMutation,
+    ballMutation,
+    sessionEndMutation,
   } = useCaptureSession(sessionId);
 
   const {
@@ -224,7 +224,7 @@ export function Capture() {
       const apiPromise: Promise<string> = (async () => {
         if (itemId) {
           try {
-            const useItemRes = await useItemMutation.mutateAsync({ itemId });
+            const useItemRes = await itemMutation.mutateAsync({ itemId });
             setDisplayRate(useItemRes.rateAfter);
             // Refresh item list since CaptureService.UseItem consumes the item internally
             void refetchItems();
@@ -236,7 +236,7 @@ export function Capture() {
           }
         }
         try {
-          const res = await throwBallMutation.mutateAsync();
+          const res = await ballMutation.mutateAsync();
           return res.result; // "success" | "fail"
         } catch {
           return "fail";
@@ -263,18 +263,18 @@ export function Capture() {
           if (result === "success") {
             setParticles(makeParticles());
             setPhase("success");
-            endSessionMutation.mutate();
+            sessionEndMutation.mutate();
           } else if (result === "escaped") {
             setPokemonClass("capture-pokemon-escape");
             setPhase("escaped");
-            endSessionMutation.mutate();
+            sessionEndMutation.mutate();
           } else {
             // "fail" — pokemon broke free; session is now closed
             setPhase("burst");
             const tid3 = window.setTimeout(() => {
               setPokemonClass("capture-pokemon-breakfree");
               setPhase("failed");
-              endSessionMutation.mutate();
+              sessionEndMutation.mutate();
             }, BURST_DURATION_MS);
             timeoutIdsRef.current.push(tid3);
           }
@@ -282,7 +282,7 @@ export function Capture() {
         timeoutIdsRef.current.push(tid2);
       });
     },
-    [circleScale, useItemMutation, throwBallMutation, endSessionMutation, refetchItems],
+    [circleScale, itemMutation, ballMutation, sessionEndMutation, refetchItems],
   );
 
   // ── Pointer handlers ──
@@ -562,7 +562,7 @@ export function Capture() {
               type="button"
               className="capture-item-btn"
               onClick={() => setShowItemModal(true)}
-              disabled={isMutationPending || useItemMutation.isPending || throwBallMutation.isPending}
+              disabled={isMutationPending || itemMutation.isPending || ballMutation.isPending}
             >
               {selectedItemForThrow ? "✓ Item Ready" : "🍓 Use Item"}
             </button>
