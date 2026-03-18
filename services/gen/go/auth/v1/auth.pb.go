@@ -253,10 +253,7 @@ func (x *User) GetLastLoginAt() *timestamppb.Timestamp {
 // ユーザー登録レスポンス
 type RegisterUserResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
-	Role          string                 `protobuf:"bytes,3,opt,name=role,proto3" json:"role,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -291,30 +288,9 @@ func (*RegisterUserResponse) Descriptor() ([]byte, []int) {
 	return file_auth_v1_auth_proto_rawDescGZIP(), []int{4}
 }
 
-func (x *RegisterUserResponse) GetId() string {
+func (x *RegisterUserResponse) GetUser() *User {
 	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
-func (x *RegisterUserResponse) GetEmail() string {
-	if x != nil {
-		return x.Email
-	}
-	return ""
-}
-
-func (x *RegisterUserResponse) GetRole() string {
-	if x != nil {
-		return x.Role
-	}
-	return ""
-}
-
-func (x *RegisterUserResponse) GetCreatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.CreatedAt
+		return x.User
 	}
 	return nil
 }
@@ -375,11 +351,7 @@ func (x *LoginUserResponse) GetUser() *User {
 // ユーザープロフィール取得レスポンス
 type GetUserProfileResponse struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Email         string                 `protobuf:"bytes,2,opt,name=email,proto3" json:"email,omitempty"`
-	Role          string                 `protobuf:"bytes,3,opt,name=role,proto3" json:"role,omitempty"`
-	CreatedAt     *timestamppb.Timestamp `protobuf:"bytes,4,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
-	LastLoginAt   *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=last_login_at,json=lastLoginAt,proto3" json:"last_login_at,omitempty"`
+	User          *User                  `protobuf:"bytes,1,opt,name=user,proto3" json:"user,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -414,37 +386,9 @@ func (*GetUserProfileResponse) Descriptor() ([]byte, []int) {
 	return file_auth_v1_auth_proto_rawDescGZIP(), []int{6}
 }
 
-func (x *GetUserProfileResponse) GetId() string {
+func (x *GetUserProfileResponse) GetUser() *User {
 	if x != nil {
-		return x.Id
-	}
-	return ""
-}
-
-func (x *GetUserProfileResponse) GetEmail() string {
-	if x != nil {
-		return x.Email
-	}
-	return ""
-}
-
-func (x *GetUserProfileResponse) GetRole() string {
-	if x != nil {
-		return x.Role
-	}
-	return ""
-}
-
-func (x *GetUserProfileResponse) GetCreatedAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.CreatedAt
-	}
-	return nil
-}
-
-func (x *GetUserProfileResponse) GetLastLoginAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.LastLoginAt
+		return x.User
 	}
 	return nil
 }
@@ -468,23 +412,14 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\x04role\x18\x03 \x01(\tR\x04role\x129\n" +
 	"\n" +
 	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12>\n" +
-	"\rlast_login_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\vlastLoginAt\"\x8b\x01\n" +
-	"\x14RegisterUserResponse\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
-	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
-	"\x04role\x18\x03 \x01(\tR\x04role\x129\n" +
-	"\n" +
-	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\"L\n" +
+	"\rlast_login_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\vlastLoginAt\"9\n" +
+	"\x14RegisterUserResponse\x12!\n" +
+	"\x04user\x18\x01 \x01(\v2\r.auth.v1.UserR\x04user\"L\n" +
 	"\x11LoginUserResponse\x12\x14\n" +
 	"\x05token\x18\x01 \x01(\tR\x05token\x12!\n" +
-	"\x04user\x18\x02 \x01(\v2\r.auth.v1.UserR\x04user\"\xcd\x01\n" +
-	"\x16GetUserProfileResponse\x12\x0e\n" +
-	"\x02id\x18\x01 \x01(\tR\x02id\x12\x14\n" +
-	"\x05email\x18\x02 \x01(\tR\x05email\x12\x12\n" +
-	"\x04role\x18\x03 \x01(\tR\x04role\x129\n" +
-	"\n" +
-	"created_at\x18\x04 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12>\n" +
-	"\rlast_login_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\vlastLoginAt2\xf7\x01\n" +
+	"\x04user\x18\x02 \x01(\v2\r.auth.v1.UserR\x04user\";\n" +
+	"\x16GetUserProfileResponse\x12!\n" +
+	"\x04user\x18\x01 \x01(\v2\r.auth.v1.UserR\x04user2\xf7\x01\n" +
 	"\vAuthService\x12M\n" +
 	"\fRegisterUser\x12\x1c.auth.v1.RegisterUserRequest\x1a\x1d.auth.v1.RegisterUserResponse\"\x00\x12D\n" +
 	"\tLoginUser\x12\x19.auth.v1.LoginUserRequest\x1a\x1a.auth.v1.LoginUserResponse\"\x00\x12S\n" +
@@ -516,21 +451,20 @@ var file_auth_v1_auth_proto_goTypes = []any{
 var file_auth_v1_auth_proto_depIdxs = []int32{
 	7, // 0: auth.v1.User.created_at:type_name -> google.protobuf.Timestamp
 	7, // 1: auth.v1.User.last_login_at:type_name -> google.protobuf.Timestamp
-	7, // 2: auth.v1.RegisterUserResponse.created_at:type_name -> google.protobuf.Timestamp
+	3, // 2: auth.v1.RegisterUserResponse.user:type_name -> auth.v1.User
 	3, // 3: auth.v1.LoginUserResponse.user:type_name -> auth.v1.User
-	7, // 4: auth.v1.GetUserProfileResponse.created_at:type_name -> google.protobuf.Timestamp
-	7, // 5: auth.v1.GetUserProfileResponse.last_login_at:type_name -> google.protobuf.Timestamp
-	0, // 6: auth.v1.AuthService.RegisterUser:input_type -> auth.v1.RegisterUserRequest
-	1, // 7: auth.v1.AuthService.LoginUser:input_type -> auth.v1.LoginUserRequest
-	2, // 8: auth.v1.AuthService.GetUserProfile:input_type -> auth.v1.GetUserProfileRequest
-	4, // 9: auth.v1.AuthService.RegisterUser:output_type -> auth.v1.RegisterUserResponse
-	5, // 10: auth.v1.AuthService.LoginUser:output_type -> auth.v1.LoginUserResponse
-	6, // 11: auth.v1.AuthService.GetUserProfile:output_type -> auth.v1.GetUserProfileResponse
-	9, // [9:12] is the sub-list for method output_type
-	6, // [6:9] is the sub-list for method input_type
-	6, // [6:6] is the sub-list for extension type_name
-	6, // [6:6] is the sub-list for extension extendee
-	0, // [0:6] is the sub-list for field type_name
+	3, // 4: auth.v1.GetUserProfileResponse.user:type_name -> auth.v1.User
+	0, // 5: auth.v1.AuthService.RegisterUser:input_type -> auth.v1.RegisterUserRequest
+	1, // 6: auth.v1.AuthService.LoginUser:input_type -> auth.v1.LoginUserRequest
+	2, // 7: auth.v1.AuthService.GetUserProfile:input_type -> auth.v1.GetUserProfileRequest
+	4, // 8: auth.v1.AuthService.RegisterUser:output_type -> auth.v1.RegisterUserResponse
+	5, // 9: auth.v1.AuthService.LoginUser:output_type -> auth.v1.LoginUserResponse
+	6, // 10: auth.v1.AuthService.GetUserProfile:output_type -> auth.v1.GetUserProfileResponse
+	8, // [8:11] is the sub-list for method output_type
+	5, // [5:8] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_auth_v1_auth_proto_init() }

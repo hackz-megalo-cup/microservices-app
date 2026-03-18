@@ -46,10 +46,7 @@ message User {
 
 // ユーザー登録レスポンス
 message RegisterUserResponse {
-  string id = 1;
-  string email = 2;
-  string role = 3;
-  google.protobuf.Timestamp created_at = 4;
+  User user = 1;
 }
 
 // ログインレスポンス
@@ -60,9 +57,5 @@ message LoginUserResponse {
 
 // ユーザープロフィール取得レスポンス
 message GetUserProfileResponse {
-  string id = 1;
-  string email = 2;
-  string role = 3;
-  google.protobuf.Timestamp created_at = 4;
-  google.protobuf.Timestamp last_login_at = 5;
+  User user = 1;
 }

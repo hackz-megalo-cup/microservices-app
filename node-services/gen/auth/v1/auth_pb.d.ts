@@ -120,24 +120,9 @@ export declare const UserSchema: GenMessage<User>;
  */
 export declare type RegisterUserResponse = Message<"auth.v1.RegisterUserResponse"> & {
   /**
-   * @generated from field: string id = 1;
+   * @generated from field: auth.v1.User user = 1;
    */
-  id: string;
-
-  /**
-   * @generated from field: string email = 2;
-   */
-  email: string;
-
-  /**
-   * @generated from field: string role = 3;
-   */
-  role: string;
-
-  /**
-   * @generated from field: google.protobuf.Timestamp created_at = 4;
-   */
-  createdAt?: Timestamp;
+  user?: User;
 };
 
 /**
@@ -176,29 +161,9 @@ export declare const LoginUserResponseSchema: GenMessage<LoginUserResponse>;
  */
 export declare type GetUserProfileResponse = Message<"auth.v1.GetUserProfileResponse"> & {
   /**
-   * @generated from field: string id = 1;
+   * @generated from field: auth.v1.User user = 1;
    */
-  id: string;
-
-  /**
-   * @generated from field: string email = 2;
-   */
-  email: string;
-
-  /**
-   * @generated from field: string role = 3;
-   */
-  role: string;
-
-  /**
-   * @generated from field: google.protobuf.Timestamp created_at = 4;
-   */
-  createdAt?: Timestamp;
-
-  /**
-   * @generated from field: google.protobuf.Timestamp last_login_at = 5;
-   */
-  lastLoginAt?: Timestamp;
+  user?: User;
 };
 
 /**

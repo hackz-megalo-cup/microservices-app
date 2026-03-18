@@ -20,6 +20,7 @@ services/greeter
 services/caller
 services/gateway
 services/projector
+services/auth
 
 # Node services
 node-services/**/node_modules/
