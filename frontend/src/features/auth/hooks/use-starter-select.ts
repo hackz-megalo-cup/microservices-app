@@ -49,7 +49,9 @@ export function useStarterSelect(userId: string) {
       );
     },
     onSuccess: () => {
-      void queryClient.invalidateQueries();
+      // removeQueries clears cache so Home remounts with isPending=true,
+      // preventing redirect on stale caughtCount=0 before refetch completes.
+      void queryClient.removeQueries();
     },
   });
 
