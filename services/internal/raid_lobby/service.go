@@ -13,6 +13,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"google.golang.org/protobuf/types/known/timestamppb"
 
 	masterdatav1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1"
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1/masterdatav1connect"
@@ -221,6 +222,11 @@ func (s *Service) HandleBattleFinished(ctx context.Context, lobbyID, sessionID, 
 func (s *Service) ListOpenRaids(ctx context.Context, req *connect.Request[pb.ListOpenRaidsRequest]) (*connect.Response[pb.ListOpenRaidsResponse], error) {
 	statusFilter := req.Msg.GetStatusFilter()
 
+	validStatuses := map[string]bool{"": true, "waiting": true, "in_battle": true}
+	if !validStatuses[statusFilter] {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid status_filter: %s", statusFilter))
+	}
+
 	if s.db == nil {
 		return connect.NewResponse(&pb.ListOpenRaidsResponse{}), nil
 	}
@@ -237,7 +243,7 @@ func (s *Service) ListOpenRaids(ctx context.Context, req *connect.Request[pb.Lis
 	)
 	if err != nil {
 		slog.Error("ListOpenRaids: failed to query", "error", err)
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to query raids"))
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to query raids: %w", err))
 	}
 	defer rows.Close()
 
@@ -248,16 +254,20 @@ func (s *Service) ListOpenRaids(ctx context.Context, req *connect.Request[pb.Lis
 		var maxParticipants, currentParticipants int32
 		if err := rows.Scan(&id, &bossPokemonID, &status, &createdAt, &maxParticipants, &currentParticipants); err != nil {
 			slog.Error("ListOpenRaids: failed to scan row", "error", err)
-			continue
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to scan raid row"))
 		}
 		entries = append(entries, &pb.OpenRaidEntry{
 			Id:                  id,
 			BossPokemonId:       bossPokemonID,
 			Status:              status,
-			CreatedAt:           createdAt.UTC().Format(time.RFC3339),
+			CreatedAt:           timestamppb.New(createdAt.UTC()),
 			MaxParticipants:     maxParticipants,
 			CurrentParticipants: currentParticipants,
 		})
+	}
+	if err := rows.Err(); err != nil {
+		slog.Error("ListOpenRaids: row iteration error", "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to iterate raids"))
 	}
 
 	return connect.NewResponse(&pb.ListOpenRaidsResponse{Raids: entries}), nil

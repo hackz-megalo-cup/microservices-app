@@ -9,6 +9,7 @@ package raid_lobbyv1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -491,7 +492,7 @@ type OpenRaidEntry struct {
 	BossPokemonId       string                 `protobuf:"bytes,2,opt,name=boss_pokemon_id,json=bossPokemonId,proto3" json:"boss_pokemon_id,omitempty"`
 	CurrentParticipants int32                  `protobuf:"varint,3,opt,name=current_participants,json=currentParticipants,proto3" json:"current_participants,omitempty"`
 	Status              string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
-	CreatedAt           string                 `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	CreatedAt           *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	MaxParticipants     int32                  `protobuf:"varint,6,opt,name=max_participants,json=maxParticipants,proto3" json:"max_participants,omitempty"`
 	unknownFields       protoimpl.UnknownFields
 	sizeCache           protoimpl.SizeCache
@@ -555,11 +556,11 @@ func (x *OpenRaidEntry) GetStatus() string {
 	return ""
 }
 
-func (x *OpenRaidEntry) GetCreatedAt() string {
+func (x *OpenRaidEntry) GetCreatedAt() *timestamppb.Timestamp {
 	if x != nil {
 		return x.CreatedAt
 	}
-	return ""
+	return nil
 }
 
 func (x *OpenRaidEntry) GetMaxParticipants() int32 {
@@ -573,7 +574,7 @@ var File_raid_lobby_v1_raid_lobby_proto protoreflect.FileDescriptor
 
 const file_raid_lobby_v1_raid_lobby_proto_rawDesc = "" +
 	"\n" +
-	"\x1eraid_lobby/v1/raid_lobby.proto\x12\rraid_lobby.v1\";\n" +
+	"\x1eraid_lobby/v1/raid_lobby.proto\x12\rraid_lobby.v1\x1a\x1fgoogle/protobuf/timestamp.proto\";\n" +
 	"\x11CreateRaidRequest\x12&\n" +
 	"\x0fboss_pokemon_id\x18\x01 \x01(\tR\rbossPokemonId\"/\n" +
 	"\x12CreateRaidResponse\x12\x19\n" +
@@ -597,14 +598,14 @@ const file_raid_lobby_v1_raid_lobby_proto_rawDesc = "" +
 	"\x14ListOpenRaidsRequest\x12#\n" +
 	"\rstatus_filter\x18\x01 \x01(\tR\fstatusFilter\"K\n" +
 	"\x15ListOpenRaidsResponse\x122\n" +
-	"\x05raids\x18\x01 \x03(\v2\x1c.raid_lobby.v1.OpenRaidEntryR\x05raids\"\xdc\x01\n" +
+	"\x05raids\x18\x01 \x03(\v2\x1c.raid_lobby.v1.OpenRaidEntryR\x05raids\"\xf8\x01\n" +
 	"\rOpenRaidEntry\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
 	"\x0fboss_pokemon_id\x18\x02 \x01(\tR\rbossPokemonId\x121\n" +
 	"\x14current_participants\x18\x03 \x01(\x05R\x13currentParticipants\x12\x16\n" +
-	"\x06status\x18\x04 \x01(\tR\x06status\x12\x1d\n" +
+	"\x06status\x18\x04 \x01(\tR\x06status\x129\n" +
 	"\n" +
-	"created_at\x18\x05 \x01(\tR\tcreatedAt\x12)\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12)\n" +
 	"\x10max_participants\x18\x06 \x01(\x05R\x0fmaxParticipants2\xc6\x03\n" +
 	"\x10RaidLobbyService\x12S\n" +
 	"\n" +
@@ -639,24 +640,26 @@ var file_raid_lobby_v1_raid_lobby_proto_goTypes = []any{
 	(*ListOpenRaidsRequest)(nil),  // 8: raid_lobby.v1.ListOpenRaidsRequest
 	(*ListOpenRaidsResponse)(nil), // 9: raid_lobby.v1.ListOpenRaidsResponse
 	(*OpenRaidEntry)(nil),         // 10: raid_lobby.v1.OpenRaidEntry
+	(*timestamppb.Timestamp)(nil), // 11: google.protobuf.Timestamp
 }
 var file_raid_lobby_v1_raid_lobby_proto_depIdxs = []int32{
 	10, // 0: raid_lobby.v1.ListOpenRaidsResponse.raids:type_name -> raid_lobby.v1.OpenRaidEntry
-	0,  // 1: raid_lobby.v1.RaidLobbyService.CreateRaid:input_type -> raid_lobby.v1.CreateRaidRequest
-	2,  // 2: raid_lobby.v1.RaidLobbyService.JoinRaid:input_type -> raid_lobby.v1.JoinRaidRequest
-	4,  // 3: raid_lobby.v1.RaidLobbyService.StartBattle:input_type -> raid_lobby.v1.StartBattleRequest
-	6,  // 4: raid_lobby.v1.RaidLobbyService.StreamLobby:input_type -> raid_lobby.v1.StreamLobbyRequest
-	8,  // 5: raid_lobby.v1.RaidLobbyService.ListOpenRaids:input_type -> raid_lobby.v1.ListOpenRaidsRequest
-	1,  // 6: raid_lobby.v1.RaidLobbyService.CreateRaid:output_type -> raid_lobby.v1.CreateRaidResponse
-	3,  // 7: raid_lobby.v1.RaidLobbyService.JoinRaid:output_type -> raid_lobby.v1.JoinRaidResponse
-	5,  // 8: raid_lobby.v1.RaidLobbyService.StartBattle:output_type -> raid_lobby.v1.StartBattleResponse
-	7,  // 9: raid_lobby.v1.RaidLobbyService.StreamLobby:output_type -> raid_lobby.v1.StreamLobbyResponse
-	9,  // 10: raid_lobby.v1.RaidLobbyService.ListOpenRaids:output_type -> raid_lobby.v1.ListOpenRaidsResponse
-	6,  // [6:11] is the sub-list for method output_type
-	1,  // [1:6] is the sub-list for method input_type
-	1,  // [1:1] is the sub-list for extension type_name
-	1,  // [1:1] is the sub-list for extension extendee
-	0,  // [0:1] is the sub-list for field type_name
+	11, // 1: raid_lobby.v1.OpenRaidEntry.created_at:type_name -> google.protobuf.Timestamp
+	0,  // 2: raid_lobby.v1.RaidLobbyService.CreateRaid:input_type -> raid_lobby.v1.CreateRaidRequest
+	2,  // 3: raid_lobby.v1.RaidLobbyService.JoinRaid:input_type -> raid_lobby.v1.JoinRaidRequest
+	4,  // 4: raid_lobby.v1.RaidLobbyService.StartBattle:input_type -> raid_lobby.v1.StartBattleRequest
+	6,  // 5: raid_lobby.v1.RaidLobbyService.StreamLobby:input_type -> raid_lobby.v1.StreamLobbyRequest
+	8,  // 6: raid_lobby.v1.RaidLobbyService.ListOpenRaids:input_type -> raid_lobby.v1.ListOpenRaidsRequest
+	1,  // 7: raid_lobby.v1.RaidLobbyService.CreateRaid:output_type -> raid_lobby.v1.CreateRaidResponse
+	3,  // 8: raid_lobby.v1.RaidLobbyService.JoinRaid:output_type -> raid_lobby.v1.JoinRaidResponse
+	5,  // 9: raid_lobby.v1.RaidLobbyService.StartBattle:output_type -> raid_lobby.v1.StartBattleResponse
+	7,  // 10: raid_lobby.v1.RaidLobbyService.StreamLobby:output_type -> raid_lobby.v1.StreamLobbyResponse
+	9,  // 11: raid_lobby.v1.RaidLobbyService.ListOpenRaids:output_type -> raid_lobby.v1.ListOpenRaidsResponse
+	7,  // [7:12] is the sub-list for method output_type
+	2,  // [2:7] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_raid_lobby_v1_raid_lobby_proto_init() }

@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package raid_lobby.v1;
 
+import "google/protobuf/timestamp.proto";
+
 option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1;raid_lobbyv1";
 
 service RaidLobbyService {
@@ -60,6 +62,6 @@ message OpenRaidEntry {
   string boss_pokemon_id      = 2;
   int32  current_participants = 3;
   string status               = 4;
-  string created_at           = 5;
+  google.protobuf.Timestamp created_at = 5;
   int32  max_participants     = 6;
 }
