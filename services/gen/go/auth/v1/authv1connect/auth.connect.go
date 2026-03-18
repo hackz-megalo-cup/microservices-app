@@ -44,6 +44,9 @@ const (
 	// AuthServiceGetUserPokemonProcedure is the fully-qualified name of the AuthService's
 	// GetUserPokemon RPC.
 	AuthServiceGetUserPokemonProcedure = "/auth.v1.AuthService/GetUserPokemon"
+	// AuthServiceChooseStarterProcedure is the fully-qualified name of the AuthService's ChooseStarter
+	// RPC.
+	AuthServiceChooseStarterProcedure = "/auth.v1.AuthService/ChooseStarter"
 )
 
 // AuthServiceClient is a client for the auth.v1.AuthService service.
@@ -56,6 +59,8 @@ type AuthServiceClient interface {
 	GetUserProfile(context.Context, *connect.Request[v1.GetUserProfileRequest]) (*connect.Response[v1.GetUserProfileResponse], error)
 	// ユーザーが所持するポケモンID一覧取得
 	GetUserPokemon(context.Context, *connect.Request[v1.GetUserPokemonRequest]) (*connect.Response[v1.GetUserPokemonResponse], error)
+	// スターターポケモン選択
+	ChooseStarter(context.Context, *connect.Request[v1.ChooseStarterRequest]) (*connect.Response[v1.ChooseStarterResponse], error)
 }
 
 // NewAuthServiceClient constructs a client for the auth.v1.AuthService service. By default, it uses
@@ -93,6 +98,12 @@ func NewAuthServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(authServiceMethods.ByName("GetUserPokemon")),
 			connect.WithClientOptions(opts...),
 		),
+		chooseStarter: connect.NewClient[v1.ChooseStarterRequest, v1.ChooseStarterResponse](
+			httpClient,
+			baseURL+AuthServiceChooseStarterProcedure,
+			connect.WithSchema(authServiceMethods.ByName("ChooseStarter")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -102,6 +113,7 @@ type authServiceClient struct {
 	loginUser      *connect.Client[v1.LoginUserRequest, v1.LoginUserResponse]
 	getUserProfile *connect.Client[v1.GetUserProfileRequest, v1.GetUserProfileResponse]
 	getUserPokemon *connect.Client[v1.GetUserPokemonRequest, v1.GetUserPokemonResponse]
+	chooseStarter  *connect.Client[v1.ChooseStarterRequest, v1.ChooseStarterResponse]
 }
 
 // RegisterUser calls auth.v1.AuthService.RegisterUser.
@@ -124,6 +136,11 @@ func (c *authServiceClient) GetUserPokemon(ctx context.Context, req *connect.Req
 	return c.getUserPokemon.CallUnary(ctx, req)
 }
 
+// ChooseStarter calls auth.v1.AuthService.ChooseStarter.
+func (c *authServiceClient) ChooseStarter(ctx context.Context, req *connect.Request[v1.ChooseStarterRequest]) (*connect.Response[v1.ChooseStarterResponse], error) {
+	return c.chooseStarter.CallUnary(ctx, req)
+}
+
 // AuthServiceHandler is an implementation of the auth.v1.AuthService service.
 type AuthServiceHandler interface {
 	// ユーザー登録
@@ -134,6 +151,8 @@ type AuthServiceHandler interface {
 	GetUserProfile(context.Context, *connect.Request[v1.GetUserProfileRequest]) (*connect.Response[v1.GetUserProfileResponse], error)
 	// ユーザーが所持するポケモンID一覧取得
 	GetUserPokemon(context.Context, *connect.Request[v1.GetUserPokemonRequest]) (*connect.Response[v1.GetUserPokemonResponse], error)
+	// スターターポケモン選択
+	ChooseStarter(context.Context, *connect.Request[v1.ChooseStarterRequest]) (*connect.Response[v1.ChooseStarterResponse], error)
 }
 
 // NewAuthServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -167,6 +186,12 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(authServiceMethods.ByName("GetUserPokemon")),
 		connect.WithHandlerOptions(opts...),
 	)
+	authServiceChooseStarterHandler := connect.NewUnaryHandler(
+		AuthServiceChooseStarterProcedure,
+		svc.ChooseStarter,
+		connect.WithSchema(authServiceMethods.ByName("ChooseStarter")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/auth.v1.AuthService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case AuthServiceRegisterUserProcedure:
@@ -177,6 +202,8 @@ func NewAuthServiceHandler(svc AuthServiceHandler, opts ...connect.HandlerOption
 			authServiceGetUserProfileHandler.ServeHTTP(w, r)
 		case AuthServiceGetUserPokemonProcedure:
 			authServiceGetUserPokemonHandler.ServeHTTP(w, r)
+		case AuthServiceChooseStarterProcedure:
+			authServiceChooseStarterHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -200,4 +227,8 @@ func (UnimplementedAuthServiceHandler) GetUserProfile(context.Context, *connect.
 
 func (UnimplementedAuthServiceHandler) GetUserPokemon(context.Context, *connect.Request[v1.GetUserPokemonRequest]) (*connect.Response[v1.GetUserPokemonResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.GetUserPokemon is not implemented"))
+}
+
+func (UnimplementedAuthServiceHandler) ChooseStarter(context.Context, *connect.Request[v1.ChooseStarterRequest]) (*connect.Response[v1.ChooseStarterResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("auth.v1.AuthService.ChooseStarter is not implemented"))
 }

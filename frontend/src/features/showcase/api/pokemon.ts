@@ -1,19 +1,11 @@
 import type { Pokemon as RpcPokemon } from "../../../gen/masterdata/v1/masterdata_pb";
+import { getPokemonImageUrl } from "../../../lib/pokemon-image";
 import type { Pokemon, PokemonStat } from "../types";
 
-const IMAGE_PLACEHOLDER = "/images/collection-python.png";
+export { getPokemonImageUrl };
 
 export function generatePokemonNumber(index: number): string {
   return `#${String(index + 1).padStart(3, "0")}`;
-}
-
-export function getPokemonImageUrl(pokemon: Pick<Pokemon, "name">): string {
-  const normalizedName = pokemon.name.trim().toLowerCase().replace(/\s+/g, "-");
-  if (!normalizedName || normalizedName === "???") {
-    return IMAGE_PLACEHOLDER;
-  }
-
-  return `/images/pokemon-${normalizedName}.png`;
 }
 
 export function adaptPokemonToUi(serverPokemon: RpcPokemon, index: number): Pokemon {

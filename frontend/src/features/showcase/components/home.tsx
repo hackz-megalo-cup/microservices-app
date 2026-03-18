@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { useNavigate } from "react-router";
 import "../../../styles/global.css";
 import { useAuthContext } from "../../../lib/auth";
 import { getPokemonImageUrl } from "../api/pokemon";
@@ -27,6 +28,14 @@ export function Home() {
     setActivePokemon,
     isSettingPokemon,
   } = useActivePokemon(userId);
+
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (!overviewLoading && !overviewError && caughtCount === 0) {
+      navigate("/starter-select", { replace: true });
+    }
+  }, [overviewLoading, overviewError, caughtCount, navigate]);
 
   const [showPokemonSelector, setShowPokemonSelector] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);

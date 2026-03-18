@@ -19,6 +19,9 @@ service AuthService {
 
   // ユーザーが所持するポケモンID一覧取得
   rpc GetUserPokemon(GetUserPokemonRequest) returns (GetUserPokemonResponse) {}
+
+  // スターターポケモン選択
+  rpc ChooseStarter(ChooseStarterRequest) returns (ChooseStarterResponse) {}
 }
 
 // ユーザー登録リクエスト
@@ -74,3 +77,12 @@ message GetUserPokemonRequest {
 message GetUserPokemonResponse {
   repeated string pokemon_ids = 1;
 }
+
+// スターターポケモン選択リクエスト
+message ChooseStarterRequest {
+  string user_id = 1;
+  string pokemon_id = 2;
+}
+
+// スターターポケモン選択レスポンス
+message ChooseStarterResponse {}

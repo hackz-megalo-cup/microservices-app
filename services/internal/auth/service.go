@@ -371,6 +371,50 @@ func (s *Service) insertOutboxEvents(ctx context.Context, tx pgx.Tx, agg *UserAg
 	return nil
 }
 
+// starterPokemonIDs is the set of allowed starter Pokémon.
+var starterPokemonIDs = map[string]bool{
+	"00000000-0000-0000-0000-000000000001": true, // Go
+	"00000000-0000-0000-0000-000000000002": true, // Python
+	"00000000-0000-0000-0000-000000000009": true, // Whitespace
+}
+
+// ChooseStarter registers a starter Pokémon for a new user.
+func (s *Service) ChooseStarter(ctx context.Context, req *connect.Request[authv1.ChooseStarterRequest]) (*connect.Response[authv1.ChooseStarterResponse], error) {
+	userID := req.Msg.GetUserId()
+	pokemonID := req.Msg.GetPokemonId()
+
+	if userID == "" || pokemonID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id and pokemon_id are required"))
+	}
+	if !starterPokemonIDs[pokemonID] {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid starter pokemon_id: %s", pokemonID))
+	}
+
+	// Guard: user must not already own any pokemon (idempotent for same starter)
+	if s.pool != nil {
+		var count int
+		if err := s.pool.QueryRow(ctx, `SELECT COUNT(*) FROM user_pokemon WHERE user_id = $1`, userID).Scan(&count); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to check existing pokemon: %w", err))
+		}
+		if count > 0 {
+			var exists bool
+			if err := s.pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM user_pokemon WHERE user_id = $1 AND pokemon_id = $2)`, userID, pokemonID).Scan(&exists); err != nil {
+				return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to check starter ownership: %w", err))
+			}
+			if exists {
+				return connect.NewResponse(&authv1.ChooseStarterResponse{}), nil
+			}
+			return nil, connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("user already has a starter pokemon"))
+		}
+	}
+
+	if err := s.RegisterPokemon(ctx, userID, pokemonID); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to register starter pokemon: %w", err))
+	}
+
+	return connect.NewResponse(&authv1.ChooseStarterResponse{}), nil
+}
+
 func (s *Service) requireWriteDependencies() error {
 	if s.eventStore == nil || s.pool == nil {
 		return fmt.Errorf("database not configured")

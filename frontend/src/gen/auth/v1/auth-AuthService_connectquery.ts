@@ -31,3 +31,10 @@ export const getUserProfile = AuthService.method.getUserProfile;
  * @generated from rpc auth.v1.AuthService.GetUserPokemon
  */
 export const getUserPokemon = AuthService.method.getUserPokemon;
+
+/**
+ * スターターポケモン選択
+ *
+ * @generated from rpc auth.v1.AuthService.ChooseStarter
+ */
+export const chooseStarter = AuthService.method.chooseStarter;

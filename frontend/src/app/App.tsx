@@ -13,6 +13,7 @@ import {
 import { ApiTestPage } from "../features/api-test/components/api-test-page";
 import { LoginPage } from "../features/auth/components/login-page";
 import { RequireAuth } from "../features/auth/components/require-auth";
+import { StarterSelect } from "../features/auth/components/starter-select";
 import { BattlePage } from "../features/battle/components/battle-page";
 import { RaidTestPage } from "../features/raid-test/components/raid-test-page";
 import { Capture } from "../features/showcase/components/capture";
@@ -28,6 +29,14 @@ export function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/starter-select"
+          element={
+            <RequireAuth>
+              <StarterSelect />
+            </RequireAuth>
+          }
+        />
         <Route
           path="/"
           element={
