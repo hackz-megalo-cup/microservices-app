@@ -2,8 +2,8 @@ import { createClient } from "@connectrpc/connect";
 import { useQuery, useTransport } from "@connectrpc/connect-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
-import { getActivePokemon } from "../../../gen/lobby/v1/lobby-LobbyService_connectquery";
 import { LobbyService } from "../../../gen/lobby/v1/lobby_pb";
+import { getActivePokemon } from "../../../gen/lobby/v1/lobby-LobbyService_connectquery";
 import { getPokemon } from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 import { adaptPokemonToUi } from "../api/pokemon";
 
@@ -51,6 +51,7 @@ export function useActivePokemon(userId: string) {
     error,
     setActivePokemon: setActivePokemonMutation.mutate,
     isSettingPokemon: setActivePokemonMutation.isPending,
-    setError: setActivePokemonMutation.error instanceof Error ? setActivePokemonMutation.error : null,
+    setError:
+      setActivePokemonMutation.error instanceof Error ? setActivePokemonMutation.error : null,
   };
 }

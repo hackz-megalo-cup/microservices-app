@@ -1,10 +1,10 @@
 import { useState } from "react";
 import "../../../styles/global.css";
 import { useAuthContext } from "../../../lib/auth";
+import { getPokemonImageUrl } from "../api/pokemon";
 import { useActivePokemon } from "../hooks/use-active-pokemon";
 import { useLobbyOverview } from "../hooks/use-lobby-overview";
 import { useOpenRaids } from "../hooks/use-open-raids";
-import { getPokemonImageUrl } from "../api/pokemon";
 import { RaidCard } from "./ui/raid-card";
 import { TabBar } from "./ui/tab-bar";
 
@@ -140,17 +140,17 @@ export function Home() {
       {showPokemonSelector && (
         <div
           className="fixed inset-0 bg-black/60 z-50 flex items-end"
-          onClick={() => setShowPokemonSelector(false)}
+          onClick={(e) => {
+            if (e.target === e.currentTarget) {
+              setShowPokemonSelector(false);
+            }
+          }}
           onKeyDown={(e) => e.key === "Escape" && setShowPokemonSelector(false)}
           role="dialog"
           aria-modal="true"
           aria-label="ポケモン選択"
         >
-          <div
-            className="w-full bg-bg-primary rounded-t-3xl p-6 max-h-[70vh] flex flex-col gap-4"
-            onClick={(e) => e.stopPropagation()}
-            onKeyDown={(e) => e.stopPropagation()}
-          >
+          <div className="w-full bg-bg-primary rounded-t-3xl p-6 max-h-[70vh] flex flex-col gap-4">
             <div className="flex items-center justify-between">
               <span className="text-sm font-bold tracking-widest text-text-secondary">
                 ポケモン選択
