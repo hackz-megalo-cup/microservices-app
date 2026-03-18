@@ -1,10 +1,11 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { useNavigate } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import type { Item } from "../../../gen/masterdata/v1/masterdata_pb";
 import { useAuthContext } from "../../../lib/auth";
 import "../../../styles/global.css";
 import "./capture.css";
 import { useCaptureItems } from "../hooks/use-capture-items";
+import { useCaptureSession } from "../hooks/use-capture-session";
 import { NavBar } from "./ui/nav-bar";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -23,7 +24,7 @@ type Particle = {
 // ── Constants ────────────────────────────────────────────────────────────────
 
 const POKEMON_NAME = "Python";
-const BASE_CATCH_RATE = 0.45;
+const DEFAULT_CATCH_RATE = 0.3;
 const CIRCLE_CYCLE_MS = 2500;
 const PARTICLE_COLORS = ["#06b6d4", "#22c55e", "#f59e0b", "#ec4899", "#a855f7", "#f97316"];
 
@@ -114,16 +115,31 @@ function makeParticles(): Particle[] {
 
 export function Capture() {
   const navigate = useNavigate();
+  const { id: sessionId = "" } = useParams<{ id: string }>();
   const { user } = useAuthContext();
   const userId = user?.id ?? "";
+
+  const {
+    session,
+    isLoading: isSessionLoading,
+    error: sessionError,
+    refetch: refetchSession,
+    useItemMutation,
+    throwBallMutation,
+    endSessionMutation,
+  } = useCaptureSession(sessionId);
+
   const {
     availableItems,
-    isLoading,
-    error,
-    handleUseItem: handleUseItemApi,
+    isLoading: isItemsLoading,
+    error: itemsError,
     isPending: isMutationPending,
-    refetch,
+    refetch: refetchItems,
   } = useCaptureItems(userId);
+
+  // Track displayed catch rate (updated optimistically after UseItem)
+  const [displayRate, setDisplayRate] = useState<number | null>(null);
+  const catchRate = displayRate ?? session?.currentRate ?? DEFAULT_CATCH_RATE;
 
   // Game state
   const [phase, setPhase] = useState<Phase>("idle");
@@ -192,59 +208,81 @@ export function Capture() {
 
   // ── Throw logic ──
   const doThrow = useCallback(
-    (bonus: number, itemId?: string) => {
+    (itemId?: string) => {
       if (phaseRef.current !== "idle") {
         return;
       }
 
-      const throwBonus = getThrowBonus(circleScale);
-      setThrowBonus(throwBonus);
-      const ballDx = 0; // Subtle horizontal arc
-      ballDxRef.current = ballDx * 0.4;
+      const bonus = getThrowBonus(circleScale);
+      setThrowBonus(bonus);
+      ballDxRef.current = 0;
 
-      // If item is selected, use it
-      if (itemId) {
-        handleUseItemApi(itemId, bonus);
-      }
-
-      // Start throw phase
       setPokemonClass("capture-pokemon-absorb");
       setPhase("throwing");
 
-      // After throw animation finishes → wobble phase
-      const t1 = window.setTimeout(() => {
+      // Fire API calls and minimum animation timer in parallel
+      const apiPromise: Promise<string> = (async () => {
+        if (itemId) {
+          try {
+            const useItemRes = await useItemMutation.mutateAsync({ itemId });
+            setDisplayRate(useItemRes.rateAfter);
+            // Refresh item list since CaptureService.UseItem consumes the item internally
+            void refetchItems();
+            if (useItemRes.escaped) {
+              return "escaped";
+            }
+          } catch {
+            // UseItem failed — continue with throw without item effect
+          }
+        }
+        try {
+          const res = await throwBallMutation.mutateAsync();
+          return res.result; // "success" | "fail"
+        } catch {
+          return "fail";
+        }
+      })();
+
+      // Ensure throw animation completes before showing result
+      const animPromise = new Promise<void>((resolve) => {
+        const tid = window.setTimeout(resolve, THROW_DURATION_MS);
+        timeoutIdsRef.current.push(tid);
+      });
+
+      void Promise.all([apiPromise, animPromise]).then(([result]) => {
+        if (phaseRef.current !== "throwing") {
+          return;
+        }
+
         const wobbles = Math.floor(Math.random() * 3) + 1;
         setWobbleCount(wobbles);
         setPhase("wobbling");
 
-        // After wobbling → result
         const wobbleDuration = WOBBLE_DURATIONS[wobbles];
-        const t2 = window.setTimeout(() => {
-          const effectiveBonus = itemId
-            ? getCatchBonus(throwBonus) * (1 + bonus)
-            : getCatchBonus(throwBonus);
-          const effectiveRate = BASE_CATCH_RATE * effectiveBonus;
-          const success = Math.random() < effectiveRate;
-
-          if (success) {
+        const tid2 = window.setTimeout(() => {
+          if (result === "success") {
             setParticles(makeParticles());
             setPhase("success");
+            endSessionMutation.mutate();
+          } else if (result === "escaped") {
+            setPokemonClass("capture-pokemon-escape");
+            setPhase("escaped");
+            endSessionMutation.mutate();
           } else {
-            // Ball bursts open
+            // "fail" — pokemon broke free; session is now closed
             setPhase("burst");
-            const t3 = window.setTimeout(() => {
-              const fled = Math.random() < 0.35;
-              setPokemonClass(fled ? "capture-pokemon-escape" : "capture-pokemon-breakfree");
-              setPhase(fled ? "escaped" : "failed");
+            const tid3 = window.setTimeout(() => {
+              setPokemonClass("capture-pokemon-breakfree");
+              setPhase("failed");
+              endSessionMutation.mutate();
             }, BURST_DURATION_MS);
-            timeoutIdsRef.current.push(t3);
+            timeoutIdsRef.current.push(tid3);
           }
         }, wobbleDuration + WOBBLE_DELAY_MS);
-        timeoutIdsRef.current.push(t2);
-      }, THROW_DURATION_MS);
-      timeoutIdsRef.current.push(t1);
+        timeoutIdsRef.current.push(tid2);
+      });
     },
-    [circleScale, handleUseItemApi],
+    [circleScale, useItemMutation, throwBallMutation, endSessionMutation, refetchItems],
   );
 
   // ── Pointer handlers ──
@@ -280,13 +318,11 @@ export function Capture() {
 
     // Throw when swiped upward fast enough or dragged up far enough
     if (vy < -THROW_VELOCITY_THRESHOLD || dy < -THROW_DRAG_THRESHOLD) {
-      // Check if item is selected
       if (selectedItemForThrow) {
-        doThrow(selectedItemForThrow.bonus, selectedItemForThrow.itemId);
+        doThrow(selectedItemForThrow.itemId);
         setSelectedItemForThrow(null);
       } else {
-        // Just throw without item
-        doThrow(0);
+        doThrow();
       }
     }
   };
@@ -297,21 +333,15 @@ export function Capture() {
     setShowItemModal(false);
   };
 
-  // ── Retry ──
-  const retry = () => {
-    cancelAnimationFrame(animFrameRef.current);
-    timeoutIdsRef.current.forEach(clearTimeout);
-    timeoutIdsRef.current = [];
-    setPhase("idle");
-    setThrowBonus("normal");
-    setWobbleCount(0);
-    setBallDragOffset({ x: 0, y: 0 });
-    setParticles([]);
-    setPokemonClass("capture-pokemon-idle");
-    setSelectedItemForThrow(null);
+  // ── Retry (reset UI only — session is closed after fail, so this navigates back) ──
+  const goBack = () => {
+    void navigate(-1);
   };
 
   // ── Loading / Error states ──
+  const isLoading = isSessionLoading || isItemsLoading;
+  const error = sessionError ?? itemsError;
+
   if (isLoading) {
     return (
       <div className="showcase-screen">
@@ -332,7 +362,10 @@ export function Capture() {
           <button
             type="button"
             className="bg-bg-card text-text-primary rounded-full px-4 py-2 border-none cursor-pointer"
-            onClick={() => void refetch()}
+            onClick={() => {
+              refetchSession();
+              void refetchItems();
+            }}
           >
             Retry
           </button>
@@ -342,8 +375,8 @@ export function Capture() {
   }
 
   // ── Derived values ──
-  const ringColor = getRingColor(BASE_CATCH_RATE);
-  const catchPercent = Math.round(BASE_CATCH_RATE * getCatchBonus(throwBonus) * 100);
+  const ringColor = getRingColor(catchRate * getCatchBonus(throwBonus));
+  const catchPercent = Math.round(catchRate * getCatchBonus(throwBonus) * 100);
   const bonusLabel = makeBonusLabel(throwBonus);
   const showRings = phase === "idle" || phase === "throwing";
   const showBall =
@@ -498,29 +531,27 @@ export function Capture() {
           </div>
         )}
 
-        {/* Result overlay — Failed / Escaped */}
-        {(phase === "failed" || phase === "escaped") && (
+        {/* Result overlay — Failed */}
+        {phase === "failed" && (
           <div className="capture-result">
-            <div className="capture-result-emoji">{phase === "escaped" ? "💨" : "😤"}</div>
-            <div className="capture-result-title">
-              {phase === "escaped" ? "Oh no!" : "It broke free!"}
-            </div>
-            <div className="capture-result-subtitle">
-              {phase === "escaped" ? `${POKEMON_NAME} fled away!` : "Keep trying!"}
-            </div>
-            {phase === "escaped" ? (
-              <button
-                type="button"
-                className="capture-result-btn"
-                onClick={() => void navigate(-1)}
-              >
-                Go Back
-              </button>
-            ) : (
-              <button type="button" className="capture-result-btn" onClick={retry}>
-                Try Again
-              </button>
-            )}
+            <div className="capture-result-emoji">😤</div>
+            <div className="capture-result-title">It broke free!</div>
+            <div className="capture-result-subtitle">The session has ended.</div>
+            <button type="button" className="capture-result-btn" onClick={goBack}>
+              Go Back
+            </button>
+          </div>
+        )}
+
+        {/* Result overlay — Escaped */}
+        {phase === "escaped" && (
+          <div className="capture-result">
+            <div className="capture-result-emoji">💨</div>
+            <div className="capture-result-title">Oh no!</div>
+            <div className="capture-result-subtitle">{POKEMON_NAME} fled away!</div>
+            <button type="button" className="capture-result-btn" onClick={goBack}>
+              Go Back
+            </button>
           </div>
         )}
 
@@ -531,7 +562,7 @@ export function Capture() {
               type="button"
               className="capture-item-btn"
               onClick={() => setShowItemModal(true)}
-              disabled={isMutationPending}
+              disabled={isMutationPending || useItemMutation.isPending || throwBallMutation.isPending}
             >
               {selectedItemForThrow ? "✓ Item Ready" : "🍓 Use Item"}
             </button>
