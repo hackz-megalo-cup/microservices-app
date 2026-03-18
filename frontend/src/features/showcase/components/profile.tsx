@@ -1,5 +1,5 @@
 import "../../../styles/global.css";
-import { useAuthContext } from "../../auth/hooks/use-auth-context";
+import { useAuthContext } from "../../../lib/auth";
 import { TabBar } from "./ui/tab-bar";
 
 export function Profile() {
