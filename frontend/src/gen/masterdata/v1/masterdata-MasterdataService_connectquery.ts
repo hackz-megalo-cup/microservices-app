@@ -20,6 +20,16 @@ export const getPokemon = MasterdataService.method.getPokemon;
 export const listPokemon = MasterdataService.method.listPokemon;
 
 /**
+ * @generated from rpc masterdata.v1.MasterdataService.UpdatePokemon
+ */
+export const updatePokemon = MasterdataService.method.updatePokemon;
+
+/**
+ * @generated from rpc masterdata.v1.MasterdataService.DeletePokemon
+ */
+export const deletePokemon = MasterdataService.method.deletePokemon;
+
+/**
  * @generated from rpc masterdata.v1.MasterdataService.CreateTypeMatchup
  */
 export const createTypeMatchup = MasterdataService.method.createTypeMatchup;
@@ -28,6 +38,16 @@ export const createTypeMatchup = MasterdataService.method.createTypeMatchup;
  * @generated from rpc masterdata.v1.MasterdataService.ListTypeMatchups
  */
 export const listTypeMatchups = MasterdataService.method.listTypeMatchups;
+
+/**
+ * @generated from rpc masterdata.v1.MasterdataService.UpdateTypeMatchup
+ */
+export const updateTypeMatchup = MasterdataService.method.updateTypeMatchup;
+
+/**
+ * @generated from rpc masterdata.v1.MasterdataService.DeleteTypeMatchup
+ */
+export const deleteTypeMatchup = MasterdataService.method.deleteTypeMatchup;
 
 /**
  * @generated from rpc masterdata.v1.MasterdataService.CreateItem
@@ -43,3 +63,13 @@ export const getItem = MasterdataService.method.getItem;
  * @generated from rpc masterdata.v1.MasterdataService.ListItems
  */
 export const listItems = MasterdataService.method.listItems;
+
+/**
+ * @generated from rpc masterdata.v1.MasterdataService.UpdateItem
+ */
+export const updateItem = MasterdataService.method.updateItem;
+
+/**
+ * @generated from rpc masterdata.v1.MasterdataService.DeleteItem
+ */
+export const deleteItem = MasterdataService.method.deleteItem;
