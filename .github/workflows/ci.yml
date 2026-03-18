@@ -31,6 +31,7 @@ jobs:
       masterdata: ${{ steps.filter.outputs.masterdata }}
       projector: ${{ steps.filter.outputs.projector }}
       raid_lobby: ${{ steps.filter.outputs.raid_lobby }}
+      capture: ${{ steps.filter.outputs.capture }}
       go_binary_attrs: ${{ steps.targets.outputs.go_binary_attrs }}
       image_attrs: ${{ steps.targets.outputs.image_attrs }}
     steps:
@@ -81,6 +82,11 @@ jobs:
               - 'services/internal/raid_lobby/**'
               - 'proto/raid_lobby/**'
               - 'services/gen/go/raid_lobby/**'
+            capture:
+              - 'services/cmd/capture/**'
+              - 'services/internal/capture/**'
+              - 'proto/capture/**'
+              - 'services/gen/go/capture/**'
             frontend:
               - 'frontend/**'
             node:
@@ -105,10 +111,11 @@ jobs:
           MASTERDATA_CHANGED: ${{ steps.filter.outputs.masterdata }}
           PROJECTOR_CHANGED: ${{ steps.filter.outputs.projector }}
           RAID_LOBBY_CHANGED: ${{ steps.filter.outputs.raid_lobby }}
+          CAPTURE_CHANGED: ${{ steps.filter.outputs.capture }}
         run: |
           set -euo pipefail
 
-          go_services=(caller gateway greeter item masterdata projector raid-lobby)
+          go_services=(caller gateway greeter item masterdata projector raid-lobby capture)
           release_images=(
             .#auth-service-image
             .#custom-lang-service-image
@@ -120,6 +127,7 @@ jobs:
             .#masterdata-image
             .#projector-image
             .#raid-lobby-image
+            .#capture-image
           )
 
           declare -A selected_go=()
@@ -156,16 +164,21 @@ jobs:
             if [[ "$ITEM_CHANGED" == "true" ]]; then
               add_go item
               add_go projector
+              add_go capture
             fi
             if [[ "$MASTERDATA_CHANGED" == "true" ]]; then
               add_go masterdata
               add_go raid-lobby
+              add_go capture
             fi
             if [[ "$PROJECTOR_CHANGED" == "true" ]]; then
               add_go projector
             fi
             if [[ "$RAID_LOBBY_CHANGED" == "true" ]]; then
               add_go raid-lobby
+            fi
+            if [[ "$CAPTURE_CHANGED" == "true" ]]; then
+              add_go capture
             fi
           fi
 
@@ -205,6 +218,7 @@ jobs:
             .#masterdata-image
             .#projector-image
             .#raid-lobby-image
+            .#capture-image
           )
           for attr in "${pr_image_order[@]}"; do
             if [[ -n "${selected_pr_images[$attr]:-}" ]]; then
@@ -354,6 +368,7 @@ jobs:
             caller gateway greeter
             frontend
             item masterdata projector raid-lobby
+            capture
           )
           export REGISTRY_AUTH_FILE="$RUNNER_TEMP/containers-auth.json"
           echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin --authfile "$REGISTRY_AUTH_FILE"

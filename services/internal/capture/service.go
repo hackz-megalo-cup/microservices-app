@@ -128,17 +128,7 @@ func (s *Service) UseItem(ctx context.Context, req *connect.Request[pb.UseItemRe
 		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("session is not pending (result: %s)", agg.Result))
 	}
 
-	// Consume item from inventory
-	if s.itemClient != nil {
-		_, err := s.itemClient.UseItem(ctx, connect.NewRequest(&itempb.UseItemRequest{
-			UserId: agg.UserID, ItemId: itemID, Quantity: 1,
-		}))
-		if err != nil {
-			return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("failed to use item: %w", err))
-		}
-	}
-
-	// Get item metadata from masterdata
+	// Get item metadata from masterdata (before consuming item to avoid inventory loss on failure)
 	var itemName, targetType string
 	var captureRateBonus float64
 	if s.masterdataClient != nil {
@@ -160,6 +150,16 @@ func (s *Service) UseItem(ctx context.Context, req *connect.Request[pb.UseItemRe
 			slog.Warn("failed to get pokemon metadata", "pokemon_id", agg.PokemonID, "error", err)
 		} else {
 			bossType = pokemonResp.Msg.GetPokemon().GetType()
+		}
+	}
+
+	// Consume item from inventory (after metadata lookup so no loss on metadata failure)
+	if s.itemClient != nil {
+		_, err := s.itemClient.UseItem(ctx, connect.NewRequest(&itempb.UseItemRequest{
+			UserId: agg.UserID, ItemId: itemID, Quantity: 1,
+		}))
+		if err != nil {
+			return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("failed to use item: %w", err))
 		}
 	}
 

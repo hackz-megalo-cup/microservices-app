@@ -135,6 +135,14 @@
                 "raid_lobby"
               ];
             };
+            capture = {
+              internals = [ "capture" ];
+              gen = [
+                "capture"
+                "item"
+                "masterdata"
+              ];
+            };
           };
           goServiceSource =
             name:
@@ -199,6 +207,7 @@
               "cmd/masterdata"
               "cmd/projector"
               "cmd/raid-lobby"
+              "cmd/capture"
             ];
           };
 
@@ -242,6 +251,10 @@
           raid-lobby = buildGoService "raid-lobby";
           raid-lobby-image = buildGoServiceImage "raid-lobby" raid-lobby;
           raid-lobby-release-image = buildGoServiceImage "raid-lobby" go-services;
+
+          capture = buildGoService "capture";
+          capture-image = buildGoServiceImage "capture" capture;
+          capture-release-image = buildGoServiceImage "capture" go-services;
 
           buildNodeService =
             name: nodeModules:
@@ -447,6 +460,9 @@
           packages.raid-lobby = raid-lobby;
           packages.raid-lobby-image = raid-lobby-image;
           packages.raid-lobby-release-image = raid-lobby-release-image;
+          packages.capture = capture;
+          packages.capture-image = capture-image;
+          packages.capture-release-image = capture-release-image;
         };
     };
 }
