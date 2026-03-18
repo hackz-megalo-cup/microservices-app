@@ -101,18 +101,23 @@ func (s *Service) GetActivePokemon(ctx context.Context, req *connect.Request[pb.
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id is required"))
 	}
 
+	// NOTE: If lobbyDB is nil (LOBBY_DATABASE_URL not set or connection failed at startup),
+	// this RPC returns an internal error rather than silently returning an empty pokemon_id.
+	// Ensure LOBBY_DATABASE_URL is always configured in production.
+	if s.lobbyDB == nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("lobby database unavailable"))
+	}
+
 	var pokemonID string
-	if s.lobbyDB != nil {
-		err := s.lobbyDB.QueryRow(ctx,
-			`SELECT pokemon_id FROM user_active_pokemon WHERE user_id = $1`,
-			userID,
-		).Scan(&pokemonID)
-		if err != nil {
-			if errors.Is(err, pgx.ErrNoRows) {
-				return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("no active pokemon set"))
-			}
-			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get active pokemon: %w", err))
+	err := s.lobbyDB.QueryRow(ctx,
+		`SELECT pokemon_id FROM user_active_pokemon WHERE user_id = $1`,
+		userID,
+	).Scan(&pokemonID)
+	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("no active pokemon set"))
 		}
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get active pokemon: %w", err))
 	}
 
 	return connect.NewResponse(&pb.GetActivePokemonResponse{PokemonId: pokemonID}), nil
