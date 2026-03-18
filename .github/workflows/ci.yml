@@ -113,13 +113,13 @@ jobs:
             .#auth-service-image
             .#custom-lang-service-image
             .#frontend-image
-            .#caller-release-image
-            .#gateway-release-image
-            .#greeter-release-image
-            .#item-release-image
-            .#masterdata-release-image
-            .#projector-release-image
-            .#raid-lobby-release-image
+            .#caller-image
+            .#gateway-image
+            .#greeter-image
+            .#item-image
+            .#masterdata-image
+            .#projector-image
+            .#raid-lobby-image
           )
 
           declare -A selected_go=()
@@ -358,13 +358,7 @@ jobs:
           export REGISTRY_AUTH_FILE="$RUNNER_TEMP/containers-auth.json"
           echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin --authfile "$REGISTRY_AUTH_FILE"
           for svc in "${services[@]}"; do
-            image_attr="${svc}-image"
-            case "$svc" in
-              caller|gateway|greeter|item|masterdata|projector|raid-lobby)
-                image_attr="${svc}-release-image"
-                ;;
-            esac
-            nix run .#${image_attr}.copyTo -- \
+            nix run .#${svc}-image.copyTo -- \
               --authfile "$REGISTRY_AUTH_FILE" \
               docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }}
             if [ "$GITHUB_REF" = "refs/heads/main" ]; then
