@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import "../../../styles/global.css";
 import { useAuthContext } from "../../../lib/auth";
 import { getPokemonImageUrl } from "../api/pokemon";
@@ -29,6 +29,14 @@ export function Home() {
   } = useActivePokemon(userId);
 
   const [showPokemonSelector, setShowPokemonSelector] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  // Focus dialog when opened to enable Escape key handling
+  useEffect(() => {
+    if (showPokemonSelector && dialogRef.current) {
+      dialogRef.current.focus();
+    }
+  }, [showPokemonSelector]);
 
   const caughtPokemon = pokedex.filter((entry) => entry.caught);
   const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
@@ -139,6 +147,7 @@ export function Home() {
       {/* Pokemon Selector Sheet */}
       {showPokemonSelector && (
         <div
+          ref={dialogRef}
           className="fixed inset-0 bg-black/60 z-50 flex items-end"
           onClick={(e) => {
             if (e.target === e.currentTarget) {
@@ -149,6 +158,7 @@ export function Home() {
           role="dialog"
           aria-modal="true"
           aria-label="ポケモン選択"
+          tabIndex={-1}
         >
           <div className="w-full bg-bg-primary rounded-t-3xl p-6 max-h-[70vh] flex flex-col gap-4">
             <div className="flex items-center justify-between">
