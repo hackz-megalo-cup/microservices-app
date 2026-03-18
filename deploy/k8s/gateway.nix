@@ -89,6 +89,11 @@ in
               "watch"
             ];
           }
+          {
+            apiGroups = [ "allocation.agones.dev" ];
+            resources = [ "gameserverallocations" ];
+            verbs = [ "create" ];
+          }
         ];
       };
 
