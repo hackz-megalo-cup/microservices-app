@@ -33,6 +33,18 @@ in
                 name = "lobby-secrets";
                 key = "KAFKA_BROKERS";
               };
+              ITEM_DATABASE_URL.valueFrom.secretKeyRef = {
+                name = "lobby-secrets";
+                key = "ITEM_DATABASE_URL";
+              };
+              RAID_LOBBY_DATABASE_URL.valueFrom.secretKeyRef = {
+                name = "lobby-secrets";
+                key = "RAID_LOBBY_DATABASE_URL";
+              };
+              MASTERDATA_URL.valueFrom.secretKeyRef = {
+                name = "lobby-secrets";
+                key = "MASTERDATA_URL";
+              };
             };
 
             livenessProbe = {

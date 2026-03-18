@@ -18,6 +18,7 @@ import (
 	"golang.org/x/net/http2/h2c"
 
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/lobby/v1/lobbyv1connect"
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1/masterdatav1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/lobby"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
@@ -69,6 +70,34 @@ func run() error {
 	// --- Event Store ---
 	eventStore := platform.NewEventStore(dbPool)
 
+	// --- Secondary DB pools (read-only: item and raid-lobby read models) ---
+	itemDB, err := platform.NewDBPool(ctx, os.Getenv("ITEM_DATABASE_URL"))
+	if err != nil {
+		slog.WarnContext(ctx, "item DB unavailable, item data will be empty", "error", err)
+		itemDB = nil
+	}
+	if itemDB != nil {
+		defer itemDB.Close()
+	}
+
+	raidLobbyDB, err := platform.NewDBPool(ctx, os.Getenv("RAID_LOBBY_DATABASE_URL"))
+	if err != nil {
+		slog.WarnContext(ctx, "raid-lobby DB unavailable, raid data will be empty", "error", err)
+		raidLobbyDB = nil
+	}
+	if raidLobbyDB != nil {
+		defer raidLobbyDB.Close()
+	}
+
+	// --- Masterdata client ---
+	var masterdataClient masterdatav1connect.MasterdataServiceClient
+	if masterdataURL := os.Getenv("MASTERDATA_URL"); masterdataURL != "" {
+		masterdataClient = masterdatav1connect.NewMasterdataServiceClient(
+			platform.NewInstrumentedHTTPClient(3*time.Second),
+			masterdataURL,
+		)
+	}
+
 	// --- Compensation (saga rollback handler) ---
 	compensation := platform.NewCompensationRouter()
 	compensation.Handle(platform.TopicLobbyFailed, func(ctx context.Context, event platform.Event) error {
@@ -108,7 +137,7 @@ func run() error {
 	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
 
 	// --- Service ---
-	svc := lobby.NewService(eventStore, outbox)
+	svc := lobby.NewService(eventStore, outbox, itemDB, raidLobbyDB, masterdataClient)
 
 	// --- Connect-RPC Handler with interceptors ---
 	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
