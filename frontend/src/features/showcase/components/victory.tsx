@@ -13,7 +13,7 @@ export function Victory() {
   return (
     <div className="showcase-screen items-center gap-8 pt-12 px-6 pb-6">
       <img
-        src="/images/victory-trophy.png"
+        src="/images/capture-python.png"
         alt="Trophy"
         className="w-[120px] h-[120px] rounded-full object-cover"
       />

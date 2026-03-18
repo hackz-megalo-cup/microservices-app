@@ -30,8 +30,13 @@ export function Home() {
         style={{ background: "radial-gradient(circle, var(--color-accent-glow), transparent)" }}
       >
         <img
+<<<<<<< claude/issue-166-20260318-1614
           src={pokemonImage}
           alt={pokemonName}
+=======
+          src="/images/capture-python.png"
+          alt="Python"
+>>>>>>> main
           className="w-[200px] h-[200px] rounded-full object-cover"
         />
         <h1 className="text-2xl font-bold text-text-primary m-0">{pokemonName}</h1>
