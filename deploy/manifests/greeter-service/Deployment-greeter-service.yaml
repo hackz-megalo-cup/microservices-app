@@ -37,7 +37,7 @@ spec:
               value: greeter-service
             - name: PORT
               value: "8080"
-          image: ghcr.io/hackz-megalo-cup/greeter:fcaa7850c7c17dea4cfba57a12165042bc68bc0f
+          image: ghcr.io/hackz-megalo-cup/greeter:1d740dfbe3e08e56dbdfbbe352b5aeb4064ba924
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
