@@ -17,8 +17,6 @@ spec:
     spec:
       containers:
         - env:
-            - name: CUSTOM_LANG_BASE_URL
-              value: http://custom-lang-service.microservices:3000
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:

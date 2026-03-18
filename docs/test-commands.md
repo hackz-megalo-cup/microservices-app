@@ -79,7 +79,7 @@ kubectl exec -n observability tempo-0 -- \
 正しく分散トレーシングが動いている場合、1 つのトレースに複数サービスの batch が含まれる:
 
 - **Greeter → Caller**: greeter-service と caller-service のスパンが同一 traceID で parent-child 関係になる
-- **Gateway → Custom-Lang**: gateway-service と custom-lang-service のスパンが同一 traceID で parent-child 関係になる
+- **Gateway**: gateway-service のスパンが含まれる
 
 link だけで繋がっている場合は `otelconnect.WithTrustRemote()` または `otelhttp.NewTransport` の設定が漏れている。
 
@@ -132,9 +132,6 @@ kubectl exec -n database postgresql-0 -c postgresql -- \
 
 kubectl exec -n database postgresql-0 -c postgresql -- \
   env PGPASSWORD=devpass psql -U devuser -d auth_db -c "\dt"
-
-kubectl exec -n database postgresql-0 -c postgresql -- \
-  env PGPASSWORD=devpass psql -U devuser -d lang_db -c "\dt"
 
 # Check migration status
 kubectl exec -n database postgresql-0 -c postgresql -- \
