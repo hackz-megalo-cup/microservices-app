@@ -8,6 +8,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"strings"
 	"time"
 
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
@@ -113,7 +114,7 @@ func (h *AllocateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	address := result.Status.Address
 	port := result.Status.Ports[0].Port
 
-	certHash, err := h.fetchCertHash(r.Context(), address, port)
+	certHash, err := h.resolveCertHash(r.Context(), result)
 	if err != nil {
 		slog.Error("failed to fetch cert hash", "error", err, "address", address, "port", port)
 		http.Error(w, "failed to fetch cert hash from game server", http.StatusInternalServerError)
@@ -128,6 +129,38 @@ func (h *AllocateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	}); err != nil {
 		slog.Error("failed to encode response", "error", err)
 	}
+}
+
+func (h *AllocateHandler) resolveCertHash(ctx context.Context, result *allocationv1.GameServerAllocation) (string, error) {
+	if metadata := result.Status.Metadata; metadata != nil {
+		if certHash := strings.TrimSpace(metadata.Annotations["cert-hash"]); certHash != "" {
+			return certHash, nil
+		}
+	}
+
+	if name := result.Status.GameServerName; name != "" {
+		gs, err := h.agonesClient.AgonesV1().GameServers(h.namespace).Get(ctx, name, metav1.GetOptions{})
+		if err != nil {
+			return "", fmt.Errorf("get game server %q: %w", name, err)
+		}
+		if certHash := strings.TrimSpace(gs.Annotations["cert-hash"]); certHash != "" {
+			return certHash, nil
+		}
+	}
+
+	address := result.Status.Address
+	if len(result.Status.Ports) == 0 {
+		return "", fmt.Errorf("allocated game server has no ports")
+	}
+	port := result.Status.Ports[0].Port
+	certHash, err := h.fetchCertHash(ctx, address, port)
+	if err != nil {
+		return "", err
+	}
+	if certHash = strings.TrimSpace(certHash); certHash == "" {
+		return "", fmt.Errorf("cert hash is empty")
+	}
+	return certHash, nil
 }
 
 func (h *AllocateHandler) fetchCertHash(ctx context.Context, address string, port int32) (string, error) {
