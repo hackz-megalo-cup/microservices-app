@@ -298,6 +298,7 @@ type UseItemResponse struct {
 	RateBefore    float64                `protobuf:"fixed64,1,opt,name=rate_before,json=rateBefore,proto3" json:"rate_before,omitempty"`
 	RateAfter     float64                `protobuf:"fixed64,2,opt,name=rate_after,json=rateAfter,proto3" json:"rate_after,omitempty"`
 	Escaped       bool                   `protobuf:"varint,3,opt,name=escaped,proto3" json:"escaped,omitempty"`
+	FlavorText    string                 `protobuf:"bytes,4,opt,name=flavor_text,json=flavorText,proto3" json:"flavor_text,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -351,6 +352,13 @@ func (x *UseItemResponse) GetEscaped() bool {
 		return x.Escaped
 	}
 	return false
+}
+
+func (x *UseItemResponse) GetFlavorText() string {
+	if x != nil {
+		return x.FlavorText
+	}
+	return ""
 }
 
 type ThrowBallRequest struct {
@@ -561,13 +569,15 @@ const file_capture_v1_capture_proto_rawDesc = "" +
 	"\x0eUseItemRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x17\n" +
-	"\aitem_id\x18\x02 \x01(\tR\x06itemId\"k\n" +
+	"\aitem_id\x18\x02 \x01(\tR\x06itemId\"\x8c\x01\n" +
 	"\x0fUseItemResponse\x12\x1f\n" +
 	"\vrate_before\x18\x01 \x01(\x01R\n" +
 	"rateBefore\x12\x1d\n" +
 	"\n" +
 	"rate_after\x18\x02 \x01(\x01R\trateAfter\x12\x18\n" +
-	"\aescaped\x18\x03 \x01(\bR\aescaped\"1\n" +
+	"\aescaped\x18\x03 \x01(\bR\aescaped\x12\x1f\n" +
+	"\vflavor_text\x18\x04 \x01(\tR\n" +
+	"flavorText\"1\n" +
 	"\x10ThrowBallRequest\x12\x1d\n" +
 	"\n" +
 	"session_id\x18\x01 \x01(\tR\tsessionId\"+\n" +
