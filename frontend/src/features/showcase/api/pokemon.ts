@@ -8,7 +8,11 @@ export function generatePokemonNumber(index: number): string {
   return `#${String(index + 1).padStart(3, "0")}`;
 }
 
-export function adaptPokemonToUi(serverPokemon: RpcPokemon, index: number): Pokemon {
+export function adaptPokemonToUi(
+  serverPokemon: RpcPokemon,
+  index: number,
+  captured = true,
+): Pokemon {
   const stats: PokemonStat[] = [
     { label: "HP", value: serverPokemon.hp },
     { label: "ATK", value: serverPokemon.attack },
@@ -34,6 +38,6 @@ export function adaptPokemonToUi(serverPokemon: RpcPokemon, index: number): Poke
     stats,
     about: "Masterdata から取得したポケモン情報です。",
     moves,
-    captured: true,
+    captured,
   };
 }
