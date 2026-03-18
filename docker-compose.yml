@@ -195,12 +195,30 @@ services:
       dockerfile: deploy/docker/frontend/Dockerfile
       args:
         VITE_API_BASE_URL: "http://localhost:30081"
+        VITE_GAME_SERVER_URL: "https://localhost:7777"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
       - "traefik.http.routers.frontend.entrypoints=web"
       - "traefik.http.routers.frontend.priority=1"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    networks:
+      - app
+
+  game-server:
+    build:
+      context: .
+      dockerfile: deploy/docker/game-server/Dockerfile
+    ports:
+      - "7777:7777/udp"
+      - "7777:7777/tcp"
+    environment:
+      LOCAL_DEV: "true"
+      PORT: "7777"
+      KAFKA_BROKERS: "redpanda:9092"
+    depends_on:
+      redpanda:
+        condition: service_healthy
     networks:
       - app
 
