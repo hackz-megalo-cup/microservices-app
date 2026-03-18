@@ -259,7 +259,7 @@
               pkgs.nginx
             ];
             text = ''
-              mkdir -p /etc /var/log/nginx
+              mkdir -p /etc /tmp /var/log/nginx
               cat > /etc/passwd <<'EOF'
               root:x:0:0:root:/root:/sbin/nologin
               nobody:x:65534:65534:nobody:/:/sbin/nologin
