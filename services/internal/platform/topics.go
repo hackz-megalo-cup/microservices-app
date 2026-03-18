@@ -42,6 +42,9 @@ const (
 
 	TopicBattleFinished = "battle.finished"
 
+	TopicLobbyFailed      = "lobby.failed"
+	TopicLobbyCompensated = "lobby.compensated"
+
 	TopicCaptureStarted     = "capture.started"
 	TopicCaptureItemUsed    = "capture.item_used"
 	TopicCaptureBallThrown  = "capture.ball_thrown"
@@ -136,6 +139,8 @@ func DefaultTopics() map[string]int32 {
 		TopicRaidBattleStarted:        3,
 		TopicRaidBattleStartedDLQ:     1,
 		TopicBattleFinished:           3,
+		TopicLobbyFailed:              1,
+		TopicLobbyCompensated:         1,
 		TopicCaptureStarted:           3,
 		TopicCaptureItemUsed:          3,
 		TopicCaptureBallThrown:        3,

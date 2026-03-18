@@ -397,6 +397,138 @@ func (x *StreamLobbyResponse) GetPayload() string {
 	return ""
 }
 
+type ListOpenRaidsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListOpenRaidsRequest) Reset() {
+	*x = ListOpenRaidsRequest{}
+	mi := &file_raid_lobby_v1_raid_lobby_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListOpenRaidsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListOpenRaidsRequest) ProtoMessage() {}
+
+func (x *ListOpenRaidsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_raid_lobby_v1_raid_lobby_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListOpenRaidsRequest.ProtoReflect.Descriptor instead.
+func (*ListOpenRaidsRequest) Descriptor() ([]byte, []int) {
+	return file_raid_lobby_v1_raid_lobby_proto_rawDescGZIP(), []int{8}
+}
+
+type ListOpenRaidsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Raids         []*OpenRaidEntry       `protobuf:"bytes,1,rep,name=raids,proto3" json:"raids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListOpenRaidsResponse) Reset() {
+	*x = ListOpenRaidsResponse{}
+	mi := &file_raid_lobby_v1_raid_lobby_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListOpenRaidsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListOpenRaidsResponse) ProtoMessage() {}
+
+func (x *ListOpenRaidsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_raid_lobby_v1_raid_lobby_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListOpenRaidsResponse.ProtoReflect.Descriptor instead.
+func (*ListOpenRaidsResponse) Descriptor() ([]byte, []int) {
+	return file_raid_lobby_v1_raid_lobby_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ListOpenRaidsResponse) GetRaids() []*OpenRaidEntry {
+	if x != nil {
+		return x.Raids
+	}
+	return nil
+}
+
+type OpenRaidEntry struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	BossPokemonId string                 `protobuf:"bytes,2,opt,name=boss_pokemon_id,json=bossPokemonId,proto3" json:"boss_pokemon_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *OpenRaidEntry) Reset() {
+	*x = OpenRaidEntry{}
+	mi := &file_raid_lobby_v1_raid_lobby_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OpenRaidEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OpenRaidEntry) ProtoMessage() {}
+
+func (x *OpenRaidEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_raid_lobby_v1_raid_lobby_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OpenRaidEntry.ProtoReflect.Descriptor instead.
+func (*OpenRaidEntry) Descriptor() ([]byte, []int) {
+	return file_raid_lobby_v1_raid_lobby_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *OpenRaidEntry) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *OpenRaidEntry) GetBossPokemonId() string {
+	if x != nil {
+		return x.BossPokemonId
+	}
+	return ""
+}
+
 var File_raid_lobby_v1_raid_lobby_proto protoreflect.FileDescriptor
 
 const file_raid_lobby_v1_raid_lobby_proto_rawDesc = "" +
@@ -421,13 +553,20 @@ const file_raid_lobby_v1_raid_lobby_proto_rawDesc = "" +
 	"\n" +
 	"event_type\x18\x01 \x01(\tR\teventType\x12\x19\n" +
 	"\blobby_id\x18\x02 \x01(\tR\alobbyId\x12\x18\n" +
-	"\apayload\x18\x03 \x01(\tR\apayload2\xe8\x02\n" +
+	"\apayload\x18\x03 \x01(\tR\apayload\"\x16\n" +
+	"\x14ListOpenRaidsRequest\"K\n" +
+	"\x15ListOpenRaidsResponse\x122\n" +
+	"\x05raids\x18\x01 \x03(\v2\x1c.raid_lobby.v1.OpenRaidEntryR\x05raids\"G\n" +
+	"\rOpenRaidEntry\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
+	"\x0fboss_pokemon_id\x18\x02 \x01(\tR\rbossPokemonId2\xc6\x03\n" +
 	"\x10RaidLobbyService\x12S\n" +
 	"\n" +
 	"CreateRaid\x12 .raid_lobby.v1.CreateRaidRequest\x1a!.raid_lobby.v1.CreateRaidResponse\"\x00\x12M\n" +
 	"\bJoinRaid\x12\x1e.raid_lobby.v1.JoinRaidRequest\x1a\x1f.raid_lobby.v1.JoinRaidResponse\"\x00\x12V\n" +
 	"\vStartBattle\x12!.raid_lobby.v1.StartBattleRequest\x1a\".raid_lobby.v1.StartBattleResponse\"\x00\x12X\n" +
-	"\vStreamLobby\x12!.raid_lobby.v1.StreamLobbyRequest\x1a\".raid_lobby.v1.StreamLobbyResponse\"\x000\x01BZZXgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1;raid_lobbyv1b\x06proto3"
+	"\vStreamLobby\x12!.raid_lobby.v1.StreamLobbyRequest\x1a\".raid_lobby.v1.StreamLobbyResponse\"\x000\x01\x12\\\n" +
+	"\rListOpenRaids\x12#.raid_lobby.v1.ListOpenRaidsRequest\x1a$.raid_lobby.v1.ListOpenRaidsResponse\"\x00BZZXgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1;raid_lobbyv1b\x06proto3"
 
 var (
 	file_raid_lobby_v1_raid_lobby_proto_rawDescOnce sync.Once
@@ -441,31 +580,37 @@ func file_raid_lobby_v1_raid_lobby_proto_rawDescGZIP() []byte {
 	return file_raid_lobby_v1_raid_lobby_proto_rawDescData
 }
 
-var file_raid_lobby_v1_raid_lobby_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_raid_lobby_v1_raid_lobby_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_raid_lobby_v1_raid_lobby_proto_goTypes = []any{
-	(*CreateRaidRequest)(nil),   // 0: raid_lobby.v1.CreateRaidRequest
-	(*CreateRaidResponse)(nil),  // 1: raid_lobby.v1.CreateRaidResponse
-	(*JoinRaidRequest)(nil),     // 2: raid_lobby.v1.JoinRaidRequest
-	(*JoinRaidResponse)(nil),    // 3: raid_lobby.v1.JoinRaidResponse
-	(*StartBattleRequest)(nil),  // 4: raid_lobby.v1.StartBattleRequest
-	(*StartBattleResponse)(nil), // 5: raid_lobby.v1.StartBattleResponse
-	(*StreamLobbyRequest)(nil),  // 6: raid_lobby.v1.StreamLobbyRequest
-	(*StreamLobbyResponse)(nil), // 7: raid_lobby.v1.StreamLobbyResponse
+	(*CreateRaidRequest)(nil),     // 0: raid_lobby.v1.CreateRaidRequest
+	(*CreateRaidResponse)(nil),    // 1: raid_lobby.v1.CreateRaidResponse
+	(*JoinRaidRequest)(nil),       // 2: raid_lobby.v1.JoinRaidRequest
+	(*JoinRaidResponse)(nil),      // 3: raid_lobby.v1.JoinRaidResponse
+	(*StartBattleRequest)(nil),    // 4: raid_lobby.v1.StartBattleRequest
+	(*StartBattleResponse)(nil),   // 5: raid_lobby.v1.StartBattleResponse
+	(*StreamLobbyRequest)(nil),    // 6: raid_lobby.v1.StreamLobbyRequest
+	(*StreamLobbyResponse)(nil),   // 7: raid_lobby.v1.StreamLobbyResponse
+	(*ListOpenRaidsRequest)(nil),  // 8: raid_lobby.v1.ListOpenRaidsRequest
+	(*ListOpenRaidsResponse)(nil), // 9: raid_lobby.v1.ListOpenRaidsResponse
+	(*OpenRaidEntry)(nil),         // 10: raid_lobby.v1.OpenRaidEntry
 }
 var file_raid_lobby_v1_raid_lobby_proto_depIdxs = []int32{
-	0, // 0: raid_lobby.v1.RaidLobbyService.CreateRaid:input_type -> raid_lobby.v1.CreateRaidRequest
-	2, // 1: raid_lobby.v1.RaidLobbyService.JoinRaid:input_type -> raid_lobby.v1.JoinRaidRequest
-	4, // 2: raid_lobby.v1.RaidLobbyService.StartBattle:input_type -> raid_lobby.v1.StartBattleRequest
-	6, // 3: raid_lobby.v1.RaidLobbyService.StreamLobby:input_type -> raid_lobby.v1.StreamLobbyRequest
-	1, // 4: raid_lobby.v1.RaidLobbyService.CreateRaid:output_type -> raid_lobby.v1.CreateRaidResponse
-	3, // 5: raid_lobby.v1.RaidLobbyService.JoinRaid:output_type -> raid_lobby.v1.JoinRaidResponse
-	5, // 6: raid_lobby.v1.RaidLobbyService.StartBattle:output_type -> raid_lobby.v1.StartBattleResponse
-	7, // 7: raid_lobby.v1.RaidLobbyService.StreamLobby:output_type -> raid_lobby.v1.StreamLobbyResponse
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	10, // 0: raid_lobby.v1.ListOpenRaidsResponse.raids:type_name -> raid_lobby.v1.OpenRaidEntry
+	0,  // 1: raid_lobby.v1.RaidLobbyService.CreateRaid:input_type -> raid_lobby.v1.CreateRaidRequest
+	2,  // 2: raid_lobby.v1.RaidLobbyService.JoinRaid:input_type -> raid_lobby.v1.JoinRaidRequest
+	4,  // 3: raid_lobby.v1.RaidLobbyService.StartBattle:input_type -> raid_lobby.v1.StartBattleRequest
+	6,  // 4: raid_lobby.v1.RaidLobbyService.StreamLobby:input_type -> raid_lobby.v1.StreamLobbyRequest
+	8,  // 5: raid_lobby.v1.RaidLobbyService.ListOpenRaids:input_type -> raid_lobby.v1.ListOpenRaidsRequest
+	1,  // 6: raid_lobby.v1.RaidLobbyService.CreateRaid:output_type -> raid_lobby.v1.CreateRaidResponse
+	3,  // 7: raid_lobby.v1.RaidLobbyService.JoinRaid:output_type -> raid_lobby.v1.JoinRaidResponse
+	5,  // 8: raid_lobby.v1.RaidLobbyService.StartBattle:output_type -> raid_lobby.v1.StartBattleResponse
+	7,  // 9: raid_lobby.v1.RaidLobbyService.StreamLobby:output_type -> raid_lobby.v1.StreamLobbyResponse
+	9,  // 10: raid_lobby.v1.RaidLobbyService.ListOpenRaids:output_type -> raid_lobby.v1.ListOpenRaidsResponse
+	6,  // [6:11] is the sub-list for method output_type
+	1,  // [1:6] is the sub-list for method input_type
+	1,  // [1:1] is the sub-list for extension type_name
+	1,  // [1:1] is the sub-list for extension extendee
+	0,  // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_raid_lobby_v1_raid_lobby_proto_init() }
@@ -479,7 +624,7 @@ func file_raid_lobby_v1_raid_lobby_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_raid_lobby_v1_raid_lobby_proto_rawDesc), len(file_raid_lobby_v1_raid_lobby_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

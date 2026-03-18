@@ -18,3 +18,8 @@ export const joinRaid = RaidLobbyService.method.joinRaid;
  * @generated from rpc raid_lobby.v1.RaidLobbyService.StartBattle
  */
 export const startBattle = RaidLobbyService.method.startBattle;
+
+/**
+ * @generated from rpc raid_lobby.v1.RaidLobbyService.ListOpenRaids
+ */
+export const listOpenRaids = RaidLobbyService.method.listOpenRaids;
