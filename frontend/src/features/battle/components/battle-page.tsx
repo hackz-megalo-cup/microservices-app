@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import "../../../styles/global.css";
-import { useAuthContext } from "../../auth/hooks/use-auth-context";
+import { useAuthContext } from "../../../lib/auth";
 import { useGameConnection } from "../hooks/use-game-connection";
 import type { ServerMessage } from "../types";
 
