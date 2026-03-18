@@ -9,6 +9,7 @@ import { Collection } from "../features/showcase/components/collection";
 import { Detail } from "../features/showcase/components/detail";
 import { Home } from "../features/showcase/components/home";
 import { Lobby } from "../features/showcase/components/lobby";
+import { Profile } from "../features/showcase/components/profile";
 import { Victory } from "../features/showcase/components/victory";
 
 export function App() {
@@ -69,6 +70,14 @@ export function App() {
           element={
             <RequireAuth>
               <Detail />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <RequireAuth>
+              <Profile />
             </RequireAuth>
           }
         />
