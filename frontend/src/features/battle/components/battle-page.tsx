@@ -1,9 +1,19 @@
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import "../../../styles/global.css";
 import { useAuthContext } from "../../../lib/auth";
 import { useGameConnection } from "../hooks/use-game-connection";
 import type { ServerMessage } from "../types";
+
+interface FloatingDmg {
+  id: number;
+  value: number;
+  x: number;
+  y: number;
+  isSpecial: boolean;
+}
+
+let dmgSeq = 0;
 
 export function BattlePage() {
   const { id } = useParams<{ id: string }>();
@@ -16,9 +26,39 @@ export function BattlePage() {
   const [bossMaxHp, setBossMaxHp] = useState(0);
   const [tapCount, setTapCount] = useState(0);
   const [result, setResult] = useState<string | null>(null);
-  const [lastDmg, setLastDmg] = useState<number | null>(null);
   const [timeoutSec, setTimeoutSec] = useState(300);
+  const [floatingDmgs, setFloatingDmgs] = useState<FloatingDmg[]>([]);
+  const [shaking, setShaking] = useState(false);
+  const [flashing, setFlashing] = useState(false);
   const requiredForSpecial = 10;
+  const shakeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const spawnDmg = useCallback((value: number, isSpecial: boolean) => {
+    const x = 10 + Math.random() * 60;
+    const y = 5 + Math.random() * 50;
+    const entry: FloatingDmg = { id: ++dmgSeq, value, x, y, isSpecial };
+    setFloatingDmgs((prev) => [...prev.slice(-8), entry]);
+    setTimeout(() => {
+      setFloatingDmgs((prev) => prev.filter((d) => d.id !== entry.id));
+    }, 800);
+  }, []);
+
+  const triggerShake = useCallback((duration: number) => {
+    setShaking(true);
+    if (shakeTimer.current) {
+      clearTimeout(shakeTimer.current);
+    }
+    shakeTimer.current = setTimeout(() => setShaking(false), duration);
+  }, []);
+
+  const triggerFlash = useCallback(() => {
+    setFlashing(true);
+    if (flashTimer.current) {
+      clearTimeout(flashTimer.current);
+    }
+    flashTimer.current = setTimeout(() => setFlashing(false), 100);
+  }, []);
 
   const onMessage = useCallback(
     (msg: ServerMessage) => {
@@ -32,13 +72,15 @@ export function BattlePage() {
           break;
         case "hp":
           setBossHp(msg.hp);
-          setLastDmg(msg.lastDmg);
-          setTimeout(() => setLastDmg(null), 600);
+          spawnDmg(msg.lastDmg, false);
+          triggerShake(100);
+          triggerFlash();
           break;
         case "special_used":
           setBossHp(msg.bossHp);
-          setLastDmg(msg.dmg);
-          setTimeout(() => setLastDmg(null), 800);
+          spawnDmg(msg.dmg, true);
+          triggerShake(300);
+          triggerFlash();
           break;
         case "finished":
           setResult(msg.result);
@@ -49,7 +91,7 @@ export function BattlePage() {
           break;
       }
     },
-    [id, navigate],
+    [id, navigate, spawnDmg, triggerShake, triggerFlash],
   );
 
   const { status, sendTap, sendSpecial } = useGameConnection({
@@ -78,6 +120,38 @@ export function BattlePage() {
 
   return (
     <div className="showcase-screen">
+      <style>
+        {`
+          @keyframes dmg-float {
+            0% { opacity: 1; transform: translateY(0) scale(1); }
+            50% { opacity: 1; transform: translateY(-30px) scale(1.2); }
+            100% { opacity: 0; transform: translateY(-60px) scale(0.8); }
+          }
+          @keyframes dmg-float-special {
+            0% { opacity: 1; transform: translateY(0) scale(1.5); }
+            30% { opacity: 1; transform: translateY(-20px) scale(2); }
+            100% { opacity: 0; transform: translateY(-80px) scale(1); }
+          }
+          @keyframes hit-shake {
+            0%, 100% { transform: translateX(0); }
+            20% { transform: translateX(-6px) rotate(-1deg); }
+            40% { transform: translateX(6px) rotate(1deg); }
+            60% { transform: translateX(-4px); }
+            80% { transform: translateX(4px); }
+          }
+          .shake {
+            animation: hit-shake 0.15s ease-in-out;
+          }
+          .flash-overlay {
+            animation: flash-hit 0.1s ease-out;
+          }
+          @keyframes flash-hit {
+            0% { opacity: 0.6; }
+            100% { opacity: 0; }
+          }
+        `}
+      </style>
+
       {/* Boss info + HP bar */}
       <section className="flex flex-col gap-3 px-6 pt-4">
         <div className="flex items-center justify-center gap-3">
@@ -115,17 +189,38 @@ export function BattlePage() {
       </section>
 
       {/* Boss visual area */}
-      <div className="flex-1 relative flex items-center justify-center">
+      <div className={`flex-1 relative flex items-center justify-center ${shaking ? "shake" : ""}`}>
         <img
           src="/images/battle-python.png"
           alt="Raid Boss"
           className="w-[280px] h-[280px] object-cover rounded-2xl"
         />
-        {lastDmg !== null && (
-          <span className="absolute top-10 right-10 text-2xl font-bold text-accent animate-bounce">
-            -{lastDmg}
-          </span>
+
+        {/* Hit flash overlay */}
+        {flashing && (
+          <div className="absolute inset-0 rounded-2xl bg-white/30 flash-overlay pointer-events-none" />
         )}
+
+        {/* Floating damage numbers */}
+        {floatingDmgs.map((dmg) => (
+          <span
+            key={dmg.id}
+            className="absolute pointer-events-none font-bold font-mono"
+            style={{
+              left: `${dmg.x}%`,
+              top: `${dmg.y}%`,
+              color: dmg.isSpecial ? "var(--color-green)" : "var(--color-accent)",
+              fontSize: dmg.isSpecial ? "2rem" : "1.5rem",
+              textShadow: "0 2px 8px rgba(0,0,0,0.7)",
+              animation: dmg.isSpecial
+                ? "dmg-float-special 0.8s ease-out forwards"
+                : "dmg-float 0.8s ease-out forwards",
+            }}
+          >
+            -{dmg.value}
+          </span>
+        ))}
+
         {result && (
           <div className="absolute inset-0 flex items-center justify-center bg-bg-primary/80 rounded-2xl">
             <span className="text-4xl font-bold text-accent">
