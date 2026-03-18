@@ -269,15 +269,19 @@ func (s *Service) EndSession(ctx context.Context, req *connect.Request[pb.EndSes
 	}), nil
 }
 
-// findMatchedEffect returns the first effect that matches bossType,
+// findMatchedEffect returns the effect that matches bossType,
 // preferring specific target matches over wildcard (empty target_type).
 func findMatchedEffect(effects []*masterdatapb.ItemEffect, bossType string) *masterdatapb.ItemEffect {
+	var wildcard *masterdatapb.ItemEffect
 	for _, e := range effects {
-		if e.GetTargetType() == bossType || e.GetTargetType() == "" {
+		if e.GetTargetType() == bossType {
 			return e
 		}
+		if e.GetTargetType() == "" && wildcard == nil {
+			wildcard = e
+		}
 	}
-	return nil
+	return wildcard
 }
 
 // applyItemEffect applies the matched item effect to the aggregate and returns escaped flag and flavor text.
