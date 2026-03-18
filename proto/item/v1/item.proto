@@ -33,11 +33,12 @@ message GetUserItemsRequest {
   string user_id = 1;
 }
 
-message GetUserItemsResponse {
-  repeated UserItem items = 1;
-}
-
 message UserItem {
   string item_id = 1;
-  int32  quantity = 2;
+  int32 quantity = 2;
+  string status = 3;
+}
+
+message GetUserItemsResponse {
+  repeated UserItem items = 1;
 }

@@ -273,61 +273,18 @@ func (x *GetUserItemsRequest) GetUserId() string {
 	return ""
 }
 
-type GetUserItemsResponse struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Items         []*UserItem            `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
-}
-
-func (x *GetUserItemsResponse) Reset() {
-	*x = GetUserItemsResponse{}
-	mi := &file_item_v1_item_proto_msgTypes[5]
-	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-	ms.StoreMessageInfo(mi)
-}
-
-func (x *GetUserItemsResponse) String() string {
-	return protoimpl.X.MessageStringOf(x)
-}
-
-func (*GetUserItemsResponse) ProtoMessage() {}
-
-func (x *GetUserItemsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_item_v1_item_proto_msgTypes[5]
-	if x != nil {
-		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
-		if ms.LoadMessageInfo() == nil {
-			ms.StoreMessageInfo(mi)
-		}
-		return ms
-	}
-	return mi.MessageOf(x)
-}
-
-// Deprecated: Use GetUserItemsResponse.ProtoReflect.Descriptor instead.
-func (*GetUserItemsResponse) Descriptor() ([]byte, []int) {
-	return file_item_v1_item_proto_rawDescGZIP(), []int{5}
-}
-
-func (x *GetUserItemsResponse) GetItems() []*UserItem {
-	if x != nil {
-		return x.Items
-	}
-	return nil
-}
-
 type UserItem struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	ItemId        string                 `protobuf:"bytes,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
 	Quantity      int32                  `protobuf:"varint,2,opt,name=quantity,proto3" json:"quantity,omitempty"`
+	Status        string                 `protobuf:"bytes,3,opt,name=status,proto3" json:"status,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
 func (x *UserItem) Reset() {
 	*x = UserItem{}
-	mi := &file_item_v1_item_proto_msgTypes[6]
+	mi := &file_item_v1_item_proto_msgTypes[5]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -339,7 +296,7 @@ func (x *UserItem) String() string {
 func (*UserItem) ProtoMessage() {}
 
 func (x *UserItem) ProtoReflect() protoreflect.Message {
-	mi := &file_item_v1_item_proto_msgTypes[6]
+	mi := &file_item_v1_item_proto_msgTypes[5]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -352,7 +309,7 @@ func (x *UserItem) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use UserItem.ProtoReflect.Descriptor instead.
 func (*UserItem) Descriptor() ([]byte, []int) {
-	return file_item_v1_item_proto_rawDescGZIP(), []int{6}
+	return file_item_v1_item_proto_rawDescGZIP(), []int{5}
 }
 
 func (x *UserItem) GetItemId() string {
@@ -367,6 +324,57 @@ func (x *UserItem) GetQuantity() int32 {
 		return x.Quantity
 	}
 	return 0
+}
+
+func (x *UserItem) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+type GetUserItemsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*UserItem            `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetUserItemsResponse) Reset() {
+	*x = GetUserItemsResponse{}
+	mi := &file_item_v1_item_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetUserItemsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetUserItemsResponse) ProtoMessage() {}
+
+func (x *GetUserItemsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_item_v1_item_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetUserItemsResponse.ProtoReflect.Descriptor instead.
+func (*GetUserItemsResponse) Descriptor() ([]byte, []int) {
+	return file_item_v1_item_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *GetUserItemsResponse) GetItems() []*UserItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
 }
 
 var File_item_v1_item_proto protoreflect.FileDescriptor
@@ -387,12 +395,13 @@ const file_item_v1_item_proto_rawDesc = "" +
 	"\bquantity\x18\x03 \x01(\x05R\bquantity\"\x11\n" +
 	"\x0fUseItemResponse\".\n" +
 	"\x13GetUserItemsRequest\x12\x17\n" +
-	"\auser_id\x18\x01 \x01(\tR\x06userId\"?\n" +
-	"\x14GetUserItemsResponse\x12'\n" +
-	"\x05items\x18\x01 \x03(\v2\x11.item.v1.UserItemR\x05items\"?\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"W\n" +
 	"\bUserItem\x12\x17\n" +
 	"\aitem_id\x18\x01 \x01(\tR\x06itemId\x12\x1a\n" +
-	"\bquantity\x18\x02 \x01(\x05R\bquantity2\xe2\x01\n" +
+	"\bquantity\x18\x02 \x01(\x05R\bquantity\x12\x16\n" +
+	"\x06status\x18\x03 \x01(\tR\x06status\"?\n" +
+	"\x14GetUserItemsResponse\x12'\n" +
+	"\x05items\x18\x01 \x03(\v2\x11.item.v1.UserItemR\x05items2\xe2\x01\n" +
 	"\vItemService\x12D\n" +
 	"\tGrantItem\x12\x19.item.v1.GrantItemRequest\x1a\x1a.item.v1.GrantItemResponse\"\x00\x12>\n" +
 	"\aUseItem\x12\x17.item.v1.UseItemRequest\x1a\x18.item.v1.UseItemResponse\"\x00\x12M\n" +
@@ -417,17 +426,17 @@ var file_item_v1_item_proto_goTypes = []any{
 	(*UseItemRequest)(nil),       // 2: item.v1.UseItemRequest
 	(*UseItemResponse)(nil),      // 3: item.v1.UseItemResponse
 	(*GetUserItemsRequest)(nil),  // 4: item.v1.GetUserItemsRequest
-	(*GetUserItemsResponse)(nil), // 5: item.v1.GetUserItemsResponse
-	(*UserItem)(nil),             // 6: item.v1.UserItem
+	(*UserItem)(nil),             // 5: item.v1.UserItem
+	(*GetUserItemsResponse)(nil), // 6: item.v1.GetUserItemsResponse
 }
 var file_item_v1_item_proto_depIdxs = []int32{
-	6, // 0: item.v1.GetUserItemsResponse.items:type_name -> item.v1.UserItem
+	5, // 0: item.v1.GetUserItemsResponse.items:type_name -> item.v1.UserItem
 	0, // 1: item.v1.ItemService.GrantItem:input_type -> item.v1.GrantItemRequest
 	2, // 2: item.v1.ItemService.UseItem:input_type -> item.v1.UseItemRequest
 	4, // 3: item.v1.ItemService.GetUserItems:input_type -> item.v1.GetUserItemsRequest
 	1, // 4: item.v1.ItemService.GrantItem:output_type -> item.v1.GrantItemResponse
 	3, // 5: item.v1.ItemService.UseItem:output_type -> item.v1.UseItemResponse
-	5, // 6: item.v1.ItemService.GetUserItems:output_type -> item.v1.GetUserItemsResponse
+	6, // 6: item.v1.ItemService.GetUserItems:output_type -> item.v1.GetUserItemsResponse
 	4, // [4:7] is the sub-list for method output_type
 	1, // [1:4] is the sub-list for method input_type
 	1, // [1:1] is the sub-list for extension type_name
