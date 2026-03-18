@@ -23,6 +23,36 @@ import (
 	"github.com/hackz-megalo-cup/microservices-app/game-server/internal/transport"
 )
 
+func publishBattleFinished(session *battle.Session, brokers string) {
+	kClient, err := kgo.NewClient(kgo.SeedBrokers(strings.Split(brokers, ",")...))
+	if err != nil {
+		log.Printf("kafka client error: %v", err)
+		return
+	}
+	defer kClient.Close()
+
+	event := gamekafka.BattleFinishedEvent{
+		SessionID:      session.SessionID,
+		LobbyID:        session.LobbyID,
+		BossPokemonID:  session.BossPokemonID,
+		Result:         session.Result(),
+		ParticipantIDs: session.ParticipantIDs(),
+	}
+	record := gamekafka.BuildBattleFinishedRecord(event)
+	if record == nil {
+		return
+	}
+
+	pctx, pcancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer pcancel()
+
+	if err := kClient.ProduceSync(pctx, record).FirstErr(); err != nil {
+		log.Printf("kafka publish error: %v", err)
+	} else {
+		log.Println("battle.finished published to Kafka")
+	}
+}
+
 func main() {
 	log.Println("game-server starting...")
 
@@ -133,33 +163,8 @@ func runLocalDev() {
 	<-session.Done()
 	log.Printf("battle finished: result=%s", session.Result())
 
-	// Publish battle.finished to Kafka if brokers configured
-	kafkaBrokers := os.Getenv("KAFKA_BROKERS")
-	if kafkaBrokers != "" {
-		kClient, err := kgo.NewClient(kgo.SeedBrokers(strings.Split(kafkaBrokers, ",")...))
-		if err != nil {
-			log.Printf("kafka client error: %v", err)
-		} else {
-			participantIDs := session.ParticipantIDs()
-			event := gamekafka.BattleFinishedEvent{
-				SessionID:      session.SessionID,
-				LobbyID:        session.LobbyID,
-				BossPokemonID:  session.BossPokemonID,
-				Result:         session.Result(),
-				ParticipantIDs: participantIDs,
-			}
-			record := gamekafka.BuildBattleFinishedRecord(event)
-			if record != nil {
-				pctx, pcancel := context.WithTimeout(context.Background(), 5*time.Second)
-				defer pcancel()
-				if err := kClient.ProduceSync(pctx, record).FirstErr(); err != nil {
-					log.Printf("kafka publish error: %v", err)
-				} else {
-					log.Println("battle.finished published to Kafka")
-				}
-			}
-			kClient.Close()
-		}
+	if kafkaBrokers := os.Getenv("KAFKA_BROKERS"); kafkaBrokers != "" {
+		publishBattleFinished(session, kafkaBrokers)
 	}
 
 	cancel()
@@ -335,31 +340,7 @@ func runProduction() {
 	<-s.Done()
 	log.Printf("battle finished: result=%s", s.Result())
 
-	// Kafka publish
-	kClient, err := kgo.NewClient(kgo.SeedBrokers(strings.Split(kafkaBrokers, ",")...))
-	if err != nil {
-		log.Printf("kafka client error: %v", err)
-	} else {
-		participantIDs := s.ParticipantIDs()
-		event := gamekafka.BattleFinishedEvent{
-			SessionID:      s.SessionID,
-			LobbyID:        s.LobbyID,
-			BossPokemonID:  s.BossPokemonID,
-			Result:         s.Result(),
-			ParticipantIDs: participantIDs,
-		}
-		record := gamekafka.BuildBattleFinishedRecord(event)
-		if record != nil {
-			pctx, pcancel := context.WithTimeout(context.Background(), 5*time.Second)
-			defer pcancel()
-			if err := kClient.ProduceSync(pctx, record).FirstErr(); err != nil {
-				log.Printf("kafka publish error: %v", err)
-			} else {
-				log.Println("battle.finished published to Kafka")
-			}
-		}
-		kClient.Close()
-	}
+	publishBattleFinished(s, kafkaBrokers)
 
 	// Shutdown
 	cancel()

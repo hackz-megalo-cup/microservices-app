@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-import { gameServerUrl, parsedGameServerUrl, resolveApiUrl } from "../../../lib/runtime-config";
+import { allocateRaid, fetchDirectConnection, findActiveRaid } from "../api/connection-info";
 import type { ConnectionState, ServerMessage } from "../types";
 
 // ---------------------------------------------------------------------------
@@ -86,8 +86,7 @@ export interface UseGameConnectionReturn {
 // ---------------------------------------------------------------------------
 // Hook
 // ---------------------------------------------------------------------------
-const allocateApiUrl = resolveApiUrl("/api/raid/allocate");
-const activeApiUrl = resolveApiUrl("/api/raid/active");
+import { resolveApiUrl } from "../../../lib/runtime-config";
 
 export function useGameConnection({
   userId,
@@ -112,7 +111,9 @@ export function useGameConnection({
   const handleRaw = useCallback((raw: string) => {
     try {
       const msg = JSON.parse(raw) as ServerMessage;
-      onMessageRef.current(msg);
+      if (typeof msg === "object" && msg !== null && "t" in msg) {
+        onMessageRef.current(msg);
+      }
     } catch {
       // non-JSON, ignore
     }
@@ -291,81 +292,13 @@ export function useGameConnection({
 
     const abort = new AbortController();
 
-    const findActiveRaid = async () => {
-      try {
-        const res = await fetch(activeApiUrl, { signal: abort.signal });
-        if (!res.ok) {
-          return null;
-        }
-        const data = await res.json();
-        if (!data.host || !data.certHash || !data.port) {
-          return null;
-        }
-        return {
-          host: data.host as string,
-          port: String(data.port),
-          certHash: String(data.certHash).trim(),
-          lobbyId: data.lobbyId as string | undefined,
-        };
-      } catch {
-        return null;
-      }
-    };
-
-    const allocate = async () => {
-      try {
-        const res = await fetch(allocateApiUrl, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            lobbyId: lobbyId ?? crypto.randomUUID(),
-            bossPokemonId: crypto.randomUUID(),
-          }),
-          signal: abort.signal,
-        });
-        if (!res.ok) {
-          return null;
-        }
-        const data = await res.json();
-        if (!data.host || !data.certHash || !data.port) {
-          return null;
-        }
-        return {
-          host: data.host as string,
-          port: String(data.port),
-          certHash: data.certHash as string,
-          lobbyId: lobbyId,
-        };
-      } catch {
-        return null;
-      }
-    };
-
-    const fallbackDirect = async () => {
-      if (!gameServerUrl || !parsedGameServerUrl) {
-        return null;
-      }
-      try {
-        const res = await fetch(`${gameServerUrl}/cert-hash`, { signal: abort.signal });
-        if (!res.ok) {
-          return null;
-        }
-        const hash = (await res.text()).trim();
-        return {
-          host: parsedGameServerUrl.hostname,
-          port: parsedGameServerUrl.port,
-          certHash: hash,
-          lobbyId: undefined,
-        };
-      } catch {
-        return null;
-      }
-    };
-
     const run = async () => {
       try {
         // Direct game server first (local dev), then K8s gateway APIs
-        const conn = (await fallbackDirect()) ?? (await findActiveRaid()) ?? (await allocate());
+        const conn =
+          (await fetchDirectConnection(abort.signal)) ??
+          (await findActiveRaid(abort.signal)) ??
+          (await allocateRaid(abort.signal, lobbyId));
         if (!conn) {
           return;
         }
@@ -399,33 +332,42 @@ export function useGameConnection({
     };
   }, [autoConnect, lobbyId, connectWt, connectWs, closeAll]);
 
-  // --- Send helpers ---
-  const sendTap = useCallback(async () => {
-    const payload = JSON.stringify({ t: "tap" });
-    if (protocolRef.current === "wt" && dgWriterRef.current) {
-      await dgWriterRef.current.write(new TextEncoder().encode(payload));
-    } else if (wsRef.current) {
-      wsRef.current.send(payload);
+  // --- Send helpers (I3: try/catch wrapped) ---
+  const sendTap = useCallback(() => {
+    try {
+      const payload = JSON.stringify({ t: "tap" });
+      if (protocolRef.current === "wt" && dgWriterRef.current) {
+        dgWriterRef.current.write(new TextEncoder().encode(payload));
+      } else if (wsRef.current) {
+        wsRef.current.send(payload);
+      }
+    } catch {
+      // send failed, ignore
     }
   }, []);
 
-  const sendSpecial = useCallback(async () => {
-    const payload = JSON.stringify({ t: "special", userId: userIdRef.current });
-    if (protocolRef.current === "wt" && transportRef.current) {
-      const stream = await transportRef.current.createBidirectionalStream();
-      const writer = stream.writable.getWriter();
-      await writer.write(new TextEncoder().encode(payload));
-      await writer.close();
-      const reader = stream.readable.getReader();
-      try {
-        while (!(await reader.read()).done) {
-          /* drain */
-        }
-      } catch {
-        // closed
+  const sendSpecial = useCallback(() => {
+    try {
+      const payload = JSON.stringify({ t: "special", userId: userIdRef.current });
+      if (protocolRef.current === "wt" && transportRef.current) {
+        transportRef.current.createBidirectionalStream().then(async (stream) => {
+          const writer = stream.writable.getWriter();
+          await writer.write(new TextEncoder().encode(payload));
+          await writer.close();
+          const reader = stream.readable.getReader();
+          try {
+            while (!(await reader.read()).done) {
+              /* drain */
+            }
+          } catch {
+            // closed
+          }
+        });
+      } else if (wsRef.current) {
+        wsRef.current.send(payload);
       }
-    } else if (wsRef.current) {
-      wsRef.current.send(payload);
+    } catch {
+      // send failed, ignore
     }
   }, []);
 

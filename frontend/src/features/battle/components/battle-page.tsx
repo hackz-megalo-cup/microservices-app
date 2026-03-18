@@ -1,10 +1,11 @@
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import "../../../styles/global.css";
 import { useAuthContext } from "../../../lib/auth";
 import { useGameConnection } from "../hooks/use-game-connection";
 import type { ServerMessage } from "../types";
+import "./battle-page.css";
 
 interface FloatingDmg {
   id: number;
@@ -20,14 +21,11 @@ interface Ripple {
   y: number;
 }
 
-let dmgSeq = 0;
-let rippleSeq = 0;
-
 export function BattlePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { user } = useAuthContext();
-  const userId = user?.id ?? crypto.randomUUID();
+  const userId = useMemo(() => user?.id ?? crypto.randomUUID(), [user?.id]);
 
   // --- Battle state ---
   const [bossHp, setBossHp] = useState(0);
@@ -37,28 +35,35 @@ export function BattlePage() {
   const [timeoutSec, setTimeoutSec] = useState(300);
   const [floatingDmgs, setFloatingDmgs] = useState<FloatingDmg[]>([]);
   const [ripples, setRipples] = useState<Ripple[]>([]);
+  const [participants, setParticipants] = useState<string[]>([]);
   const [squashing, setSquashing] = useState(false);
   const hitCount = useRef(0);
   const squashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const dmgSeq = useRef(0);
+  const rippleSeq = useRef(0);
   const requiredForSpecial = 10;
 
   const spawnDmg = useCallback((value: number, isSpecial: boolean) => {
     const x = 10 + Math.random() * 60;
     const y = 5 + Math.random() * 50;
-    const entry: FloatingDmg = { id: ++dmgSeq, value, x, y, isSpecial };
+    dmgSeq.current++;
+    const entryId = dmgSeq.current;
+    const entry: FloatingDmg = { id: entryId, value, x, y, isSpecial };
     setFloatingDmgs((prev) => [...prev.slice(-8), entry]);
     setTimeout(() => {
-      setFloatingDmgs((prev) => prev.filter((d) => d.id !== entry.id));
+      setFloatingDmgs((prev) => prev.filter((d) => d.id !== entryId));
     }, 800);
   }, []);
 
   const spawnRipple = useCallback((clientX: number, clientY: number, rect: DOMRect) => {
     const x = clientX - rect.left;
     const y = clientY - rect.top;
-    const entry: Ripple = { id: ++rippleSeq, x, y };
+    rippleSeq.current++;
+    const entryId = rippleSeq.current;
+    const entry: Ripple = { id: entryId, x, y };
     setRipples((prev) => [...prev.slice(-4), entry]);
     setTimeout(() => {
-      setRipples((prev) => prev.filter((r) => r.id !== entry.id));
+      setRipples((prev) => prev.filter((r) => r.id !== entryId));
     }, 500);
   }, []);
 
@@ -70,6 +75,9 @@ export function BattlePage() {
           setBossMaxHp(msg.bossMaxHp);
           if (msg.timeoutSec) {
             setTimeoutSec(msg.timeoutSec);
+          }
+          if (msg.participants) {
+            setParticipants(msg.participants);
           }
           break;
         case "hp":
@@ -133,38 +141,6 @@ export function BattlePage() {
 
   return (
     <div className="showcase-screen">
-      <style>
-        {`
-          @keyframes dmg-float {
-            0% { opacity: 1; transform: translateY(0) scale(1); }
-            50% { opacity: 1; transform: translateY(-30px) scale(1.2); }
-            100% { opacity: 0; transform: translateY(-60px) scale(0.8); }
-          }
-          @keyframes dmg-float-special {
-            0% { opacity: 1; transform: translateY(0) scale(1.5); }
-            30% { opacity: 1; transform: translateY(-20px) scale(2); }
-            100% { opacity: 0; transform: translateY(-80px) scale(1); }
-          }
-          @keyframes boss-nudge {
-            0% { transform: scaleX(1) scaleY(1); }
-            40% { transform: scaleX(1.03) scaleY(0.97); }
-            100% { transform: scaleX(1) scaleY(1); }
-          }
-          @keyframes tap-ripple {
-            0% { transform: translate(-50%, -50%) scale(0); opacity: 0.5; }
-            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
-          }
-          @keyframes special-appear {
-            0% { opacity: 0; transform: scale(0.5) translateY(20px); }
-            60% { opacity: 1; transform: scale(1.1) translateY(-5px); }
-            100% { opacity: 1; transform: scale(1) translateY(0); }
-          }
-          .special-btn-appear {
-            animation: special-appear 0.3s ease-out;
-          }
-        `}
-      </style>
-
       {/* Boss info + HP bar */}
       <section className="flex flex-col gap-3 px-6 pt-4">
         <div className="flex items-center justify-center gap-3">
@@ -174,7 +150,6 @@ export function BattlePage() {
           </span>
         </div>
 
-        {/* Connection status */}
         {status !== "connected" && (
           <div className="flex items-center justify-center gap-2">
             <span className="text-xs text-text-secondary">
@@ -201,7 +176,7 @@ export function BattlePage() {
         </p>
       </section>
 
-      {/* Tap area — entire boss visual region */}
+      {/* Tap area */}
       <button
         type="button"
         onClick={handleTap}
@@ -215,7 +190,6 @@ export function BattlePage() {
           style={squashing ? { animation: "boss-nudge 0.1s ease-out" } : undefined}
         />
 
-        {/* Tap ripples */}
         {ripples.map((r) => (
           <span
             key={r.id}
@@ -232,7 +206,6 @@ export function BattlePage() {
           />
         ))}
 
-        {/* Floating damage numbers */}
         {floatingDmgs.map((dmg) => (
           <span
             key={dmg.id}
@@ -265,10 +238,20 @@ export function BattlePage() {
       <section className="flex flex-col items-center gap-3 px-6 pb-6">
         {/* Participant indicators */}
         <div className="flex gap-3">
-          <div className="w-8 h-8 rounded-full bg-bg-card border-2 border-accent" />
-          <div className="w-8 h-8 rounded-full bg-bg-card border-2 border-green" />
-          <div className="w-8 h-8 rounded-full bg-bg-card border-2 border-text-secondary" />
-          <div className="w-8 h-8 rounded-full bg-bg-card border-2 border-text-secondary" />
+          {participants.length > 0
+            ? participants.map((pid) => (
+                <div
+                  key={pid}
+                  className="w-8 h-8 rounded-full bg-bg-card border-2 border-accent"
+                  title={pid}
+                />
+              ))
+            : Array.from({ length: 4 }).map((_, i) => (
+                <div
+                  key={`placeholder-${String(i)}`}
+                  className="w-8 h-8 rounded-full bg-bg-card border-2 border-text-secondary"
+                />
+              ))}
         </div>
 
         {/* Special gauge */}
@@ -287,7 +270,6 @@ export function BattlePage() {
           {tapCount}/{requiredForSpecial}
         </p>
 
-        {/* Special button — appears only when charged */}
         {canSpecial && result === null && (
           <button
             type="button"
