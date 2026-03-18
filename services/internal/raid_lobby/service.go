@@ -236,7 +236,7 @@ func (s *Service) ListOpenRaids(ctx context.Context, req *connect.Request[pb.Lis
 		       COUNT(rp.id)::int AS current_participants
 		FROM raid_lobby rl
 		LEFT JOIN raid_participant rp ON rl.id = rp.lobby_id
-		WHERE ($1 = '' OR rl.status = $1)
+		WHERE rl.status != 'finished' AND ($1 = '' OR rl.status = $1)
 		GROUP BY rl.id
 		ORDER BY rl.created_at DESC`,
 		statusFilter,

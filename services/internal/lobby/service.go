@@ -204,10 +204,11 @@ type userItemRow struct {
 	quantity int32
 }
 
-// openRaidRow holds a raid lobby entry in waiting status.
+// openRaidRow holds a raid lobby entry in waiting or in_battle status.
 type openRaidRow struct {
 	id            string
 	bossPokemonID string
+	status        string
 }
 
 // fetchUserItems calls item-service GetUserItems RPC.
@@ -237,7 +238,7 @@ func (s *Service) fetchOpenRaids(ctx context.Context) ([]openRaidRow, error) {
 	}
 	rows := make([]openRaidRow, 0, len(resp.Msg.GetRaids()))
 	for _, r := range resp.Msg.GetRaids() {
-		rows = append(rows, openRaidRow{id: r.GetId(), bossPokemonID: r.GetBossPokemonId()})
+		rows = append(rows, openRaidRow{id: r.GetId(), bossPokemonID: r.GetBossPokemonId(), status: r.GetStatus()})
 	}
 	return rows, nil
 }
@@ -323,10 +324,21 @@ func buildRaids(rows []openRaidRow, pokemonMap map[string]string) []*pb.Raid {
 			Id:          r.id,
 			PokemonId:   r.bossPokemonID,
 			PokemonName: pokemonMap[r.bossPokemonID],
-			Status:      pb.RaidStatus_RAID_STATUS_OPEN,
+			Status:      raidStatusFromString(r.status),
 		})
 	}
 	return raids
+}
+
+func raidStatusFromString(s string) pb.RaidStatus {
+	switch s {
+	case "waiting":
+		return pb.RaidStatus_RAID_STATUS_OPEN
+	case "in_battle":
+		return pb.RaidStatus_RAID_STATUS_IN_PROGRESS
+	default:
+		return pb.RaidStatus_RAID_STATUS_UNSPECIFIED
+	}
 }
 
 func buildPokedex(pokemon []*masterdatav1.Pokemon, caught map[string]bool) []*pb.PokedexEntry {
