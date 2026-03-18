@@ -33,7 +33,7 @@ spec:
               value: caller-service
             - name: PORT
               value: "8081"
-          image: ghcr.io/hackz-megalo-cup/caller:538128242c0b42dd1eb82d031c02b81a51f74c7f
+          image: ghcr.io/hackz-megalo-cup/caller:c89cd1f08b06787499b17850ead9ea7441f08ffc
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
