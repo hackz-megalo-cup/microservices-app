@@ -154,11 +154,12 @@ services:
       KAFKA_BROKERS: "redpanda:9092"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.auth.rule=PathPrefix(`/auth`)"
+      - "traefik.http.routers.auth.rule=PathPrefix(`/auth.v1.AuthService`) || PathPrefix(`/.well-known`) || Path(`/verify`)"
       - "traefik.http.routers.auth.entrypoints=web"
-      - "traefik.http.routers.auth.priority=90"
+      - "traefik.http.routers.auth.priority=100"
       - "traefik.http.routers.auth.middlewares=cors@file,rate-limit@file"
       - "traefik.http.services.auth.loadbalancer.server.port=8090"
+      - "traefik.http.services.auth.loadbalancer.server.scheme=h2c"
     networks:
       - app
     depends_on:
