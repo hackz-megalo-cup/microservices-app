@@ -249,6 +249,60 @@ export const handlers = [
     });
   }),
 
+  // CaptureService mock handlers
+  http.post(`${baseUrl}/capture.v1.CaptureService/GetCaptureSession`, async ({ request }) => {
+    const body = await request.json();
+    const sessionId = pickString(body, ["sessionId", "session_id"]);
+
+    return HttpResponse.json({
+      sessionId: sessionId || "mock-session-1",
+      battleSessionId: "mock-battle-1",
+      userId: "demo",
+      pokemonId: "1",
+      baseRate: 0.3,
+      currentRate: 0.3,
+      result: "pending",
+      actions: [],
+    });
+  }),
+
+  http.post(`${baseUrl}/capture.v1.CaptureService/UseItem`, async ({ request }) => {
+    const body = await request.json();
+    const itemId = pickString(body, ["itemId", "item_id"]);
+
+    // Simulate escape effect for specific item (for testing)
+    if (itemId === "escape-item") {
+      return HttpResponse.json({
+        rateBefore: 0.3,
+        rateAfter: 0.3,
+        escaped: true,
+        flavorText: "The Pokémon fled!",
+      });
+    }
+
+    return HttpResponse.json({
+      rateBefore: 0.3,
+      rateAfter: 0.5,
+      escaped: false,
+      flavorText: "Capture rate increased!",
+    });
+  }),
+
+  http.post(`${baseUrl}/capture.v1.CaptureService/ThrowBall`, async () => {
+    const success = Math.random() < 0.5;
+    return HttpResponse.json({
+      result: success ? "success" : "fail",
+    });
+  }),
+
+  http.post(`${baseUrl}/capture.v1.CaptureService/EndSession`, async ({ request }) => {
+    const body = await request.json();
+    const sessionId = pickString(body, ["sessionId", "session_id"]);
+    return HttpResponse.json({
+      result: sessionId ? "completed" : "completed",
+    });
+  }),
+
   http.post(`${baseUrl}/item.v1.ItemService/UseItem`, async ({ request }) => {
     const body = await request.json();
     const userId = pickString(body, ["userId", "user_id"]);
