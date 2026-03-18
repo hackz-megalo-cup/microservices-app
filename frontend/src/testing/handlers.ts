@@ -123,6 +123,8 @@ const mockItems = [
   },
 ];
 
+let mockActivePokemonId = "1";
+
 const mockInventoryByUser: Record<
   string,
   Array<{ itemId: string; quantity: number; status: string }>
@@ -162,6 +164,34 @@ function pickNumber(body: unknown, keys: string[]): number | null {
 }
 
 export const handlers = [
+  http.post(`${baseUrl}/lobby.v1.LobbyService/GetActivePokemon`, () => {
+    return HttpResponse.json({ pokemonId: mockActivePokemonId });
+  }),
+
+  http.post(`${baseUrl}/lobby.v1.LobbyService/SetActivePokemon`, async ({ request }) => {
+    const body = await request.json();
+    const pokemonId = pickString(body, ["pokemonId", "pokemon_id"]);
+
+    if (!pokemonId) {
+      return HttpResponse.json(
+        { code: "invalid_argument", message: "pokemon_id is required" },
+        { status: 400 },
+      );
+    }
+
+    const exists = mockPokemon.some((p) => p.id === pokemonId);
+    if (!exists) {
+      return HttpResponse.json(
+        { code: "not_found", message: "pokemon not found" },
+        { status: 404 },
+      );
+    }
+
+    mockActivePokemonId = pokemonId;
+    return HttpResponse.json({ success: true });
+  }),
+
+
   http.post(`${baseUrl}/gateway.v1.GatewayService/InvokeCustom`, async ({ request }) => {
     const body = (await request.json()) as { name?: string };
     const name = body.name || "World";

@@ -1,10 +1,16 @@
 import "../../../styles/global.css";
+import { useActivePokemon } from "../hooks/use-active-pokemon";
 import { useOpenRaids } from "../hooks/use-open-raids";
 import { RaidCard } from "./ui/raid-card";
 import { TabBar } from "./ui/tab-bar";
 
 export function Home() {
   const { raids, isLoading, error } = useOpenRaids();
+  const { activePokemon } = useActivePokemon();
+
+  const pokemonName = activePokemon?.name ?? "???";
+  const pokemonImage = activePokemon?.image ?? "/images/capture-python.png";
+  const pokemonType = activePokemon?.types[0] ?? "-";
 
   return (
     <div className="showcase-screen">
@@ -24,12 +30,12 @@ export function Home() {
         style={{ background: "radial-gradient(circle, var(--color-accent-glow), transparent)" }}
       >
         <img
-          src="/images/capture-python.png"
-          alt="Python"
+          src={pokemonImage}
+          alt={pokemonName}
           className="w-[200px] h-[200px] rounded-full object-cover"
         />
-        <h1 className="text-2xl font-bold text-text-primary m-0">Python</h1>
-        <p className="text-sm text-text-secondary m-0">Dynamic / Interpreted</p>
+        <h1 className="text-2xl font-bold text-text-primary m-0">{pokemonName}</h1>
+        <p className="text-sm text-text-secondary m-0">{pokemonType}</p>
       </section>
 
       <section className="flex flex-col gap-3 px-6">
