@@ -95,7 +95,7 @@
           # Microservices (connect-go) — go.mod requires go 1.26
           buildGoModule = pkgs.buildGo126Module;
           goServiceVersion = "0.1.0";
-          goVendorHash = "sha256-fzgNa+0Y5biTxqcK6VelnCzzIElzxeiLb653GhKKR7E=";
+          goVendorHash = "sha256-9mDtmS5axcsP/YiqrIcZT6YkysC0OegilaNfWNPvp80=";
           servicesRoot = toString ./services;
           goServiceInputs = {
             caller = {
