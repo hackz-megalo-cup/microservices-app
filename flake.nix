@@ -271,6 +271,7 @@
                 deps = [
                   frontend-assets
                   frontend-runner
+                  pkgs.dockerTools.fakeNss
                   pkgs.nginx
                 ];
               })
