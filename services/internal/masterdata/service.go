@@ -398,9 +398,14 @@ func (s *Service) UpdateItem(ctx context.Context, req *connect.Request[pb.Update
 		return nil, connect.NewError(connect.CodeInternal, commitErr)
 	}
 
-	effects, err := s.loadEffects(ctx, req.Msg.Id)
-	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, err)
+	effects := make([]*pb.ItemEffect, len(req.Msg.Effects))
+	for i, e := range req.Msg.Effects {
+		effects[i] = &pb.ItemEffect{
+			EffectType:       e.EffectType,
+			TargetType:       e.TargetType,
+			CaptureRateBonus: e.CaptureRateBonus,
+			FlavorText:       e.FlavorText,
+		}
 	}
 	return connect.NewResponse(&pb.UpdateItemResponse{Item: &pb.Item{Id: req.Msg.Id, Name: req.Msg.Name, Effects: effects}}), nil
 }
