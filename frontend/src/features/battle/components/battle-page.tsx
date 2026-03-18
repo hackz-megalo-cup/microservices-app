@@ -1,3 +1,4 @@
+import type { MouseEvent as ReactMouseEvent } from "react";
 import { useCallback, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import "../../../styles/global.css";
@@ -13,7 +14,14 @@ interface FloatingDmg {
   isSpecial: boolean;
 }
 
+interface Ripple {
+  id: number;
+  x: number;
+  y: number;
+}
+
 let dmgSeq = 0;
+let rippleSeq = 0;
 
 export function BattlePage() {
   const { id } = useParams<{ id: string }>();
@@ -28,11 +36,10 @@ export function BattlePage() {
   const [result, setResult] = useState<string | null>(null);
   const [timeoutSec, setTimeoutSec] = useState(300);
   const [floatingDmgs, setFloatingDmgs] = useState<FloatingDmg[]>([]);
-  const [shaking, setShaking] = useState(false);
-  const [flashing, setFlashing] = useState(false);
+  const [ripples, setRipples] = useState<Ripple[]>([]);
+  const [squashing, setSquashing] = useState(false);
   const requiredForSpecial = 10;
-  const shakeTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const flashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const squashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const spawnDmg = useCallback((value: number, isSpecial: boolean) => {
     const x = 10 + Math.random() * 60;
@@ -44,20 +51,22 @@ export function BattlePage() {
     }, 800);
   }, []);
 
-  const triggerShake = useCallback((duration: number) => {
-    setShaking(true);
-    if (shakeTimer.current) {
-      clearTimeout(shakeTimer.current);
+  const triggerSquash = useCallback((duration: number) => {
+    setSquashing(true);
+    if (squashTimer.current) {
+      clearTimeout(squashTimer.current);
     }
-    shakeTimer.current = setTimeout(() => setShaking(false), duration);
+    squashTimer.current = setTimeout(() => setSquashing(false), duration);
   }, []);
 
-  const triggerFlash = useCallback(() => {
-    setFlashing(true);
-    if (flashTimer.current) {
-      clearTimeout(flashTimer.current);
-    }
-    flashTimer.current = setTimeout(() => setFlashing(false), 100);
+  const spawnRipple = useCallback((clientX: number, clientY: number, rect: DOMRect) => {
+    const x = clientX - rect.left;
+    const y = clientY - rect.top;
+    const entry: Ripple = { id: ++rippleSeq, x, y };
+    setRipples((prev) => [...prev.slice(-4), entry]);
+    setTimeout(() => {
+      setRipples((prev) => prev.filter((r) => r.id !== entry.id));
+    }, 500);
   }, []);
 
   const onMessage = useCallback(
@@ -73,14 +82,12 @@ export function BattlePage() {
         case "hp":
           setBossHp(msg.hp);
           spawnDmg(msg.lastDmg, false);
-          triggerShake(100);
-          triggerFlash();
+          triggerSquash(120);
           break;
         case "special_used":
           setBossHp(msg.bossHp);
           spawnDmg(msg.dmg, true);
-          triggerShake(300);
-          triggerFlash();
+          triggerSquash(250);
           break;
         case "finished":
           setResult(msg.result);
@@ -91,7 +98,7 @@ export function BattlePage() {
           break;
       }
     },
-    [id, navigate, spawnDmg, triggerShake, triggerFlash],
+    [id, navigate, spawnDmg, triggerSquash],
   );
 
   const { status, sendTap, sendSpecial } = useGameConnection({
@@ -100,9 +107,11 @@ export function BattlePage() {
     onMessage,
   });
 
-  const handleTap = () => {
+  const handleTap = (e: ReactMouseEvent<HTMLButtonElement>) => {
     sendTap();
     setTapCount((c) => c + 1);
+    const rect = e.currentTarget.getBoundingClientRect();
+    spawnRipple(e.clientX, e.clientY, rect);
   };
 
   const handleSpecial = () => {
@@ -132,22 +141,28 @@ export function BattlePage() {
             30% { opacity: 1; transform: translateY(-20px) scale(2); }
             100% { opacity: 0; transform: translateY(-80px) scale(1); }
           }
-          @keyframes hit-shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-6px) rotate(-1deg); }
-            40% { transform: translateX(6px) rotate(1deg); }
-            60% { transform: translateX(-4px); }
-            80% { transform: translateX(4px); }
+          @keyframes boss-squash {
+            0% { transform: scaleX(1) scaleY(1); }
+            30% { transform: scaleX(1.08) scaleY(0.92); }
+            60% { transform: scaleX(0.97) scaleY(1.03); }
+            100% { transform: scaleX(1) scaleY(1); }
           }
-          .shake {
-            animation: hit-shake 0.15s ease-in-out;
+          @keyframes boss-squash-heavy {
+            0% { transform: scaleX(1) scaleY(1); }
+            20% { transform: scaleX(1.15) scaleY(0.85); }
+            50% { transform: scaleX(0.94) scaleY(1.06); }
+            75% { transform: scaleX(1.03) scaleY(0.97); }
+            100% { transform: scaleX(1) scaleY(1); }
           }
-          .flash-overlay {
-            animation: flash-hit 0.1s ease-out;
+          .squash {
+            animation: boss-squash 0.12s ease-out;
           }
-          @keyframes flash-hit {
-            0% { opacity: 0.6; }
-            100% { opacity: 0; }
+          .squash-heavy {
+            animation: boss-squash-heavy 0.25s ease-out;
+          }
+          @keyframes tap-ripple {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0.5; }
+            100% { transform: translate(-50%, -50%) scale(1); opacity: 0; }
           }
           @keyframes special-appear {
             0% { opacity: 0; transform: scale(0.5) translateY(20px); }
@@ -201,18 +216,30 @@ export function BattlePage() {
         type="button"
         onClick={handleTap}
         disabled={!isConnected || result !== null}
-        className={`flex-1 relative flex items-center justify-center cursor-pointer select-none active:scale-[0.98] transition-transform disabled:cursor-not-allowed ${shaking ? "shake" : ""}`}
+        className="flex-1 relative flex items-center justify-center cursor-pointer select-none overflow-hidden disabled:cursor-not-allowed"
       >
         <img
           src="/images/battle-python.png"
           alt="Raid Boss"
-          className="w-[280px] h-[280px] object-cover rounded-2xl pointer-events-none"
+          className={`w-[280px] h-[280px] object-cover rounded-2xl pointer-events-none transition-transform ${squashing ? "squash" : ""}`}
         />
 
-        {/* Hit flash overlay */}
-        {flashing && (
-          <div className="absolute inset-0 rounded-2xl bg-white/30 flash-overlay pointer-events-none" />
-        )}
+        {/* Tap ripples */}
+        {ripples.map((r) => (
+          <span
+            key={r.id}
+            className="absolute pointer-events-none rounded-full"
+            style={{
+              left: r.x,
+              top: r.y,
+              width: 120,
+              height: 120,
+              border: "2px solid var(--color-accent)",
+              background: "radial-gradient(circle, var(--color-accent-glow) 0%, transparent 70%)",
+              animation: "tap-ripple 0.5s ease-out forwards",
+            }}
+          />
+        ))}
 
         {/* Floating damage numbers */}
         {floatingDmgs.map((dmg) => (
