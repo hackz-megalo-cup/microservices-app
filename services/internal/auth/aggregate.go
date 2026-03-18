@@ -14,6 +14,7 @@ import (
 type UserAggregate struct {
 	platform.AggregateBase
 	Email        string
+	Name         string
 	PasswordHash string
 	Role         string
 	CreatedAt    time.Time
@@ -39,6 +40,7 @@ func (a *UserAggregate) ApplyEvent(eventType string, data json.RawMessage) {
 			slog.Warn("failed to unmarshal UserRegisteredData", "error", err)
 		}
 		a.Email = d.Email
+		a.Name = d.Name
 		a.Role = d.Role
 		a.CreatedAt = d.OccurredAt
 
@@ -53,14 +55,16 @@ func (a *UserAggregate) ApplyEvent(eventType string, data json.RawMessage) {
 }
 
 // RegisterUser records a user registration
-func (a *UserAggregate) RegisterUser(email string, passwordHash string, occurredAt time.Time) {
+func (a *UserAggregate) RegisterUser(email, name, passwordHash string, occurredAt time.Time) {
 	a.Raise(EventUserRegistered, UserRegisteredData{
 		UserID:     a.AggregateID(),
 		Email:      email,
+		Name:       name,
 		Role:       "user",
 		OccurredAt: occurredAt,
 	})
 	a.Email = email
+	a.Name = name
 	a.PasswordHash = passwordHash
 	a.Role = "user"
 	a.CreatedAt = occurredAt

@@ -1073,7 +1073,8 @@
                   "fill": "#71717A",
                   "content": "Search raids...",
                   "fontFamily": "Inter",
-                  "fontSize": 15
+                  "fontSize": 15,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -1447,7 +1448,8 @@
                           "fill": "#71717A",
                           "content": "Dynamic / Multi-paradigm",
                           "fontFamily": "Inter",
-                          "fontSize": 14
+                          "fontSize": 14,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -1554,7 +1556,8 @@
                           "fill": "#71717A",
                           "content": "Static / Class-based",
                           "fontFamily": "Inter",
-                          "fontSize": 14
+                          "fontSize": 14,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -1964,7 +1967,8 @@
                           "content": "Dynamic / Interpreted",
                           "lineHeight": 1.4,
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2043,7 +2047,8 @@
                           "content": "Static / Systems",
                           "lineHeight": 1.4,
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2122,7 +2127,8 @@
                           "content": "Dynamic / Multi-paradigm",
                           "lineHeight": 1.4,
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -2205,7 +2211,8 @@
                           "content": "Static / Class-based",
                           "lineHeight": 1.4,
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -3645,7 +3652,8 @@
               "content": "tap anywhere on screen",
               "textAlign": "center",
               "fontFamily": "Inter",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             }
           ]
         }
@@ -4031,7 +4039,8 @@
                               "fill": "#8A8A8A",
                               "content": "TypeScript Lv.18",
                               "fontFamily": "Inter",
-                              "fontSize": 11
+                              "fontSize": 11,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -4115,7 +4124,8 @@
                               "fill": "#8A8A8A",
                               "content": "Rust Lv.25",
                               "fontFamily": "Inter",
-                              "fontSize": 11
+                              "fontSize": 11,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -4199,7 +4209,8 @@
                               "fill": "#8A8A8A",
                               "content": "JavaScript Lv.12",
                               "fontFamily": "Inter",
-                              "fontSize": 11
+                              "fontSize": 11,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -4432,7 +4443,8 @@
                       "name": "em",
                       "content": "🐍",
                       "fontFamily": "Inter",
-                      "fontSize": 24
+                      "fontSize": 24,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -5315,7 +5327,8 @@
                       "fill": "#FFFFFF",
                       "content": "★",
                       "fontFamily": "Inter",
-                      "fontSize": 18
+                      "fontSize": 18,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -5344,7 +5357,8 @@
                       "fill": "#8A8A8A",
                       "content": "32,450 total damage",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -5452,7 +5466,8 @@
                   "fill": "#000000",
                   "content": "🏆",
                   "fontFamily": "Inter",
-                  "fontSize": 48
+                  "fontSize": 48,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -5473,7 +5488,8 @@
               "fill": "#71717A",
               "content": "Python has been defeated",
               "fontFamily": "Inter",
-              "fontSize": 15
+              "fontSize": 15,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -5520,7 +5536,8 @@
                           "fill": "#000000",
                           "content": "⚡",
                           "fontFamily": "Inter",
-                          "fontSize": 24
+                          "fontSize": 24,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -5563,7 +5580,8 @@
                           "fill": "#000000",
                           "content": "🥤",
                           "fontFamily": "Inter",
-                          "fontSize": 24
+                          "fontSize": 24,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -5606,7 +5624,8 @@
                           "fill": "#000000",
                           "content": "🛋️",
                           "fontFamily": "Inter",
-                          "fontSize": 24
+                          "fontSize": 24,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -5762,7 +5781,8 @@
                       "fill": "#71717A",
                       "content": "EXP",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -5792,7 +5812,8 @@
                       "fill": "#71717A",
                       "content": "Red Bull",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -5822,7 +5843,8 @@
                       "fill": "#71717A",
                       "content": "Cushion",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -6095,7 +6117,8 @@
               "fill": "#000000",
               "content": "🐍",
               "fontFamily": "Inter",
-              "fontSize": 64
+              "fontSize": 64,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -6235,7 +6258,8 @@
                   "fill": "#000000",
                   "content": "🥤",
                   "fontFamily": "Inter",
-                  "fontSize": 16
+                  "fontSize": 16,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -6333,7 +6357,8 @@
               "fill": "#71717A",
               "content": "Dynamic / Interpreted",
               "fontFamily": "Inter",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -6406,7 +6431,8 @@
               "fill": "#71717A",
               "content": "tap to throw",
               "fontFamily": "Inter",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -8388,7 +8414,8 @@
                   "content": "A strongly typed superset of JavaScript that compiles to clean, readable code. Known for its powerful type system and excellent tooling.",
                   "lineHeight": 1.5,
                   "fontFamily": "Inter",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -8841,7 +8868,8 @@
                   "content": "A strongly typed superset of JavaScript that compiles to clean, readable code. Known for its powerful type system and excellent tooling.",
                   "lineHeight": 1.5,
                   "fontFamily": "Inter",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -9137,7 +9165,8 @@
                       "fill": "#757575",
                       "content": "Dynamic / ★★★",
                       "fontFamily": "Inter",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -9314,7 +9343,8 @@
                           "fill": "#212121",
                           "content": "Ash",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -9370,7 +9400,8 @@
                           "fill": "#212121",
                           "content": "Misty",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -9426,7 +9457,8 @@
                           "fill": "#212121",
                           "content": "Brock",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -9482,7 +9514,8 @@
                           "fill": "#212121",
                           "content": "Gary",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -9533,7 +9566,8 @@
               "content": "Starting in 30s...",
               "textAlign": "center",
               "fontFamily": "Inter",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         }
@@ -9694,7 +9728,8 @@
                   "fill": "#757575",
                   "content": "Python defeated",
                   "fontFamily": "Inter",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -9897,7 +9932,8 @@
                       "fill": "#757575",
                       "content": "32,450 damage",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -9952,70 +9988,6 @@
       "fill": "#0F172A",
       "layout": "vertical",
       "children": [
-        {
-          "type": "frame",
-          "id": "hgPqe",
-          "name": "Status Bar",
-          "width": "fill_container",
-          "height": 62,
-          "padding": [
-            0,
-            24
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "kk2NA",
-              "name": "timeLabel",
-              "fill": "#F1F5F9",
-              "content": "9:41",
-              "fontFamily": "Inter",
-              "fontSize": 14,
-              "fontWeight": "700"
-            },
-            {
-              "type": "frame",
-              "id": "0pIOZ",
-              "name": "statusIcons",
-              "gap": 8,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "WeaSl",
-                  "name": "sigIcon",
-                  "width": 16,
-                  "height": 16,
-                  "iconFontName": "signal",
-                  "iconFontFamily": "lucide",
-                  "fill": "#F1F5F9"
-                },
-                {
-                  "type": "icon_font",
-                  "id": "S0d2r",
-                  "name": "wifiIcon",
-                  "width": 16,
-                  "height": 16,
-                  "iconFontName": "wifi",
-                  "iconFontFamily": "lucide",
-                  "fill": "#F1F5F9"
-                },
-                {
-                  "type": "icon_font",
-                  "id": "LPzdP",
-                  "name": "batIcon",
-                  "width": 16,
-                  "height": 16,
-                  "iconFontName": "battery-full",
-                  "iconFontFamily": "lucide",
-                  "fill": "#F1F5F9"
-                }
-              ]
-            }
-          ]
-        },
         {
           "type": "frame",
           "id": "zksuo",
@@ -10131,7 +10103,8 @@
                   "fill": "#94A3B8",
                   "content": "Dynamic / Interpreted",
                   "fontFamily": "Inter",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -10220,7 +10193,8 @@
                       "fill": "#94A3B8",
                       "content": "Dynamic / JIT Compiled",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "frame",
@@ -10253,7 +10227,8 @@
                               "fill": "#94A3B8",
                               "content": "5/10",
                               "fontFamily": "Inter",
-                              "fontSize": 11
+                              "fontSize": 11,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -10281,7 +10256,8 @@
                               "fill": "#94A3B8",
                               "content": "12:34",
                               "fontFamily": "Inter",
-                              "fontSize": 11
+                              "fontSize": 11,
+                              "fontWeight": "normal"
                             }
                           ]
                         }
@@ -10376,7 +10352,8 @@
                       "fill": "#94A3B8",
                       "content": "Static / Compiled",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "frame",
@@ -10409,7 +10386,8 @@
                               "fill": "#94A3B8",
                               "content": "8/10",
                               "fontFamily": "Inter",
-                              "fontSize": 11
+                              "fontSize": 11,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -10437,7 +10415,8 @@
                               "fill": "#94A3B8",
                               "content": "05:12",
                               "fontFamily": "Inter",
-                              "fontSize": 11
+                              "fontSize": 11,
+                              "fontWeight": "normal"
                             }
                           ]
                         }
@@ -10532,7 +10511,8 @@
                       "fill": "#94A3B8",
                       "content": "Static / Compiled",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "frame",
@@ -10565,7 +10545,8 @@
                               "fill": "#94A3B8",
                               "content": "3/10",
                               "fontFamily": "Inter",
-                              "fontSize": 11
+                              "fontSize": 11,
+                              "fontWeight": "normal"
                             }
                           ]
                         },
@@ -10593,7 +10574,8 @@
                               "fill": "#94A3B8",
                               "content": "23:45",
                               "fontFamily": "Inter",
-                              "fontSize": 11
+                              "fontSize": 11,
+                              "fontWeight": "normal"
                             }
                           ]
                         }
@@ -10818,70 +10800,6 @@
       "fill": "#0F172A",
       "layout": "vertical",
       "children": [
-        {
-          "type": "frame",
-          "id": "52EXU",
-          "name": "Status Bar",
-          "width": "fill_container",
-          "height": 62,
-          "padding": [
-            0,
-            24
-          ],
-          "justifyContent": "space_between",
-          "alignItems": "center",
-          "children": [
-            {
-              "type": "text",
-              "id": "BNH20",
-              "name": "bsTime",
-              "fill": "#F1F5F9",
-              "content": "9:41",
-              "fontFamily": "Inter",
-              "fontSize": 14,
-              "fontWeight": "700"
-            },
-            {
-              "type": "frame",
-              "id": "jrPCr",
-              "name": "bsIcons",
-              "gap": 8,
-              "alignItems": "center",
-              "children": [
-                {
-                  "type": "icon_font",
-                  "id": "KsjFj",
-                  "name": "bsSig",
-                  "width": 16,
-                  "height": 16,
-                  "iconFontName": "signal",
-                  "iconFontFamily": "lucide",
-                  "fill": "#F1F5F9"
-                },
-                {
-                  "type": "icon_font",
-                  "id": "euw4K",
-                  "name": "bsWifi",
-                  "width": 16,
-                  "height": 16,
-                  "iconFontName": "wifi",
-                  "iconFontFamily": "lucide",
-                  "fill": "#F1F5F9"
-                },
-                {
-                  "type": "icon_font",
-                  "id": "NyFGq",
-                  "name": "bsBat",
-                  "width": 16,
-                  "height": 16,
-                  "iconFontName": "battery-full",
-                  "iconFontFamily": "lucide",
-                  "fill": "#F1F5F9"
-                }
-              ]
-            }
-          ]
-        },
         {
           "type": "frame",
           "id": "sjlZB",
@@ -11159,7 +11077,8 @@
               "content": "tap to attack",
               "textAlign": "center",
               "fontFamily": "Inter",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             }
           ]
         }
@@ -11427,7 +11346,8 @@
                   "width": "fill_container",
                   "content": "RustLover42",
                   "fontFamily": "Inter",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -11436,7 +11356,8 @@
                   "fill": "#94A3B8",
                   "content": "Ferris",
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "ellipse",
@@ -11479,7 +11400,8 @@
                   "width": "fill_container",
                   "content": "GoGopher99",
                   "fontFamily": "Inter",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -11488,7 +11410,8 @@
                   "fill": "#94A3B8",
                   "content": "Gopher",
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "ellipse",
@@ -11531,7 +11454,8 @@
                   "width": "fill_container",
                   "content": "JSNinja",
                   "fontFamily": "Inter",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -11540,7 +11464,8 @@
                   "fill": "#94A3B8",
                   "content": "Node",
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "ellipse",
@@ -11583,7 +11508,8 @@
                   "width": "fill_container",
                   "content": "SwiftSamurai",
                   "fontFamily": "Inter",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -11592,7 +11518,8 @@
                   "fill": "#94A3B8",
                   "content": "Swift",
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "ellipse",
@@ -11696,7 +11623,8 @@
           "fill": "#94A3B8",
           "content": "Python defeated in 2:31",
           "fontFamily": "Inter",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         },
         {
           "type": "frame",
@@ -11755,7 +11683,8 @@
                       "fill": "#94A3B8",
                       "content": "EXP",
                       "fontFamily": "Inter",
-                      "fontSize": 11
+                      "fontSize": 11,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -11788,7 +11717,8 @@
                       "fill": "#94A3B8",
                       "content": "Red Bull",
                       "fontFamily": "Inter",
-                      "fontSize": 11
+                      "fontSize": 11,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -11821,7 +11751,8 @@
                       "fill": "#94A3B8",
                       "content": "Cushion",
                       "fontFamily": "Inter",
-                      "fontSize": 11
+                      "fontSize": 11,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -12068,7 +11999,8 @@
                       "fill": "#FFFFFFCC",
                       "content": "Level 24",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -12201,7 +12133,8 @@
                           "fill": "#757575",
                           "content": "Dynamic",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -12210,7 +12143,8 @@
                           "fill": "#FFC107",
                           "content": "★★★",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -12221,7 +12155,8 @@
                       "fill": "#757575",
                       "content": "4/6 players",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -12230,7 +12165,8 @@
                       "fill": "#757575",
                       "content": "2:45 remaining",
                       "fontFamily": "Inter",
-                      "fontSize": 11
+                      "fontSize": 11,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -12337,7 +12273,8 @@
                           "fill": "#757575",
                           "content": "Static",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -12346,7 +12283,8 @@
                           "fill": "#FFC107",
                           "content": "★★★★★",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -12357,7 +12295,8 @@
                       "fill": "#757575",
                       "content": "2/8 players",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -12366,7 +12305,8 @@
                       "fill": "#757575",
                       "content": "5:12 remaining",
                       "fontFamily": "Inter",
-                      "fontSize": 11
+                      "fontSize": 11,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -12473,7 +12413,8 @@
                           "fill": "#757575",
                           "content": "Dynamic",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -12482,7 +12423,8 @@
                           "fill": "#FFC107",
                           "content": "★★",
                           "fontFamily": "Inter",
-                          "fontSize": 12
+                          "fontSize": 12,
+                          "fontWeight": "normal"
                         }
                       ]
                     },
@@ -12493,7 +12435,8 @@
                       "fill": "#757575",
                       "content": "6/6 players",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -12647,7 +12590,8 @@
                       "fill": "#757575",
                       "content": "1/10 players",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -12656,7 +12600,8 @@
                       "fill": "#757575",
                       "content": "10:00 remaining",
                       "fontFamily": "Inter",
-                      "fontSize": 11
+                      "fontSize": 11,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -12772,7 +12717,8 @@
                   "fill": "#757575",
                   "content": "Collection",
                   "fontFamily": "Inter",
-                  "fontSize": 10
+                  "fontSize": 10,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -12803,7 +12749,8 @@
                   "fill": "#757575",
                   "content": "Items",
                   "fontFamily": "Inter",
-                  "fontSize": 10
+                  "fontSize": 10,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -12834,7 +12781,8 @@
                   "fill": "#757575",
                   "content": "Profile",
                   "fontFamily": "Inter",
-                  "fontSize": 10
+                  "fontSize": 10,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -13399,7 +13347,8 @@
               "fill": "#FFFFFF50",
               "content": "Swipe to dodge",
               "fontFamily": "Inter",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             }
           ]
         }
@@ -13696,7 +13645,8 @@
                       "fill": "#757575",
                       "content": "Run Away",
                       "fontFamily": "Inter",
-                      "fontSize": 16
+                      "fontSize": 16,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "icon_font",
@@ -14782,7 +14732,8 @@
                   "content": "TypeScript is a strongly typed programming language that builds on JavaScript, giving you better tooling at any scale. Known for its static type system and class-based architecture.",
                   "lineHeight": 1.5,
                   "fontFamily": "Inter",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -15062,7 +15013,8 @@
           "fill": "#94A3B8",
           "content": "tap to throw",
           "fontFamily": "Inter",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         },
         {
           "type": "frame",
@@ -15236,7 +15188,8 @@
               "fill": "#94A3B8",
               "content": "/ 12 captured",
               "fontFamily": "Inter",
-              "fontSize": 16
+              "fontSize": 16,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -16064,7 +16017,8 @@
                   "content": "A statically typed superset of JavaScript that compiles to clean, readable code. Known for its powerful type system and class-based architecture.",
                   "lineHeight": 1.5,
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -16408,7 +16362,8 @@
               "fill": "#71717A",
               "content": "Static / Class-based",
               "fontFamily": "Inter",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -16456,7 +16411,8 @@
                   "fill": "#71717A",
                   "content": "HP",
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -16486,7 +16442,8 @@
                   "fill": "#71717A",
                   "content": "ATK",
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -16516,7 +16473,8 @@
                   "fill": "#71717A",
                   "content": "SPD",
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -16563,7 +16521,8 @@
               "content": "A strongly typed superset of JavaScript that compiles to clean, readable code. Known for its powerful type system and excellent tooling support.",
               "lineHeight": 1.5,
               "fontFamily": "Inter",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -16623,7 +16582,8 @@
                   "fill": "#71717A",
                   "content": "PWR 65",
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -16658,7 +16618,8 @@
                   "fill": "#71717A",
                   "content": "PWR 80",
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -16890,7 +16851,8 @@
                       "fill": "#737373",
                       "content": "Dynamic / Interpreted",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -16899,7 +16861,8 @@
                       "fill": "#EAB308",
                       "content": "★★★☆☆",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -16928,7 +16891,8 @@
                       "fill": "#737373",
                       "content": "2:45",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "icon_font",
@@ -16993,7 +16957,8 @@
                       "fill": "#737373",
                       "content": "Systems / Compiled",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -17002,7 +16967,8 @@
                       "fill": "#EAB308",
                       "content": "★★★★★",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -17031,7 +16997,8 @@
                       "fill": "#737373",
                       "content": "1:30",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "icon_font",
@@ -17096,7 +17063,8 @@
                       "fill": "#737373",
                       "content": "Dynamic / Interpreted",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -17105,7 +17073,8 @@
                       "fill": "#EAB308",
                       "content": "★★★★☆",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -17134,7 +17103,8 @@
                       "fill": "#737373",
                       "content": "3:10",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "icon_font",
@@ -17800,7 +17770,8 @@
               "content": "TAP ANYWHERE",
               "textAlign": "center",
               "fontFamily": "Inter",
-              "fontSize": 10
+              "fontSize": 10,
+              "fontWeight": "normal"
             }
           ]
         }
@@ -17961,7 +17932,8 @@
                           "fill": "#EAB308",
                           "content": "★★★",
                           "fontFamily": "Inter",
-                          "fontSize": 14
+                          "fontSize": 14,
+                          "fontWeight": "normal"
                         },
                         {
                           "type": "text",
@@ -17970,7 +17942,8 @@
                           "fill": "#737373",
                           "content": "HP 100,000 / ATK 342",
                           "fontFamily": "Inter",
-                          "fontSize": 11
+                          "fontSize": 11,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -18316,7 +18289,8 @@
               "fill": "#737373",
               "content": "WAITING FOR SQUAD...",
               "fontFamily": "Inter",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             }
           ]
         }
@@ -18374,7 +18348,8 @@
           "content": "Python defeated",
           "textAlign": "center",
           "fontFamily": "Inter",
-          "fontSize": 14
+          "fontSize": 14,
+          "fontWeight": "normal"
         },
         {
           "type": "frame",
@@ -18691,7 +18666,8 @@
                   "fill": "#737373",
                   "content": "12,800 DMG",
                   "fontFamily": "Inter",
-                  "fontSize": 11
+                  "fontSize": 11,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -19087,7 +19063,8 @@
                           "fill": "#737373",
                           "content": "LV.18",
                           "fontFamily": "Inter",
-                          "fontSize": 10
+                          "fontSize": 10,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -19141,7 +19118,8 @@
                           "fill": "#737373",
                           "content": "LV.24",
                           "fontFamily": "Inter",
-                          "fontSize": 10
+                          "fontSize": 10,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -19204,7 +19182,8 @@
                           "fill": "#737373",
                           "content": "LV.31",
                           "fontFamily": "Inter",
-                          "fontSize": 10
+                          "fontSize": 10,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -19258,7 +19237,8 @@
                           "fill": "#737373",
                           "content": "LV.12",
                           "fontFamily": "Inter",
-                          "fontSize": 10
+                          "fontSize": 10,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -19321,7 +19301,8 @@
                           "fill": "#737373",
                           "content": "LV.08",
                           "fontFamily": "Inter",
-                          "fontSize": 10
+                          "fontSize": 10,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -19389,7 +19370,8 @@
                           "fill": "#737373",
                           "content": "LOCKED",
                           "fontFamily": "Inter",
-                          "fontSize": 10
+                          "fontSize": 10,
+                          "fontWeight": "normal"
                         }
                       ]
                     }
@@ -19934,7 +19916,8 @@
                   "content": "A strongly-typed superset of JavaScript. Known for static analysis and IDE-friendly tooling. Evolved from the JS ecosystem.",
                   "lineHeight": 1.5,
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -20194,7 +20177,8 @@
               "fill": "#8B949E",
               "content": "> pokemon-raid --version 1.0.0",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -20203,7 +20187,8 @@
               "fill": "#C9D1D9",
               "content": "$ whoami",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -20212,7 +20197,8 @@
               "fill": "#7EE787",
               "content": "player_01 [Lv.24]",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -20228,7 +20214,8 @@
               "fill": "#C9D1D9",
               "content": "$ raid list --active",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -20255,7 +20242,8 @@
               "fill": "#30363D",
               "content": "--------------------------------------",
               "fontFamily": "monospace",
-              "fontSize": 11
+              "fontSize": 11,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -20264,7 +20252,8 @@
               "fill": "#C9D1D9",
               "content": "01  Python      Dynamic   4/6    2:45",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -20279,7 +20268,8 @@
                   "fill": "#C9D1D9",
                   "content": "02  Rust        ",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -20288,7 +20278,8 @@
                   "fill": "#E3B341",
                   "content": "Static",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -20297,7 +20288,8 @@
                   "fill": "#C9D1D9",
                   "content": "    2/8    5:12",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -20314,7 +20306,8 @@
                   "fill": "#C9D1D9",
                   "content": "03  JavaScript  ",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -20323,7 +20316,8 @@
                   "fill": "#C9D1D9",
                   "content": "Dynamic",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -20332,7 +20326,8 @@
                   "fill": "#C9D1D9",
                   "content": "   ",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -20341,7 +20336,8 @@
                   "fill": "#7EE787",
                   "content": "FULL",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -20350,7 +20346,8 @@
                   "fill": "#C9D1D9",
                   "content": "   ",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -20359,7 +20356,8 @@
                   "fill": "#F97583",
                   "content": "0:30",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -20384,7 +20382,8 @@
                   "fill": "#7EE787",
                   "content": "$ raid join --id 01",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "rectangle",
@@ -20426,7 +20425,8 @@
               "fill": "#7EE787",
               "content": "[RAIDS]",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -20435,7 +20435,8 @@
               "fill": "#8B949E",
               "content": "[COLLECTION]",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -20444,7 +20445,8 @@
               "fill": "#8B949E",
               "content": "[ITEMS]",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -20453,7 +20455,8 @@
               "fill": "#8B949E",
               "content": "[PROFILE]",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             }
           ]
         }
@@ -20579,7 +20582,8 @@
                   "fill": "#C9D1D9",
                   "content": "HP ",
                   "fontFamily": "monospace",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "frame",
@@ -20606,7 +20610,8 @@
                   "fill": "#C9D1D9",
                   "content": " 42,680/100,000",
                   "fontFamily": "monospace",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -20624,7 +20629,8 @@
                   "fill": "#E3B341",
                   "content": "TIME: 2:45",
                   "fontFamily": "monospace",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "frame",
@@ -20638,7 +20644,8 @@
                       "fill": "#C9D1D9",
                       "content": "PHASE: 2/3 — ",
                       "fontFamily": "monospace",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -20647,7 +20654,8 @@
                       "fill": "#F97583",
                       "content": "ENRAGED",
                       "fontFamily": "monospace",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -20683,7 +20691,8 @@
                       "fill": "#C9D1D9",
                       "content": "> player_01 attacks! ",
                       "fontFamily": "monospace",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -20692,7 +20701,8 @@
                       "fill": "#F97583",
                       "content": "-342 dmg",
                       "fontFamily": "monospace",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -20705,7 +20715,8 @@
                   "width": "fill_container",
                   "content": "> rust_lover42 attacks! -256 dmg",
                   "fontFamily": "monospace",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "frame",
@@ -20719,7 +20730,8 @@
                       "fill": "#C9D1D9",
                       "content": "> js_master uses ",
                       "fontFamily": "monospace",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -20728,7 +20740,8 @@
                       "fill": "#7EE787",
                       "content": "SPECIAL! -1,024 dmg",
                       "fontFamily": "monospace",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -20744,7 +20757,8 @@
                       "fill": "#F97583",
                       "content": "> Python uses Byte Strike! ",
                       "fontFamily": "monospace",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     },
                     {
                       "type": "text",
@@ -20753,7 +20767,8 @@
                       "fill": "#F97583",
                       "content": "-89 dmg to player_01",
                       "fontFamily": "monospace",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
@@ -20790,7 +20805,8 @@
                   "fill": "#C9D1D9",
                   "content": "CHARGE ",
                   "fontFamily": "monospace",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "frame",
@@ -20817,7 +20833,8 @@
                   "fill": "#C9D1D9",
                   "content": " 72%",
                   "fontFamily": "monospace",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -20850,7 +20867,8 @@
                   "fill": "#7EE787",
                   "content": "$ attack --target python",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -20871,7 +20889,8 @@
               "content": "[TAP ANYWHERE]",
               "textAlign": "center",
               "fontFamily": "monospace",
-              "fontSize": 10
+              "fontSize": 10,
+              "fontWeight": "normal"
             }
           ]
         }
@@ -20970,7 +20989,8 @@
               "fill": "#C9D1D9",
               "content": "$ raid lobby --code 7X4K",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -20979,7 +20999,8 @@
               "fill": "#8B949E",
               "content": "Connecting...",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -20988,7 +21009,8 @@
               "fill": "#7EE787",
               "content": "Connected to RAID-7X4K",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -21016,7 +21038,8 @@
                   "fill": "#8B949E",
                   "content": "QR:",
                   "fontFamily": "monospace",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "icon_font",
@@ -21054,7 +21077,8 @@
               "fill": "#C9D1D9",
               "content": "$ squad status",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -21081,7 +21105,8 @@
               "fill": "#30363D",
               "content": "------------------------------------------",
               "fontFamily": "monospace",
-              "fontSize": 11
+              "fontSize": 11,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -21096,7 +21121,8 @@
                   "fill": "#C9D1D9",
                   "content": "player_01       TypeScript    18   READY ",
                   "fontFamily": "monospace",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -21105,7 +21131,8 @@
                   "fill": "#7EE787",
                   "content": "●",
                   "fontFamily": "monospace",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -21122,7 +21149,8 @@
                   "fill": "#C9D1D9",
                   "content": "rust_lover42    Rust          25   READY ",
                   "fontFamily": "monospace",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -21131,7 +21159,8 @@
                   "fill": "#7EE787",
                   "content": "●",
                   "fontFamily": "monospace",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -21148,7 +21177,8 @@
                   "fill": "#C9D1D9",
                   "content": "js_master       JavaScript    12   WAIT  ",
                   "fontFamily": "monospace",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -21157,7 +21187,8 @@
                   "fill": "#E3B341",
                   "content": "○",
                   "fontFamily": "monospace",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -21175,7 +21206,8 @@
               "fill": "#8B949E",
               "content": "3/6 players ready",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -21206,7 +21238,8 @@
                   "fill": "#7EE787",
                   "content": "$ raid start",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             }
@@ -21327,7 +21360,8 @@
               "fill": "#C9D1D9",
               "content": "Target: Python — DEFEATED",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21336,7 +21370,8 @@
               "fill": "#C9D1D9",
               "content": "Time: 2:31",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -21362,7 +21397,8 @@
               "fill": "#30363D",
               "content": "--------------------------------------",
               "fontFamily": "monospace",
-              "fontSize": 11
+              "fontSize": 11,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21371,7 +21407,8 @@
               "fill": "#C9D1D9",
               "content": "DAMAGE:  32,450",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21380,7 +21417,8 @@
               "fill": "#C9D1D9",
               "content": "TIME:    2:31",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -21395,7 +21433,8 @@
                   "fill": "#C9D1D9",
                   "content": "RANK:    ",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -21433,7 +21472,8 @@
               "fill": "#30363D",
               "content": "--------------------------------------",
               "fontFamily": "monospace",
-              "fontSize": 11
+              "fontSize": 11,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21442,7 +21482,8 @@
               "fill": "#7EE787",
               "content": "+350 XP | x2 RedBull | x1 Cushion",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -21464,7 +21505,8 @@
                   "fill": "#C9D1D9",
                   "content": "MVP: ",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "text",
@@ -21473,7 +21515,8 @@
                   "fill": "#7EE787",
                   "content": "rust_lover42 (32,450 dmg)",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -21608,7 +21651,8 @@
               "fill": "#C9D1D9",
               "content": "$ capture --target python",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -21624,7 +21668,8 @@
               "fill": "#E3B341",
               "content": "Capture probability: 42%",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21633,7 +21678,8 @@
               "fill": "#8B949E",
               "content": "Initializing capture sequence...",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -21674,7 +21720,8 @@
                   "fill": "#C9D1D9",
                   "content": " 42%",
                   "fontFamily": "monospace",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -21707,7 +21754,8 @@
                   "fill": "#7EE787",
                   "content": "$ throw --ball standard",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -21725,7 +21773,8 @@
               "fill": "#C9D1D9",
               "content": "Use item? [Y/N]",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21737,7 +21786,8 @@
               "content": "[SKIP]",
               "textAlign": "center",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             }
           ]
         }
@@ -21836,7 +21886,8 @@
               "fill": "#C9D1D9",
               "content": "$ pokedex --list",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -21863,7 +21914,8 @@
               "fill": "#30363D",
               "content": "--------------------------------------",
               "fontFamily": "monospace",
-              "fontSize": 11
+              "fontSize": 11,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21872,7 +21924,8 @@
               "fill": "#C9D1D9",
               "content": "01  TypeScript   Static    18  ★",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21881,7 +21934,8 @@
               "fill": "#C9D1D9",
               "content": "02  Python       Dynamic   22  ★",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21890,7 +21944,8 @@
               "fill": "#C9D1D9",
               "content": "03  Rust         Static    25  ★",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21899,7 +21954,8 @@
               "fill": "#C9D1D9",
               "content": "04  JavaScript   Dynamic   12  ★",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21908,7 +21964,8 @@
               "fill": "#C9D1D9",
               "content": "05  Go           Static    15  ★",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21917,7 +21974,8 @@
               "fill": "#C9D1D9",
               "content": "06  Swift        Static    20  ★",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21926,7 +21984,8 @@
               "fill": "#8B949E",
               "content": "07  ???          ???       --  LOCKED",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -21942,7 +22001,8 @@
               "fill": "#8B949E",
               "content": "6/12 registered",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -21974,7 +22034,8 @@
               "fill": "#8B949E",
               "content": "[RAIDS]",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21983,7 +22044,8 @@
               "fill": "#7EE787",
               "content": "[COLLECTION]",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -21992,7 +22054,8 @@
               "fill": "#8B949E",
               "content": "[ITEMS]",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -22001,7 +22064,8 @@
               "fill": "#8B949E",
               "content": "[PROFILE]",
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             }
           ]
         }
@@ -22100,7 +22164,8 @@
               "fill": "#C9D1D9",
               "content": "$ pokedex --inspect 001",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -22133,7 +22198,8 @@
               "fill": "#C9D1D9",
               "content": "Type: Static / Class-based",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -22156,7 +22222,8 @@
                   "fill": "#C9D1D9",
                   "content": "HP:  ",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "frame",
@@ -22183,7 +22250,8 @@
                   "fill": "#C9D1D9",
                   "content": " 85",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -22201,7 +22269,8 @@
                   "fill": "#C9D1D9",
                   "content": "ATK: ",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "frame",
@@ -22228,7 +22297,8 @@
                   "fill": "#C9D1D9",
                   "content": " 72",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -22246,7 +22316,8 @@
                   "fill": "#C9D1D9",
                   "content": "SPD: ",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 },
                 {
                   "type": "frame",
@@ -22273,7 +22344,8 @@
                   "fill": "#C9D1D9",
                   "content": " 91",
                   "fontFamily": "monospace",
-                  "fontSize": 14
+                  "fontSize": 14,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -22304,7 +22376,8 @@
               "content": "A strongly-typed superset of JavaScript that compiles to clean, readable code. Known for its powerful type system and class-based architecture.",
               "lineHeight": 1.5,
               "fontFamily": "monospace",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -22330,7 +22403,8 @@
               "fill": "#C9D1D9",
               "content": "  - Type Guard     (PWR: 65)",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "text",
@@ -22339,7 +22413,8 @@
               "fill": "#C9D1D9",
               "content": "  - Compile Strike (PWR: 80)",
               "fontFamily": "monospace",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             }
           ]
         }
@@ -22470,7 +22545,8 @@
                   "fill": "#9090B0",
                   "content": "Online",
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -22736,7 +22812,8 @@
                       "fill": "#9090B0",
                       "content": "Type: Backend",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -22812,7 +22889,8 @@
                       "fill": "#9090B0",
                       "content": "Type: Systems",
                       "fontFamily": "Inter",
-                      "fontSize": 12
+                      "fontSize": 12,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -23091,7 +23169,8 @@
           "fill": "#9090B0",
           "content": "Python",
           "fontFamily": "Inter",
-          "fontSize": 12
+          "fontSize": 12,
+          "fontWeight": "normal"
         },
         {
           "type": "text",
@@ -23249,7 +23328,8 @@
                   "fill": "#9090B0",
                   "content": "Lv.32 - Backend Type",
                   "fontFamily": "Inter",
-                  "fontSize": 12
+                  "fontSize": 12,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -23301,7 +23381,8 @@
               "content": "[SYSTEM] Raid lobby created. Code: 7X4K",
               "textAlign": "center",
               "fontFamily": "Inter",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -23331,7 +23412,8 @@
                       "fill": "#E8E8F0",
                       "content": "Ready to go!",
                       "fontFamily": "Inter",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -23342,7 +23424,8 @@
                   "fill": "#9090B0",
                   "content": "Ash",
                   "fontFamily": "Inter",
-                  "fontSize": 10
+                  "fontSize": 10,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -23374,7 +23457,8 @@
                       "fill": "#E8E8F0",
                       "content": "Who's bringing a Rust-type?",
                       "fontFamily": "Inter",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -23385,7 +23469,8 @@
                   "fill": "#9090B0",
                   "content": "Misty",
                   "fontFamily": "Inter",
-                  "fontSize": 10
+                  "fontSize": 10,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -23418,7 +23503,8 @@
                       "fill": "#FFFFFF",
                       "content": "I've got TypeScript Lv.18",
                       "fontFamily": "Inter",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -23429,7 +23515,8 @@
                   "fill": "#9090B0",
                   "content": "You",
                   "fontFamily": "Inter",
-                  "fontSize": 10
+                  "fontSize": 10,
+                  "fontWeight": "normal"
                 }
               ]
             },
@@ -23443,7 +23530,8 @@
               "content": "[SYSTEM] Brock joined the raid",
               "textAlign": "center",
               "fontFamily": "Inter",
-              "fontSize": 12
+              "fontSize": 12,
+              "fontWeight": "normal"
             }
           ]
         },
@@ -23486,7 +23574,8 @@
                       "fill": "#9090B0",
                       "content": "Type a message...",
                       "fontFamily": "Inter",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -23622,7 +23711,8 @@
               "fill": "#9090B0",
               "content": "defeated in 2:31",
               "fontFamily": "Inter",
-              "fontSize": 14
+              "fontSize": 14,
+              "fontWeight": "normal"
             },
             {
               "type": "frame",
@@ -23690,7 +23780,8 @@
                       "fill": "#E8E8F0",
                       "content": "x2 Red Bull",
                       "fontFamily": "Inter",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 },
@@ -23718,7 +23809,8 @@
                       "fill": "#E8E8F0",
                       "content": "x1 Cushion",
                       "fontFamily": "Inter",
-                      "fontSize": 14
+                      "fontSize": 14,
+                      "fontWeight": "normal"
                     }
                   ]
                 }
