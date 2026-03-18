@@ -168,6 +168,8 @@ export function Capture() {
   const animFrameRef = useRef<number>(0);
   const circleStartRef = useRef<number>(Date.now());
   const timeoutIdsRef = useRef<number[]>([]);
+  const isMountedRef = useRef(true);
+  const throwRequestIdRef = useRef(0);
 
   // Keep phaseRef in sync
   useEffect(() => {
@@ -200,6 +202,7 @@ export function Capture() {
   // ── Cleanup timers on unmount ──
   useEffect(() => {
     return () => {
+      isMountedRef.current = false;
       cancelAnimationFrame(animFrameRef.current);
       timeoutIdsRef.current.forEach(clearTimeout);
       timeoutIdsRef.current = [];
@@ -212,6 +215,8 @@ export function Capture() {
       if (phaseRef.current !== "idle") {
         return;
       }
+      const requestId = ++throwRequestIdRef.current;
+      const isStaleRequest = () => !isMountedRef.current || requestId !== throwRequestIdRef.current;
 
       const bonus = getThrowBonus(circleScale);
       setThrowBonus(bonus);
@@ -225,6 +230,9 @@ export function Capture() {
         if (itemId) {
           try {
             const useItemRes = await itemMutation.mutateAsync({ itemId });
+            if (isStaleRequest()) {
+              return "fail";
+            }
             setDisplayRate(useItemRes.rateAfter);
             // Refresh item list since CaptureService.UseItem consumes the item internally
             void refetchItems();
@@ -250,6 +258,9 @@ export function Capture() {
       });
 
       void Promise.all([apiPromise, animPromise]).then(([result]) => {
+        if (isStaleRequest()) {
+          return;
+        }
         if (phaseRef.current !== "throwing") {
           return;
         }
@@ -260,6 +271,9 @@ export function Capture() {
 
         const wobbleDuration = WOBBLE_DURATIONS[wobbles];
         const tid2 = window.setTimeout(() => {
+          if (isStaleRequest()) {
+            return;
+          }
           if (result === "success") {
             setParticles(makeParticles());
             setPhase("success");
@@ -272,6 +286,9 @@ export function Capture() {
             // "fail" — pokemon broke free; session is now closed
             setPhase("burst");
             const tid3 = window.setTimeout(() => {
+              if (isStaleRequest()) {
+                return;
+              }
               setPokemonClass("capture-pokemon-breakfree");
               setPhase("failed");
               sessionEndMutation.mutate();
@@ -333,10 +350,23 @@ export function Capture() {
     setShowItemModal(false);
   };
 
-  // ── Retry (reset UI only — session is closed after fail, so this navigates back) ──
-  const goBack = () => {
-    void navigate(-1);
-  };
+  const goBack = useCallback(() => {
+    if (!sessionId) {
+      void navigate(-1);
+      return;
+    }
+
+    void sessionEndMutation
+      .mutateAsync()
+      .catch(() => {
+        // Even if closing fails, keep navigation responsive for the user.
+      })
+      .finally(() => {
+        if (isMountedRef.current) {
+          void navigate(-1);
+        }
+      });
+  }, [navigate, sessionId, sessionEndMutation]);
 
   // ── Loading / Error states ──
   const isLoading = isSessionLoading || isItemsLoading;
@@ -569,7 +599,7 @@ export function Capture() {
             <button
               type="button"
               className="capture-item-btn capture-item-btn-secondary"
-              onClick={() => void navigate(-1)}
+              onClick={goBack}
             >
               ✕ Run
             </button>
