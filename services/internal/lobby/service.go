@@ -118,7 +118,7 @@ func (s *Service) GetActivePokemon(ctx context.Context, req *connect.Request[pb.
 	).Scan(&pokemonID)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
-			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("no active pokemon set"))
+			return connect.NewResponse(&pb.GetActivePokemonResponse{}), nil
 		}
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get active pokemon: %w", err))
 	}
