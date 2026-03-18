@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package capture.v1;
+
+option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/capture/v1;capturev1";
+
+service CaptureService {
+  rpc Invoke(CaptureRequest) returns (CaptureResponse) {}
+}
+
+message CaptureRequest {
+  string input = 1;
+}
+
+message CaptureResponse {
+  string output = 1;
+}
