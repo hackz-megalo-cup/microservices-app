@@ -34,7 +34,7 @@ export function Lobby() {
       .catch((err) => {
         console.error("[JoinRaid] 失敗:", err);
       });
-  }, [lobbyId, hasJoined, userId, joinMutation]);
+  }, [lobbyId, hasJoined, userId]);
 
   // --- 2. StreamLobby (Server Streaming) ---
   const {
