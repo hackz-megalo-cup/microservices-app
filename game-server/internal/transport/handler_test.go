@@ -1,6 +1,8 @@
 package transport
 
 import (
+	"context"
+	"encoding/json"
 	"testing"
 	"time"
 
@@ -112,5 +114,45 @@ func TestHandleMessage_BossDefeated(t *testing.T) {
 	}
 	if !hasFinished && len(conn.reliableMsgs) == 0 {
 		t.Error("expected finished message")
+	}
+}
+
+func TestStartTimeSync(t *testing.T) {
+	hub := NewHub()
+	matchups := battle.TypeMatchup{}
+	session := battle.NewSession(uuid.New(), uuid.New(), 50000, "normal", matchups, 300*time.Second)
+
+	conn := &mockConn{}
+	userID := uuid.New()
+	hub.Register(userID, conn)
+
+	handler := NewHandler(hub, session)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 2500*time.Millisecond)
+	defer cancel()
+
+	go handler.StartTimeSync(ctx)
+
+	// Wait for at least 2 ticks
+	time.Sleep(2200 * time.Millisecond)
+
+	conn.mu.Lock()
+	msgs := make([][]byte, len(conn.unreliableMsgs))
+	copy(msgs, conn.unreliableMsgs)
+	conn.mu.Unlock()
+
+	if len(msgs) < 2 {
+		t.Fatalf("expected at least 2 time_sync messages, got %d", len(msgs))
+	}
+
+	var tsMsg TimeSyncMessage
+	if err := json.Unmarshal(msgs[0], &tsMsg); err != nil {
+		t.Fatalf("failed to unmarshal time_sync: %v", err)
+	}
+	if tsMsg.T != "time_sync" {
+		t.Errorf("expected type time_sync, got %q", tsMsg.T)
+	}
+	if tsMsg.RemainingSec <= 0 || tsMsg.RemainingSec > 300 {
+		t.Errorf("unexpected remaining seconds: %d", tsMsg.RemainingSec)
 	}
 }

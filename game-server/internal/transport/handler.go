@@ -1,6 +1,7 @@
 package transport
 
 import (
+	"context"
 	"log"
 	"time"
 
@@ -65,7 +66,7 @@ func (h *Handler) handleJoin(userID uuid.UUID) {
 		BossHP:       info.BossHP,
 		BossMaxHP:    info.BossMaxHP,
 		Participants: participants,
-		TimeoutSec:   int(info.TimeoutDuration / time.Second),
+		TimeoutSec:   int(h.session.RemainingTime() / time.Second),
 	}
 
 	data, err := MarshalJSON(joined)
@@ -148,6 +149,32 @@ func (h *Handler) handleSpecial(userID uuid.UUID) {
 
 	if justFinished {
 		h.broadcastFinished()
+	}
+}
+
+func (h *Handler) StartTimeSync(ctx context.Context) {
+	ticker := time.NewTicker(1 * time.Second)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ctx.Done():
+			return
+		case <-h.session.Done():
+			return
+		case <-ticker.C:
+			remaining := h.session.RemainingTime()
+
+			msg := TimeSyncMessage{
+				T:            "time_sync",
+				RemainingSec: int(remaining.Seconds()),
+			}
+			data, err := MarshalJSON(msg)
+			if err != nil {
+				continue
+			}
+			h.hub.Broadcast(data)
+		}
 	}
 }
 

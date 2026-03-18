@@ -46,56 +46,6 @@ services:
     networks:
       - app
 
-  greeter:
-    build:
-      context: .
-      dockerfile: deploy/docker/greeter/Dockerfile
-    environment:
-      PORT: "8080"
-      CALLER_BASE_URL: "http://caller:8081"
-      EXTERNAL_API_URL: "https://httpbin.org/get"
-      DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/greeter_db"
-      OTEL_EXPORTER_OTLP_ENDPOINT: ""
-      OTEL_SERVICE_NAME: "greeter-service"
-      KAFKA_BROKERS: "redpanda:9092"
-      JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
-    labels:
-      - "traefik.enable=true"
-      - "traefik.http.routers.greeter.rule=PathPrefix(`/greeter.v1.GreeterService`)"
-      - "traefik.http.routers.greeter.entrypoints=web"
-      - "traefik.http.routers.greeter.priority=100"
-      - "traefik.http.routers.greeter.middlewares=cors@file,auth@file,rate-limit@file,retry@file"
-      - "traefik.http.routers.greeter-v2.rule=PathPrefix(`/greeter.v2.GreeterService`)"
-      - "traefik.http.routers.greeter-v2.entrypoints=web"
-      - "traefik.http.routers.greeter-v2.priority=100"
-      - "traefik.http.routers.greeter-v2.middlewares=cors@file,rate-limit@file"
-      - "traefik.http.services.greeter.loadbalancer.server.port=8080"
-      - "traefik.http.services.greeter.loadbalancer.server.scheme=h2c"
-    networks:
-      - app
-    depends_on:
-      caller:
-        condition: service_started
-      postgres-db-sync:
-        condition: service_completed_successfully
-
-  caller:
-    build:
-      context: .
-      dockerfile: deploy/docker/caller/Dockerfile
-    environment:
-      PORT: "8081"
-      DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/caller_db"
-      OTEL_EXPORTER_OTLP_ENDPOINT: ""
-      OTEL_SERVICE_NAME: "caller-service"
-      KAFKA_BROKERS: "redpanda:9092"
-      JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
-    networks:
-      - app
-    depends_on:
-      postgres-db-sync:
-        condition: service_completed_successfully
-
   gateway:
     build:
       context: .
@@ -173,7 +123,6 @@ services:
     environment:
       KAFKA_BROKERS: "redpanda:9092"
       DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/gateway_db"
-      GREETER_DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/greeter_db?sslmode=disable"
       ITEM_DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/item_db?sslmode=disable"
       HEALTH_PORT: "8083"
     healthcheck:
@@ -195,12 +144,30 @@ services:
       dockerfile: deploy/docker/frontend/Dockerfile
       args:
         VITE_API_BASE_URL: "http://localhost:30081"
+        VITE_GAME_SERVER_URL: "https://localhost:7777"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.frontend.rule=PathPrefix(`/`)"
       - "traefik.http.routers.frontend.entrypoints=web"
       - "traefik.http.routers.frontend.priority=1"
       - "traefik.http.services.frontend.loadbalancer.server.port=80"
+    networks:
+      - app
+
+  game-server:
+    build:
+      context: .
+      dockerfile: deploy/docker/game-server/Dockerfile
+    ports:
+      - "7777:7777/udp"
+      - "7777:7777/tcp"
+    environment:
+      LOCAL_DEV: "true"
+      PORT: "7777"
+      KAFKA_BROKERS: "redpanda:9092"
+    depends_on:
+      redpanda:
+        condition: service_healthy
     networks:
       - app
 
@@ -255,6 +222,14 @@ services:
       DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/item_db"
       OTEL_EXPORTER_OTLP_ENDPOINT: ""
       OTEL_SERVICE_NAME: "item-service"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.item.rule=PathPrefix(`/item.v1.ItemService`)"
+      - "traefik.http.routers.item.entrypoints=web"
+      - "traefik.http.routers.item.priority=100"
+      - "traefik.http.routers.item.middlewares=cors@file,auth@file,rate-limit@file,retry@file"
+      - "traefik.http.services.item.loadbalancer.server.port=8080"
+      - "traefik.http.services.item.loadbalancer.server.scheme=h2c"
     networks:
       - app
     depends_on:
@@ -274,12 +249,6 @@ services:
       JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
     labels:
       - "traefik.enable=true"
-      - "traefik.http.routers.item.rule=PathPrefix(`/item.v1.ItemService`)"
-      - "traefik.http.routers.item.entrypoints=web"
-      - "traefik.http.routers.item.priority=100"
-      - "traefik.http.routers.item.middlewares=cors@file,auth@file,rate-limit@file,retry@file"
-      - "traefik.http.services.item.loadbalancer.server.port=8080"
-      - "traefik.http.services.item.loadbalancer.server.scheme=h2c"
       - "traefik.http.routers.masterdata.rule=PathPrefix(`/masterdata.v1.MasterdataService`)"
       - "traefik.http.routers.masterdata.entrypoints=web"
       - "traefik.http.routers.masterdata.priority=100"
