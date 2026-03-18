@@ -95,9 +95,13 @@
           # Microservices (connect-go) — go.mod requires go 1.26
           buildGoModule = pkgs.buildGo126Module;
           goServiceVersion = "0.1.0";
-          goVendorHash = "sha256-9mDtmS5axcsP/YiqrIcZT6YkysC0OegilaNfWNPvp80=";
+          goVendorHash = "sha256-DW+NKaC3W4XXy1/tGCOgwbwqnwiwVwcZvtffZ7dPrcU=";
           servicesRoot = toString ./services;
           goServiceInputs = {
+            auth = {
+              internals = [ "auth" ];
+              gen = [ "auth" ];
+            };
             caller = {
               internals = [ "caller" ];
               gen = [ "caller" ];
@@ -142,7 +146,6 @@
                 "item"
                 "masterdata"
               ];
-              vendorHash = "sha256-0kjB3UTON7eZJEZ9vIZlN3RqGLryhklu8fcMLowv53A=";
             };
           };
           goServiceSource =
@@ -205,6 +208,7 @@
             name = "go-services";
             src = ./services;
             subPackages = [
+              "cmd/auth"
               "cmd/caller"
               "cmd/gateway"
               "cmd/greeter"
@@ -214,6 +218,7 @@
               "cmd/raid-lobby"
               "cmd/capture"
             ];
+            vendorHash = "sha256-MMHm0r37BNzgmkrZUb+OCbbcptqpBJEoK1hSgBM+ceY=";
           };
 
           buildGoServiceImage =
@@ -228,6 +233,10 @@
                 (nix2containerPkgs.nix2container.buildLayer { deps = [ package ]; })
               ];
             };
+
+          auth = buildGoService "auth";
+          auth-image = buildGoServiceImage "auth" auth;
+          auth-release-image = buildGoServiceImage "auth" go-services;
 
           caller = buildGoService "caller";
           caller-image = buildGoServiceImage "caller" caller;
@@ -312,9 +321,6 @@
                 })
               ];
             };
-
-          auth-service = buildNodeService "auth-service" (nodeServiceNodeModules "auth-service");
-          auth-service-image = buildNodeServiceImage "auth-service" auth-service;
 
           custom-lang-service = buildNodeService "custom-lang-service" (
             nodeServiceNodeModules "custom-lang-service"
@@ -440,8 +446,9 @@
           packages.caller = caller;
           packages.caller-image = caller-image;
           packages.caller-release-image = caller-release-image;
-          packages.auth-service = auth-service;
-          packages.auth-service-image = auth-service-image;
+          packages.auth = auth;
+          packages.auth-image = auth-image;
+          packages.auth-release-image = auth-release-image;
           packages.custom-lang-service = custom-lang-service;
           packages.custom-lang-service-image = custom-lang-service-image;
           packages.frontend = frontend-assets;

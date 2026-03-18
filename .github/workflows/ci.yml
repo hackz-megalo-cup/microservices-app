@@ -115,9 +115,9 @@ jobs:
         run: |
           set -euo pipefail
 
-          go_services=(caller gateway greeter item masterdata projector raid-lobby capture)
+          go_services=(auth caller gateway greeter item masterdata projector raid-lobby capture)
           release_images=(
-            .#auth-service-image
+            .#auth-image
             .#custom-lang-service-image
             .#frontend-image
             .#caller-image
@@ -199,7 +199,7 @@ jobs:
           done
 
           if [[ "$NIX_CHANGED" == "true" || "$NODE_CHANGED" == "true" ]]; then
-            add_pr_image .#auth-service-image
+            add_pr_image .#auth-image
             add_pr_image .#custom-lang-service-image
           fi
           if [[ "$NIX_CHANGED" == "true" || "$FRONTEND_CHANGED" == "true" ]]; then
@@ -208,7 +208,7 @@ jobs:
 
           image_attrs=()
           pr_image_order=(
-            .#auth-service-image
+            .#auth-image
             .#custom-lang-service-image
             .#frontend-image
             .#caller-image
