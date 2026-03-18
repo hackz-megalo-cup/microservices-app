@@ -1,3 +1,5 @@
+import type { EffectField } from "../../types";
+
 export type { EffectField } from "../../types";
 
 const EFFECT_TYPES = ["capture_rate_up", "escape"] as const;
