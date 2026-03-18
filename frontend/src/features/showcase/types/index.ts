@@ -13,6 +13,23 @@ export interface Trainer {
   online: boolean;
 }
 
+export interface Participant {
+  id: string;
+  userId: string;
+  name: string;
+  pokemon: string;
+  online: boolean;
+}
+
+export interface LobbyState {
+  lobbyId: string;
+  participants: Participant[];
+  bossName?: string;
+  bossImage?: string;
+  bossType?: string;
+  maxParticipants: number;
+}
+
 export interface PokemonStat {
   label: string;
   value: number;

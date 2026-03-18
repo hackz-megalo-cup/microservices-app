@@ -66,11 +66,13 @@ export const handlers = [
       message: `Hello ${name} from mocked gateway!`,
     });
   }),
+
   http.post(`${baseUrl}/masterdata.v1.MasterdataService/ListPokemon`, () => {
     return HttpResponse.json({
       pokemon: mockPokemon,
     });
   }),
+
   http.post(`${baseUrl}/masterdata.v1.MasterdataService/GetPokemon`, async ({ request }) => {
     const body = (await request.json()) as { id?: string };
     const target = mockPokemon.find((pokemon) => pokemon.id === body.id);
@@ -89,4 +91,27 @@ export const handlers = [
       pokemon: target,
     });
   }),
+
+  // JoinRaid (Unary)
+  http.post(`${baseUrl}/raid_lobby.v1.RaidLobbyService/JoinRaid`, async ({ request }) => {
+    const body = (await request.json()) as { lobbyId?: string; userId?: string };
+    console.log("[MSW] JoinRaid:", body);
+
+    return HttpResponse.json({
+      participantId: `participant-${Math.random().toString(36).substring(7)}`,
+    });
+  }),
+
+  // StartBattle (Unary)
+  http.post(`${baseUrl}/raid_lobby.v1.RaidLobbyService/StartBattle`, async ({ request }) => {
+    const body = (await request.json()) as { lobbyId?: string };
+    console.log("[MSW] StartBattle:", body);
+
+    return HttpResponse.json({
+      battleSessionId: `battle-${Math.random().toString(36).substring(7)}`,
+    });
+  }),
+
+  // NOTE: StreamLobby (Server Streaming) は MSW では完全にモックするのは困難
+  // 開発時は実際のバックエンドを起動するか、useLobbyStream を直接モック差し替えする
 ];
