@@ -9,6 +9,7 @@ psql -v ON_ERROR_STOP=1 --username "$POSTGRES_USER" --dbname "$POSTGRES_DB" <<-E
     CREATE DATABASE item_db;
     CREATE DATABASE masterdata_db;
     CREATE DATABASE raid_lobby_db;
+    CREATE DATABASE lobby_db;
     CREATE DATABASE capture_db;
 EOSQL
 

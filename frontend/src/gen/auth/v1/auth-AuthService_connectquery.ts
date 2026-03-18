@@ -24,3 +24,10 @@ export const loginUser = AuthService.method.loginUser;
  * @generated from rpc auth.v1.AuthService.GetUserProfile
  */
 export const getUserProfile = AuthService.method.getUserProfile;
+
+/**
+ * ユーザーが所持するポケモンID一覧取得
+ *
+ * @generated from rpc auth.v1.AuthService.GetUserPokemon
+ */
+export const getUserPokemon = AuthService.method.getUserPokemon;
