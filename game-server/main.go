@@ -83,6 +83,9 @@ func runLocalDev() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
+	// Start time sync broadcast
+	go handler.StartTimeSync(ctx)
+
 	onWT := func(wtSession *webtransport.Session) {
 		userID := uuid.New()
 		conn := transport.NewWTConn(wtSession)
@@ -301,6 +304,9 @@ func runProduction() {
 			time.AfterFunc(session.TimeoutDuration, func() {
 				session.Timeout()
 			})
+
+			// Start time sync broadcast
+			go handler.StartTimeSync(ctx)
 
 			close(sessionReady)
 

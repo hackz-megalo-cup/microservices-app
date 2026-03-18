@@ -44,6 +44,9 @@ export function BattlePage() {
           setResult(msg.result);
           setTimeout(() => navigate(`/victory/${id}`), 2000);
           break;
+        case "time_sync":
+          setTimeoutSec(msg.remainingSec);
+          break;
       }
     },
     [id, navigate],

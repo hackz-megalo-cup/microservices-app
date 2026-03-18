@@ -34,7 +34,17 @@ export interface FinishedMessage {
   elapsed: number;
 }
 
-export type ServerMessage = JoinedMessage | HpMessage | SpecialUsedMessage | FinishedMessage;
+export interface TimeSyncMessage {
+  t: "time_sync";
+  remainingSec: number;
+}
+
+export type ServerMessage =
+  | JoinedMessage
+  | HpMessage
+  | SpecialUsedMessage
+  | FinishedMessage
+  | TimeSyncMessage;
 
 // --- Client → Server messages ---
 
