@@ -434,7 +434,7 @@ export function RaidTestPage() {
 
         const { host: connectHost, port: connectPort, certHash: hash } = conn;
         if ("lobbyId" in conn && conn.lobbyId) {
-          setCurrentLobbyId(conn.lobbyId);
+          setCurrentLobbyId(conn.lobbyId as string);
         }
 
         setHost(connectHost);
