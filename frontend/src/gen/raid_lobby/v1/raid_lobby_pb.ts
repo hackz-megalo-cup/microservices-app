@@ -4,13 +4,15 @@
 
 import type { GenFile, GenMessage, GenService } from "@bufbuild/protobuf/codegenv2";
 import { fileDesc, messageDesc, serviceDesc } from "@bufbuild/protobuf/codegenv2";
+import type { Timestamp } from "@bufbuild/protobuf/wkt";
+import { file_google_protobuf_timestamp } from "@bufbuild/protobuf/wkt";
 import type { Message } from "@bufbuild/protobuf";
 
 /**
  * Describes the file raid_lobby/v1/raid_lobby.proto.
  */
 export const file_raid_lobby_v1_raid_lobby: GenFile = /*@__PURE__*/
-  fileDesc("Ch5yYWlkX2xvYmJ5L3YxL3JhaWRfbG9iYnkucHJvdG8SDXJhaWRfbG9iYnkudjEiLAoRQ3JlYXRlUmFpZFJlcXVlc3QSFwoPYm9zc19wb2tlbW9uX2lkGAEgASgJIiYKEkNyZWF0ZVJhaWRSZXNwb25zZRIQCghsb2JieV9pZBgBIAEoCSI0Cg9Kb2luUmFpZFJlcXVlc3QSEAoIbG9iYnlfaWQYASABKAkSDwoHdXNlcl9pZBgCIAEoCSIqChBKb2luUmFpZFJlc3BvbnNlEhYKDnBhcnRpY2lwYW50X2lkGAEgASgJIiYKElN0YXJ0QmF0dGxlUmVxdWVzdBIQCghsb2JieV9pZBgBIAEoCSIwChNTdGFydEJhdHRsZVJlc3BvbnNlEhkKEWJhdHRsZV9zZXNzaW9uX2lkGAEgASgJIiYKElN0cmVhbUxvYmJ5UmVxdWVzdBIQCghsb2JieV9pZBgBIAEoCSJMChNTdHJlYW1Mb2JieVJlc3BvbnNlEhIKCmV2ZW50X3R5cGUYASABKAkSEAoIbG9iYnlfaWQYAiABKAkSDwoHcGF5bG9hZBgDIAEoCSIWChRMaXN0T3BlblJhaWRzUmVxdWVzdCJEChVMaXN0T3BlblJhaWRzUmVzcG9uc2USKwoFcmFpZHMYASADKAsyHC5yYWlkX2xvYmJ5LnYxLk9wZW5SYWlkRW50cnkiNAoNT3BlblJhaWRFbnRyeRIKCgJpZBgBIAEoCRIXCg9ib3NzX3Bva2Vtb25faWQYAiABKAkyxgMKEFJhaWRMb2JieVNlcnZpY2USUwoKQ3JlYXRlUmFpZBIgLnJhaWRfbG9iYnkudjEuQ3JlYXRlUmFpZFJlcXVlc3QaIS5yYWlkX2xvYmJ5LnYxLkNyZWF0ZVJhaWRSZXNwb25zZSIAEk0KCEpvaW5SYWlkEh4ucmFpZF9sb2JieS52MS5Kb2luUmFpZFJlcXVlc3QaHy5yYWlkX2xvYmJ5LnYxLkpvaW5SYWlkUmVzcG9uc2UiABJWCgtTdGFydEJhdHRsZRIhLnJhaWRfbG9iYnkudjEuU3RhcnRCYXR0bGVSZXF1ZXN0GiIucmFpZF9sb2JieS52MS5TdGFydEJhdHRsZVJlc3BvbnNlIgASWAoLU3RyZWFtTG9iYnkSIS5yYWlkX2xvYmJ5LnYxLlN0cmVhbUxvYmJ5UmVxdWVzdBoiLnJhaWRfbG9iYnkudjEuU3RyZWFtTG9iYnlSZXNwb25zZSIAMAESXAoNTGlzdE9wZW5SYWlkcxIjLnJhaWRfbG9iYnkudjEuTGlzdE9wZW5SYWlkc1JlcXVlc3QaJC5yYWlkX2xvYmJ5LnYxLkxpc3RPcGVuUmFpZHNSZXNwb25zZSIAQlpaWGdpdGh1Yi5jb20vaGFja3otbWVnYWxvLWN1cC9taWNyb3NlcnZpY2VzLWFwcC9zZXJ2aWNlcy9nZW4vZ28vcmFpZF9sb2JieS92MTtyYWlkX2xvYmJ5djFiBnByb3RvMw");
+  fileDesc("Ch5yYWlkX2xvYmJ5L3YxL3JhaWRfbG9iYnkucHJvdG8SDXJhaWRfbG9iYnkudjEiLAoRQ3JlYXRlUmFpZFJlcXVlc3QSFwoPYm9zc19wb2tlbW9uX2lkGAEgASgJIiYKEkNyZWF0ZVJhaWRSZXNwb25zZRIQCghsb2JieV9pZBgBIAEoCSI0Cg9Kb2luUmFpZFJlcXVlc3QSEAoIbG9iYnlfaWQYASABKAkSDwoHdXNlcl9pZBgCIAEoCSIqChBKb2luUmFpZFJlc3BvbnNlEhYKDnBhcnRpY2lwYW50X2lkGAEgASgJIiYKElN0YXJ0QmF0dGxlUmVxdWVzdBIQCghsb2JieV9pZBgBIAEoCSIwChNTdGFydEJhdHRsZVJlc3BvbnNlEhkKEWJhdHRsZV9zZXNzaW9uX2lkGAEgASgJIiYKElN0cmVhbUxvYmJ5UmVxdWVzdBIQCghsb2JieV9pZBgBIAEoCSJMChNTdHJlYW1Mb2JieVJlc3BvbnNlEhIKCmV2ZW50X3R5cGUYASABKAkSEAoIbG9iYnlfaWQYAiABKAkSDwoHcGF5bG9hZBgDIAEoCSItChRMaXN0T3BlblJhaWRzUmVxdWVzdBIVCg1zdGF0dXNfZmlsdGVyGAEgASgJIkQKFUxpc3RPcGVuUmFpZHNSZXNwb25zZRIrCgVyYWlkcxgBIAMoCzIcLnJhaWRfbG9iYnkudjEuT3BlblJhaWRFbnRyeSKsAQoNT3BlblJhaWRFbnRyeRIKCgJpZBgBIAEoCRIXCg9ib3NzX3Bva2Vtb25faWQYAiABKAkSHAoUY3VycmVudF9wYXJ0aWNpcGFudHMYAyABKAUSDgoGc3RhdHVzGAQgASgJEi4KCmNyZWF0ZWRfYXQYBSABKAsyGi5nb29nbGUucHJvdG9idWYuVGltZXN0YW1wEhgKEG1heF9wYXJ0aWNpcGFudHMYBiABKAUyxgMKEFJhaWRMb2JieVNlcnZpY2USUwoKQ3JlYXRlUmFpZBIgLnJhaWRfbG9iYnkudjEuQ3JlYXRlUmFpZFJlcXVlc3QaIS5yYWlkX2xvYmJ5LnYxLkNyZWF0ZVJhaWRSZXNwb25zZSIAEk0KCEpvaW5SYWlkEh4ucmFpZF9sb2JieS52MS5Kb2luUmFpZFJlcXVlc3QaHy5yYWlkX2xvYmJ5LnYxLkpvaW5SYWlkUmVzcG9uc2UiABJWCgtTdGFydEJhdHRsZRIhLnJhaWRfbG9iYnkudjEuU3RhcnRCYXR0bGVSZXF1ZXN0GiIucmFpZF9sb2JieS52MS5TdGFydEJhdHRsZVJlc3BvbnNlIgASWAoLU3RyZWFtTG9iYnkSIS5yYWlkX2xvYmJ5LnYxLlN0cmVhbUxvYmJ5UmVxdWVzdBoiLnJhaWRfbG9iYnkudjEuU3RyZWFtTG9iYnlSZXNwb25zZSIAMAESXAoNTGlzdE9wZW5SYWlkcxIjLnJhaWRfbG9iYnkudjEuTGlzdE9wZW5SYWlkc1JlcXVlc3QaJC5yYWlkX2xvYmJ5LnYxLkxpc3RPcGVuUmFpZHNSZXNwb25zZSIAQlpaWGdpdGh1Yi5jb20vaGFja3otbWVnYWxvLWN1cC9taWNyb3NlcnZpY2VzLWFwcC9zZXJ2aWNlcy9nZW4vZ28vcmFpZF9sb2JieS92MTtyYWlkX2xvYmJ5djFiBnByb3RvMw", [file_google_protobuf_timestamp]);
 
 /**
  * @generated from message raid_lobby.v1.CreateRaidRequest
@@ -167,6 +169,12 @@ export const StreamLobbyResponseSchema: GenMessage<StreamLobbyResponse> = /*@__P
  * @generated from message raid_lobby.v1.ListOpenRaidsRequest
  */
 export type ListOpenRaidsRequest = Message<"raid_lobby.v1.ListOpenRaidsRequest"> & {
+  /**
+   * optional: "waiting", "in_battle", "" (全件)
+   *
+   * @generated from field: string status_filter = 1;
+   */
+  statusFilter: string;
 };
 
 /**
@@ -206,6 +214,26 @@ export type OpenRaidEntry = Message<"raid_lobby.v1.OpenRaidEntry"> & {
    * @generated from field: string boss_pokemon_id = 2;
    */
   bossPokemonId: string;
+
+  /**
+   * @generated from field: int32 current_participants = 3;
+   */
+  currentParticipants: number;
+
+  /**
+   * @generated from field: string status = 4;
+   */
+  status: string;
+
+  /**
+   * @generated from field: google.protobuf.Timestamp created_at = 5;
+   */
+  createdAt?: Timestamp;
+
+  /**
+   * @generated from field: int32 max_participants = 6;
+   */
+  maxParticipants: number;
 };
 
 /**
