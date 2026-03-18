@@ -1,15 +1,33 @@
 import { createClient } from "@connectrpc/connect";
-import { useQuery, useTransport } from "@connectrpc/connect-query";
+import { createConnectQueryKey, useQuery, useTransport } from "@connectrpc/connect-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { MasterdataService } from "../../../gen/masterdata/v1/masterdata_pb";
-import { listItems } from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
+import {
+  getItem,
+  listItems,
+} from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 
-export function useAdminItems() {
+const masterdataQueryKey = createConnectQueryKey({
+  schema: MasterdataService,
+  cardinality: undefined,
+});
+
+interface UseAdminItemsOptions {
+  id?: string;
+  mode?: "create" | "edit";
+}
+
+export function useAdminItems(options?: UseAdminItemsOptions) {
   const transport = useTransport();
   const queryClient = useQueryClient();
 
   const query = useQuery(listItems, {});
+  const detailQuery = useQuery(
+    getItem,
+    { id: options?.id ?? "" },
+    { enabled: options?.mode === "edit" && Boolean(options?.id) },
+  );
 
   const client = useMemo(() => createClient(MasterdataService, transport), [transport]);
 
@@ -27,7 +45,7 @@ export function useAdminItems() {
         { name: vars.name, effects: vars.effects },
         { headers: new Headers({ "idempotency-key": crypto.randomUUID() }) },
       ),
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: masterdataQueryKey }),
   });
 
   const updateMutation = useMutation({
@@ -45,7 +63,7 @@ export function useAdminItems() {
         { id: vars.id, name: vars.name, effects: vars.effects },
         { headers: new Headers({ "idempotency-key": crypto.randomUUID() }) },
       ),
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: masterdataQueryKey }),
   });
 
   const deleteMutation = useMutation({
@@ -54,7 +72,7 @@ export function useAdminItems() {
         { id: vars.id },
         { headers: new Headers({ "idempotency-key": crypto.randomUUID() }) },
       ),
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: masterdataQueryKey }),
   });
 
   return {
@@ -62,6 +80,9 @@ export function useAdminItems() {
     isLoading: query.isPending,
     error: query.error,
     refetch: query.refetch,
+    itemDetail: detailQuery.data?.item,
+    isDetailLoading: detailQuery.isPending,
+    detailError: detailQuery.error,
     createMutation,
     updateMutation,
     deleteMutation,

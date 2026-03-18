@@ -6,3 +6,11 @@ export interface AdminRaid {
   status: string;
   createdAtMs: number | null;
 }
+
+export type EffectField = {
+  _key: string;
+  effectType: string;
+  targetType: string;
+  captureRateBonus: number;
+  flavorText: string;
+};

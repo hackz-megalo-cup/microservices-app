@@ -1,8 +1,6 @@
-import { useQuery } from "@connectrpc/connect-query";
 import { type FormEvent, useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import type { Pokemon } from "../../../../gen/masterdata/v1/masterdata_pb";
-import { getPokemon } from "../../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 import { useAdminPokemon } from "../../hooks/use-admin-pokemon";
 
 interface PokemonFormProps {
@@ -44,21 +42,18 @@ function pokemonToFormValues(p: Pokemon): FormValues {
 export function PokemonForm({ mode }: PokemonFormProps) {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
-  const { createMutation, updateMutation } = useAdminPokemon();
-
-  const editQuery = useQuery(
-    getPokemon,
-    { id: id ?? "" },
-    { enabled: mode === "edit" && Boolean(id) },
-  );
+  const { createMutation, updateMutation, pokemonDetail, isDetailLoading } = useAdminPokemon({
+    id,
+    mode,
+  });
 
   const [values, setValues] = useState<FormValues>(EMPTY_FORM);
 
   useEffect(() => {
-    if (mode === "edit" && editQuery.data?.pokemon) {
-      setValues(pokemonToFormValues(editQuery.data.pokemon));
+    if (mode === "edit" && pokemonDetail) {
+      setValues(pokemonToFormValues(pokemonDetail));
     }
-  }, [mode, editQuery.data?.pokemon]);
+  }, [mode, pokemonDetail]);
 
   function handleChange(field: keyof FormValues, value: string) {
     setValues((prev) => ({ ...prev, [field]: value }));
@@ -89,7 +84,7 @@ export function PokemonForm({ mode }: PokemonFormProps) {
     }
   }
 
-  const isLoading = mode === "edit" && editQuery.isPending;
+  const isLoading = mode === "edit" && isDetailLoading;
   const isMutating = createMutation.isPending || updateMutation.isPending;
   const mutationError = createMutation.error ?? updateMutation.error;
 

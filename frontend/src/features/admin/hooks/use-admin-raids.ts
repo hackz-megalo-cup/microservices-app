@@ -1,11 +1,16 @@
 import { createClient } from "@connectrpc/connect";
-import { useQuery, useTransport } from "@connectrpc/connect-query";
+import { createConnectQueryKey, useQuery, useTransport } from "@connectrpc/connect-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { listPokemon } from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 import { RaidLobbyService } from "../../../gen/raid_lobby/v1/raid_lobby_pb";
 import { listOpenRaids } from "../../../gen/raid_lobby/v1/raid_lobby-RaidLobbyService_connectquery";
 import type { AdminRaid } from "../types";
+
+const raidLobbyQueryKey = createConnectQueryKey({
+  schema: RaidLobbyService,
+  cardinality: undefined,
+});
 
 function toEpochMs(createdAt: { seconds: bigint; nanos: number } | undefined): number | null {
   if (!createdAt) {
@@ -55,7 +60,7 @@ export function useAdminRaids() {
   const createMutation = useMutation({
     mutationFn: async (vars: { bossPokemonId: string }) =>
       client.createRaid(vars, { headers: new Headers({ "idempotency-key": crypto.randomUUID() }) }),
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: raidLobbyQueryKey }),
   });
 
   const startMutation = useMutation({
@@ -63,7 +68,7 @@ export function useAdminRaids() {
       client.startBattle(vars, {
         headers: new Headers({ "idempotency-key": crypto.randomUUID() }),
       }),
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: raidLobbyQueryKey }),
   });
 
   return {

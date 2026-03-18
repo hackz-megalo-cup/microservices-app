@@ -1,8 +1,6 @@
-import { useQuery } from "@connectrpc/connect-query";
 import type { FormEvent } from "react";
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import { getItem } from "../../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 import { useAdminItems } from "../../hooks/use-admin-items";
 import type { EffectField } from "./item-effect-fields";
 import { BLANK_EFFECT, ItemEffectFields } from "./item-effect-fields";
@@ -15,23 +13,17 @@ export function ItemForm({ mode }: ItemFormProps) {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
 
-  const { createMutation, updateMutation } = useAdminItems();
-
-  const itemQuery = useQuery(
-    getItem,
-    { id: id ?? "" },
-    { enabled: mode === "edit" && Boolean(id) },
-  );
+  const { createMutation, updateMutation, itemDetail, isDetailLoading, detailError } =
+    useAdminItems({ id, mode });
 
   const [name, setName] = useState("");
   const [effects, setEffects] = useState<EffectField[]>([]);
 
   useEffect(() => {
-    if (mode === "edit" && itemQuery.data?.item) {
-      const item = itemQuery.data.item;
-      setName(item.name);
+    if (mode === "edit" && itemDetail) {
+      setName(itemDetail.name);
       setEffects(
-        item.effects.map((e) => ({
+        itemDetail.effects.map((e) => ({
           ...BLANK_EFFECT(),
           effectType: e.effectType,
           targetType: e.targetType,
@@ -40,9 +32,9 @@ export function ItemForm({ mode }: ItemFormProps) {
         })),
       );
     }
-  }, [mode, itemQuery.data]);
+  }, [mode, itemDetail]);
 
-  async function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
 
     const apiEffects = effects.map(({ effectType, targetType, captureRateBonus, flavorText }) => ({
@@ -52,15 +44,23 @@ export function ItemForm({ mode }: ItemFormProps) {
       flavorText,
     }));
     if (mode === "create") {
-      await createMutation.mutateAsync({ name, effects: apiEffects });
+      createMutation.mutate(
+        { name, effects: apiEffects },
+        {
+          onSuccess: () => void navigate("/admin/items"),
+        },
+      );
     } else {
-      await updateMutation.mutateAsync({ id: id ?? "", name, effects: apiEffects });
+      updateMutation.mutate(
+        { id: id ?? "", name, effects: apiEffects },
+        {
+          onSuccess: () => void navigate("/admin/items"),
+        },
+      );
     }
-
-    void navigate("/admin/items");
   }
 
-  if (mode === "edit" && itemQuery.isPending) {
+  if (mode === "edit" && isDetailLoading) {
     return (
       <div className="p-8">
         <p className="text-text-secondary">読み込み中...</p>
@@ -68,10 +68,10 @@ export function ItemForm({ mode }: ItemFormProps) {
     );
   }
 
-  if (mode === "edit" && itemQuery.error) {
+  if (mode === "edit" && detailError) {
     return (
       <div className="p-8">
-        <p className="text-red-400">エラー: {itemQuery.error.message}</p>
+        <p className="text-red-400">エラー: {detailError.message}</p>
       </div>
     );
   }
@@ -89,7 +89,7 @@ export function ItemForm({ mode }: ItemFormProps) {
         </p>
       </header>
 
-      <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-6 max-w-2xl">
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6 max-w-2xl">
         <div className="bg-bg-card border border-bg-hover rounded-2xl p-6 flex flex-col gap-4">
           <div className="flex flex-col gap-1">
             <label htmlFor="item-name" className="text-sm font-medium text-text-secondary">

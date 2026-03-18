@@ -1,10 +1,4 @@
-export type EffectField = {
-  _key: string;
-  effectType: string;
-  targetType: string;
-  captureRateBonus: number;
-  flavorText: string;
-};
+export type { EffectField } from "../../types";
 
 const EFFECT_TYPES = ["capture_rate_up", "escape"] as const;
 

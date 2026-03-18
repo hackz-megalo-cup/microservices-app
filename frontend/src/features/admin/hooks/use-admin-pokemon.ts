@@ -1,14 +1,32 @@
 import { createClient } from "@connectrpc/connect";
-import { useQuery, useTransport } from "@connectrpc/connect-query";
+import { createConnectQueryKey, useQuery, useTransport } from "@connectrpc/connect-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { MasterdataService } from "../../../gen/masterdata/v1/masterdata_pb";
-import { listPokemon } from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
+import {
+  getPokemon,
+  listPokemon,
+} from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 
-export function useAdminPokemon() {
+const masterdataQueryKey = createConnectQueryKey({
+  schema: MasterdataService,
+  cardinality: undefined,
+});
+
+interface UseAdminPokemonOptions {
+  id?: string;
+  mode?: "create" | "edit";
+}
+
+export function useAdminPokemon(options?: UseAdminPokemonOptions) {
   const transport = useTransport();
   const queryClient = useQueryClient();
   const query = useQuery(listPokemon, {});
+  const detailQuery = useQuery(
+    getPokemon,
+    { id: options?.id ?? "" },
+    { enabled: options?.mode === "edit" && Boolean(options?.id) },
+  );
   const client = useMemo(() => createClient(MasterdataService, transport), [transport]);
 
   const createMutation = useMutation({
@@ -16,7 +34,7 @@ export function useAdminPokemon() {
       client.createPokemon(vars, {
         headers: new Headers({ "idempotency-key": crypto.randomUUID() }),
       }),
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: masterdataQueryKey }),
   });
 
   const updateMutation = useMutation({
@@ -24,7 +42,7 @@ export function useAdminPokemon() {
       client.updatePokemon(vars, {
         headers: new Headers({ "idempotency-key": crypto.randomUUID() }),
       }),
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: masterdataQueryKey }),
   });
 
   const deleteMutation = useMutation({
@@ -32,7 +50,7 @@ export function useAdminPokemon() {
       client.deletePokemon(vars, {
         headers: new Headers({ "idempotency-key": crypto.randomUUID() }),
       }),
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: masterdataQueryKey }),
   });
 
   return {
@@ -40,6 +58,9 @@ export function useAdminPokemon() {
     isLoading: query.isPending,
     error: query.error,
     refetch: query.refetch,
+    pokemonDetail: detailQuery.data?.pokemon,
+    isDetailLoading: detailQuery.isPending,
+    detailError: detailQuery.error,
     createMutation,
     updateMutation,
     deleteMutation,

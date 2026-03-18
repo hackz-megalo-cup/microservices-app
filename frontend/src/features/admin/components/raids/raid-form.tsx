@@ -1,5 +1,4 @@
-import type { FormEvent } from "react";
-import { useState } from "react";
+import { type FormEvent, useState } from "react";
 import { useNavigate } from "react-router";
 import { useAdminRaids } from "../../hooks/use-admin-raids";
 
@@ -9,13 +8,17 @@ export function RaidForm() {
 
   const [bossPokemonId, setBossPokemonId] = useState("");
 
-  async function handleSubmit(e: FormEvent) {
+  function handleSubmit(e: FormEvent) {
     e.preventDefault();
     if (!bossPokemonId) {
       return;
     }
-    await createMutation.mutateAsync({ bossPokemonId });
-    void navigate("/admin/raids");
+    createMutation.mutate(
+      { bossPokemonId },
+      {
+        onSuccess: () => void navigate("/admin/raids"),
+      },
+    );
   }
 
   return (
@@ -26,7 +29,7 @@ export function RaidForm() {
       </header>
 
       <div className="bg-bg-card border border-bg-hover rounded-2xl p-6 max-w-lg">
-        <form onSubmit={(e) => void handleSubmit(e)}>
+        <form onSubmit={handleSubmit}>
           <div className="mb-6">
             <label
               htmlFor="boss-pokemon"

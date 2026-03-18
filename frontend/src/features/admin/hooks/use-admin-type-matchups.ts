@@ -1,9 +1,14 @@
 import { createClient } from "@connectrpc/connect";
-import { useQuery, useTransport } from "@connectrpc/connect-query";
+import { createConnectQueryKey, useQuery, useTransport } from "@connectrpc/connect-query";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useMemo } from "react";
 import { MasterdataService } from "../../../gen/masterdata/v1/masterdata_pb";
 import { listTypeMatchups } from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
+
+const masterdataQueryKey = createConnectQueryKey({
+  schema: MasterdataService,
+  cardinality: undefined,
+});
 
 export function useAdminTypeMatchups() {
   const transport = useTransport();
@@ -16,7 +21,7 @@ export function useAdminTypeMatchups() {
       client.createTypeMatchup(vars, {
         headers: new Headers({ "idempotency-key": crypto.randomUUID() }),
       }),
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: masterdataQueryKey }),
   });
 
   const updateMutation = useMutation({
@@ -24,7 +29,7 @@ export function useAdminTypeMatchups() {
       client.updateTypeMatchup(vars, {
         headers: new Headers({ "idempotency-key": crypto.randomUUID() }),
       }),
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: masterdataQueryKey }),
   });
 
   const deleteMutation = useMutation({
@@ -32,7 +37,7 @@ export function useAdminTypeMatchups() {
       client.deleteTypeMatchup(vars, {
         headers: new Headers({ "idempotency-key": crypto.randomUUID() }),
       }),
-    onSuccess: () => queryClient.invalidateQueries(),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: masterdataQueryKey }),
   });
 
   return {

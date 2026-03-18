@@ -36,7 +36,7 @@ export function RaidList() {
   if (error) {
     return (
       <div className="p-8">
-        <p className="text-text-secondary">{error.message}</p>
+        <p className="text-red-400">エラー: {error.message}</p>
       </div>
     );
   }
