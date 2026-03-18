@@ -12,61 +12,103 @@ in
     createNamespace = false;
 
     resources = {
+      serviceAccounts.gateway.metadata.name = "gateway";
+
       deployments.gateway.spec = {
         replicas = 2;
         selector.matchLabels = labels;
         template = {
           metadata.labels = labels;
-          spec.containers.gateway = {
-            image = images.ghcrImage "gateway";
-            imagePullPolicy = "Always";
-            ports.http.containerPort = 8082;
+          spec = {
+            serviceAccountName = "gateway";
+            containers.gateway = {
+              image = images.ghcrImage "gateway";
+              imagePullPolicy = "Always";
+              ports.http.containerPort = 8082;
 
-            env = {
-              OTEL_EXPORTER_OTLP_ENDPOINT.value = "http://otel-collector.observability:4317";
-              OTEL_SERVICE_NAME.value = "gateway-service";
-              CUSTOM_LANG_BASE_URL.value = "http://custom-lang-service.microservices:3000";
-              PORT.value = "8082";
-              DATABASE_URL.valueFrom.secretKeyRef = {
-                name = "gateway-secrets";
-                key = "DATABASE_URL";
+              env = {
+                OTEL_EXPORTER_OTLP_ENDPOINT.value = "http://otel-collector.observability:4317";
+                OTEL_SERVICE_NAME.value = "gateway-service";
+                CUSTOM_LANG_BASE_URL.value = "http://custom-lang-service.microservices:3000";
+                PORT.value = "8082";
+                DATABASE_URL.valueFrom.secretKeyRef = {
+                  name = "gateway-secrets";
+                  key = "DATABASE_URL";
+                };
+                KAFKA_BROKERS.valueFrom.secretKeyRef = {
+                  name = "gateway-secrets";
+                  key = "KAFKA_BROKERS";
+                };
               };
-              KAFKA_BROKERS.valueFrom.secretKeyRef = {
-                name = "gateway-secrets";
-                key = "KAFKA_BROKERS";
-              };
-            };
 
-            livenessProbe = {
-              httpGet = {
-                path = "/healthz";
-                port = 8082;
+              livenessProbe = {
+                httpGet = {
+                  path = "/healthz";
+                  port = 8082;
+                };
+                initialDelaySeconds = 5;
+                periodSeconds = 10;
               };
-              initialDelaySeconds = 5;
-              periodSeconds = 10;
-            };
 
-            readinessProbe = {
-              httpGet = {
-                path = "/healthz";
-                port = 8082;
+              readinessProbe = {
+                httpGet = {
+                  path = "/healthz";
+                  port = 8082;
+                };
+                initialDelaySeconds = 3;
+                periodSeconds = 5;
               };
-              initialDelaySeconds = 3;
-              periodSeconds = 5;
-            };
 
-            resources = {
-              requests = {
-                cpu = "50m";
-                memory = "64Mi";
-              };
-              limits = {
-                cpu = "200m";
-                memory = "256Mi";
+              resources = {
+                requests = {
+                  cpu = "50m";
+                  memory = "64Mi";
+                };
+                limits = {
+                  cpu = "200m";
+                  memory = "256Mi";
+                };
               };
             };
           };
         };
+      };
+
+      roles.gateway-agones-reader = {
+        metadata = {
+          name = "gateway-agones-reader";
+          namespace = "default";
+        };
+        rules = [
+          {
+            apiGroups = [ "agones.dev" ];
+            resources = [ "gameservers" ];
+            verbs = [
+              "get"
+              "list"
+              "watch"
+            ];
+          }
+        ];
+      };
+
+      roleBindings.gateway-agones-reader = {
+        metadata = {
+          name = "gateway-agones-reader";
+          namespace = "default";
+        };
+        roleRef = {
+          apiGroup = "rbac.authorization.k8s.io";
+          kind = "Role";
+          name = "gateway-agones-reader";
+        };
+        subjects = [
+          {
+            kind = "ServiceAccount";
+            name = "gateway";
+            namespace = "microservices";
+          }
+        ];
       };
 
       services.gateway.spec = {

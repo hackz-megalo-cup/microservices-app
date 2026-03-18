@@ -256,6 +256,15 @@
             name = "frontend-run";
             runtimeInputs = [ pkgs.nginx ];
             text = ''
+              mkdir -p /etc /var/log/nginx
+              cat > /etc/passwd <<'EOF'
+              root:x:0:0:root:/root:/sbin/nologin
+              nobody:x:65534:65534:nobody:/:/sbin/nologin
+              EOF
+              cat > /etc/group <<'EOF'
+              root:x:0:
+              nobody:x:65534:
+              EOF
               exec ${pkgs.nginx}/bin/nginx -c ${frontend-nginx-conf} -g 'daemon off;'
             '';
           };
