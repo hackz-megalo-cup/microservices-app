@@ -290,11 +290,13 @@ func runProduction() {
 
 			lobbyID, err := uuid.Parse(lobbyIDStr)
 			if err != nil {
-				log.Fatalf("invalid lobby-id annotation %q: %v", lobbyIDStr, err)
+				lobbyID = uuid.NewSHA1(uuid.NameSpaceDNS, []byte(lobbyIDStr))
+				log.Printf("non-UUID lobby-id %q, generated deterministic UUID: %s", lobbyIDStr, lobbyID)
 			}
 			bossPokemonID, err := uuid.Parse(bossPokemonIDStr)
 			if err != nil {
-				log.Fatalf("invalid boss-pokemon-id annotation %q: %v", bossPokemonIDStr, err)
+				bossPokemonID = uuid.NewSHA1(uuid.NameSpaceDNS, []byte(bossPokemonIDStr))
+				log.Printf("non-UUID boss-pokemon-id %q, generated deterministic UUID: %s", bossPokemonIDStr, bossPokemonID)
 			}
 
 			matchups := battle.TypeMatchup{}
