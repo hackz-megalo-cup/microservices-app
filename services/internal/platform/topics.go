@@ -18,6 +18,8 @@ const (
 	TopicInvocationFailed      = "invocation.failed"
 	TopicGreetingCompensated   = "greeting.compensated"
 	TopicInvocationCompensated = "invocation.compensated"
+	TopicUserFailed            = "user.failed"
+	TopicUserCompensated       = "user.compensated"
 
 	TopicTodoTitleUpdated = "todo.title_updated"
 	TopicTodoDeleted      = "todo.deleted"
@@ -40,17 +42,32 @@ const (
 
 	TopicBattleFinished = "battle.finished"
 
+	TopicLobbyFailed      = "lobby.failed"
+	TopicLobbyCompensated = "lobby.compensated"
+
+	TopicCaptureStarted     = "capture.started"
+	TopicCaptureItemUsed    = "capture.item_used"
+	TopicCaptureBallThrown  = "capture.ball_thrown"
+	TopicCaptureCompleted   = "capture.completed"
+	TopicCaptureFailed      = "capture.failed"
+	TopicCaptureCompensated = "capture.compensated"
+
 	// Dead Letter Queue topics.
 	TopicGreetingCreatedDLQ       = "greeting.created.dlq"
 	TopicCallCompletedDLQ         = "call.completed.dlq"
 	TopicInvocationCreatedDLQ     = "invocation.created.dlq"
 	TopicUserRegisteredDLQ        = "user.registered.dlq"
+	TopicUserLoggedInDLQ          = "user.logged_in.dlq"
+	TopicUserFailedDLQ            = "user.failed.dlq"
+	TopicUserCompensatedDLQ       = "user.compensated.dlq"
 	TopicInvocationCompensatedDLQ = "invocation.compensated.dlq"
 	TopicItemCreatedDLQ           = "item.created.dlq"
 	TopicMasterdataCreatedDLQ     = "masterdata.created.dlq"
 	TopicRaidLobbyCreatedDLQ      = "raid_lobby.created.dlq"
 	TopicRaidUserJoinedDLQ        = "raid.user_joined.dlq"
 	TopicRaidBattleStartedDLQ     = "raid.battle_started.dlq"
+	TopicCaptureStartedDLQ        = "capture.started.dlq"
+	TopicCaptureCompletedDLQ      = "capture.completed.dlq"
 )
 
 // DLQTopic returns the dead-letter queue topic for a given source topic.
@@ -61,12 +78,17 @@ func DLQTopic(source string) string {
 		TopicCallCompleted:         TopicCallCompletedDLQ,
 		TopicInvocationCreated:     TopicInvocationCreatedDLQ,
 		TopicUserRegistered:        TopicUserRegisteredDLQ,
+		TopicUserLoggedIn:          TopicUserLoggedInDLQ,
+		TopicUserFailed:            TopicUserFailedDLQ,
+		TopicUserCompensated:       TopicUserCompensatedDLQ,
+		TopicCaptureCompleted:      TopicCaptureCompletedDLQ,
 		TopicInvocationCompensated: TopicInvocationCompensatedDLQ,
 		TopicItemCreated:           TopicItemCreatedDLQ,
 		TopicMasterdataCreated:     TopicMasterdataCreatedDLQ,
 		TopicRaidLobbyCreated:      TopicRaidLobbyCreatedDLQ,
 		TopicRaidUserJoined:        TopicRaidUserJoinedDLQ,
 		TopicRaidBattleStarted:     TopicRaidBattleStartedDLQ,
+		TopicCaptureStarted:        TopicCaptureStartedDLQ,
 	}
 	return m[source]
 }
@@ -79,14 +101,21 @@ func DefaultTopics() map[string]int32 {
 		TopicInvocationCreated:        3,
 		TopicUserRegistered:           3,
 		TopicUserLoggedIn:             3,
+		TopicCaptureCompleted:         3,
 		TopicGreetingFailed:           1,
 		TopicInvocationFailed:         1,
 		TopicGreetingCompensated:      1,
 		TopicInvocationCompensated:    1,
+		TopicUserFailed:               1,
+		TopicUserCompensated:          1,
 		TopicGreetingCreatedDLQ:       1,
 		TopicCallCompletedDLQ:         1,
 		TopicInvocationCreatedDLQ:     1,
 		TopicUserRegisteredDLQ:        1,
+		TopicUserLoggedInDLQ:          1,
+		TopicUserFailedDLQ:            1,
+		TopicUserCompensatedDLQ:       1,
+		TopicCaptureCompletedDLQ:      1,
 		TopicInvocationCompensatedDLQ: 1,
 		TopicTodoTitleUpdated:         1,
 		TopicTodoDeleted:              1,
@@ -110,6 +139,14 @@ func DefaultTopics() map[string]int32 {
 		TopicRaidBattleStarted:        3,
 		TopicRaidBattleStartedDLQ:     1,
 		TopicBattleFinished:           3,
+		TopicLobbyFailed:              1,
+		TopicLobbyCompensated:         1,
+		TopicCaptureStarted:           3,
+		TopicCaptureItemUsed:          3,
+		TopicCaptureBallThrown:        3,
+		TopicCaptureFailed:            1,
+		TopicCaptureCompensated:       1,
+		TopicCaptureStartedDLQ:        1,
 	}
 }
 

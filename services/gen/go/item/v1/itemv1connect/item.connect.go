@@ -37,16 +37,16 @@ const (
 	ItemServiceGrantItemProcedure = "/item.v1.ItemService/GrantItem"
 	// ItemServiceUseItemProcedure is the fully-qualified name of the ItemService's UseItem RPC.
 	ItemServiceUseItemProcedure = "/item.v1.ItemService/UseItem"
-	// ItemServiceGetInventoryProcedure is the fully-qualified name of the ItemService's GetInventory
+	// ItemServiceGetUserItemsProcedure is the fully-qualified name of the ItemService's GetUserItems
 	// RPC.
-	ItemServiceGetInventoryProcedure = "/item.v1.ItemService/GetInventory"
+	ItemServiceGetUserItemsProcedure = "/item.v1.ItemService/GetUserItems"
 )
 
 // ItemServiceClient is a client for the item.v1.ItemService service.
 type ItemServiceClient interface {
 	GrantItem(context.Context, *connect.Request[v1.GrantItemRequest]) (*connect.Response[v1.GrantItemResponse], error)
 	UseItem(context.Context, *connect.Request[v1.UseItemRequest]) (*connect.Response[v1.UseItemResponse], error)
-	GetInventory(context.Context, *connect.Request[v1.GetInventoryRequest]) (*connect.Response[v1.GetInventoryResponse], error)
+	GetUserItems(context.Context, *connect.Request[v1.GetUserItemsRequest]) (*connect.Response[v1.GetUserItemsResponse], error)
 }
 
 // NewItemServiceClient constructs a client for the item.v1.ItemService service. By default, it uses
@@ -72,10 +72,10 @@ func NewItemServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 			connect.WithSchema(itemServiceMethods.ByName("UseItem")),
 			connect.WithClientOptions(opts...),
 		),
-		getInventory: connect.NewClient[v1.GetInventoryRequest, v1.GetInventoryResponse](
+		getUserItems: connect.NewClient[v1.GetUserItemsRequest, v1.GetUserItemsResponse](
 			httpClient,
-			baseURL+ItemServiceGetInventoryProcedure,
-			connect.WithSchema(itemServiceMethods.ByName("GetInventory")),
+			baseURL+ItemServiceGetUserItemsProcedure,
+			connect.WithSchema(itemServiceMethods.ByName("GetUserItems")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -85,7 +85,7 @@ func NewItemServiceClient(httpClient connect.HTTPClient, baseURL string, opts ..
 type itemServiceClient struct {
 	grantItem    *connect.Client[v1.GrantItemRequest, v1.GrantItemResponse]
 	useItem      *connect.Client[v1.UseItemRequest, v1.UseItemResponse]
-	getInventory *connect.Client[v1.GetInventoryRequest, v1.GetInventoryResponse]
+	getUserItems *connect.Client[v1.GetUserItemsRequest, v1.GetUserItemsResponse]
 }
 
 // GrantItem calls item.v1.ItemService.GrantItem.
@@ -98,16 +98,16 @@ func (c *itemServiceClient) UseItem(ctx context.Context, req *connect.Request[v1
 	return c.useItem.CallUnary(ctx, req)
 }
 
-// GetInventory calls item.v1.ItemService.GetInventory.
-func (c *itemServiceClient) GetInventory(ctx context.Context, req *connect.Request[v1.GetInventoryRequest]) (*connect.Response[v1.GetInventoryResponse], error) {
-	return c.getInventory.CallUnary(ctx, req)
+// GetUserItems calls item.v1.ItemService.GetUserItems.
+func (c *itemServiceClient) GetUserItems(ctx context.Context, req *connect.Request[v1.GetUserItemsRequest]) (*connect.Response[v1.GetUserItemsResponse], error) {
+	return c.getUserItems.CallUnary(ctx, req)
 }
 
 // ItemServiceHandler is an implementation of the item.v1.ItemService service.
 type ItemServiceHandler interface {
 	GrantItem(context.Context, *connect.Request[v1.GrantItemRequest]) (*connect.Response[v1.GrantItemResponse], error)
 	UseItem(context.Context, *connect.Request[v1.UseItemRequest]) (*connect.Response[v1.UseItemResponse], error)
-	GetInventory(context.Context, *connect.Request[v1.GetInventoryRequest]) (*connect.Response[v1.GetInventoryResponse], error)
+	GetUserItems(context.Context, *connect.Request[v1.GetUserItemsRequest]) (*connect.Response[v1.GetUserItemsResponse], error)
 }
 
 // NewItemServiceHandler builds an HTTP handler from the service implementation. It returns the path
@@ -129,10 +129,10 @@ func NewItemServiceHandler(svc ItemServiceHandler, opts ...connect.HandlerOption
 		connect.WithSchema(itemServiceMethods.ByName("UseItem")),
 		connect.WithHandlerOptions(opts...),
 	)
-	itemServiceGetInventoryHandler := connect.NewUnaryHandler(
-		ItemServiceGetInventoryProcedure,
-		svc.GetInventory,
-		connect.WithSchema(itemServiceMethods.ByName("GetInventory")),
+	itemServiceGetUserItemsHandler := connect.NewUnaryHandler(
+		ItemServiceGetUserItemsProcedure,
+		svc.GetUserItems,
+		connect.WithSchema(itemServiceMethods.ByName("GetUserItems")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/item.v1.ItemService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
@@ -141,8 +141,8 @@ func NewItemServiceHandler(svc ItemServiceHandler, opts ...connect.HandlerOption
 			itemServiceGrantItemHandler.ServeHTTP(w, r)
 		case ItemServiceUseItemProcedure:
 			itemServiceUseItemHandler.ServeHTTP(w, r)
-		case ItemServiceGetInventoryProcedure:
-			itemServiceGetInventoryHandler.ServeHTTP(w, r)
+		case ItemServiceGetUserItemsProcedure:
+			itemServiceGetUserItemsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -160,6 +160,6 @@ func (UnimplementedItemServiceHandler) UseItem(context.Context, *connect.Request
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("item.v1.ItemService.UseItem is not implemented"))
 }
 
-func (UnimplementedItemServiceHandler) GetInventory(context.Context, *connect.Request[v1.GetInventoryRequest]) (*connect.Response[v1.GetInventoryResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("item.v1.ItemService.GetInventory is not implemented"))
+func (UnimplementedItemServiceHandler) GetUserItems(context.Context, *connect.Request[v1.GetUserItemsRequest]) (*connect.Response[v1.GetUserItemsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("item.v1.ItemService.GetUserItems is not implemented"))
 }

@@ -9,6 +9,7 @@ package raid_lobbyv1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
+	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -397,11 +398,183 @@ func (x *StreamLobbyResponse) GetPayload() string {
 	return ""
 }
 
+type ListOpenRaidsRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	StatusFilter  string                 `protobuf:"bytes,1,opt,name=status_filter,json=statusFilter,proto3" json:"status_filter,omitempty"` // optional: "waiting", "in_battle", "" (全件)
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListOpenRaidsRequest) Reset() {
+	*x = ListOpenRaidsRequest{}
+	mi := &file_raid_lobby_v1_raid_lobby_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListOpenRaidsRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListOpenRaidsRequest) ProtoMessage() {}
+
+func (x *ListOpenRaidsRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_raid_lobby_v1_raid_lobby_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListOpenRaidsRequest.ProtoReflect.Descriptor instead.
+func (*ListOpenRaidsRequest) Descriptor() ([]byte, []int) {
+	return file_raid_lobby_v1_raid_lobby_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ListOpenRaidsRequest) GetStatusFilter() string {
+	if x != nil {
+		return x.StatusFilter
+	}
+	return ""
+}
+
+type ListOpenRaidsResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Raids         []*OpenRaidEntry       `protobuf:"bytes,1,rep,name=raids,proto3" json:"raids,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ListOpenRaidsResponse) Reset() {
+	*x = ListOpenRaidsResponse{}
+	mi := &file_raid_lobby_v1_raid_lobby_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ListOpenRaidsResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ListOpenRaidsResponse) ProtoMessage() {}
+
+func (x *ListOpenRaidsResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_raid_lobby_v1_raid_lobby_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ListOpenRaidsResponse.ProtoReflect.Descriptor instead.
+func (*ListOpenRaidsResponse) Descriptor() ([]byte, []int) {
+	return file_raid_lobby_v1_raid_lobby_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *ListOpenRaidsResponse) GetRaids() []*OpenRaidEntry {
+	if x != nil {
+		return x.Raids
+	}
+	return nil
+}
+
+type OpenRaidEntry struct {
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	Id                  string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	BossPokemonId       string                 `protobuf:"bytes,2,opt,name=boss_pokemon_id,json=bossPokemonId,proto3" json:"boss_pokemon_id,omitempty"`
+	CurrentParticipants int32                  `protobuf:"varint,3,opt,name=current_participants,json=currentParticipants,proto3" json:"current_participants,omitempty"`
+	Status              string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
+	CreatedAt           *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	MaxParticipants     int32                  `protobuf:"varint,6,opt,name=max_participants,json=maxParticipants,proto3" json:"max_participants,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
+}
+
+func (x *OpenRaidEntry) Reset() {
+	*x = OpenRaidEntry{}
+	mi := &file_raid_lobby_v1_raid_lobby_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *OpenRaidEntry) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*OpenRaidEntry) ProtoMessage() {}
+
+func (x *OpenRaidEntry) ProtoReflect() protoreflect.Message {
+	mi := &file_raid_lobby_v1_raid_lobby_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use OpenRaidEntry.ProtoReflect.Descriptor instead.
+func (*OpenRaidEntry) Descriptor() ([]byte, []int) {
+	return file_raid_lobby_v1_raid_lobby_proto_rawDescGZIP(), []int{10}
+}
+
+func (x *OpenRaidEntry) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *OpenRaidEntry) GetBossPokemonId() string {
+	if x != nil {
+		return x.BossPokemonId
+	}
+	return ""
+}
+
+func (x *OpenRaidEntry) GetCurrentParticipants() int32 {
+	if x != nil {
+		return x.CurrentParticipants
+	}
+	return 0
+}
+
+func (x *OpenRaidEntry) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *OpenRaidEntry) GetCreatedAt() *timestamppb.Timestamp {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return nil
+}
+
+func (x *OpenRaidEntry) GetMaxParticipants() int32 {
+	if x != nil {
+		return x.MaxParticipants
+	}
+	return 0
+}
+
 var File_raid_lobby_v1_raid_lobby_proto protoreflect.FileDescriptor
 
 const file_raid_lobby_v1_raid_lobby_proto_rawDesc = "" +
 	"\n" +
-	"\x1eraid_lobby/v1/raid_lobby.proto\x12\rraid_lobby.v1\";\n" +
+	"\x1eraid_lobby/v1/raid_lobby.proto\x12\rraid_lobby.v1\x1a\x1fgoogle/protobuf/timestamp.proto\";\n" +
 	"\x11CreateRaidRequest\x12&\n" +
 	"\x0fboss_pokemon_id\x18\x01 \x01(\tR\rbossPokemonId\"/\n" +
 	"\x12CreateRaidResponse\x12\x19\n" +
@@ -421,13 +594,26 @@ const file_raid_lobby_v1_raid_lobby_proto_rawDesc = "" +
 	"\n" +
 	"event_type\x18\x01 \x01(\tR\teventType\x12\x19\n" +
 	"\blobby_id\x18\x02 \x01(\tR\alobbyId\x12\x18\n" +
-	"\apayload\x18\x03 \x01(\tR\apayload2\xe8\x02\n" +
+	"\apayload\x18\x03 \x01(\tR\apayload\";\n" +
+	"\x14ListOpenRaidsRequest\x12#\n" +
+	"\rstatus_filter\x18\x01 \x01(\tR\fstatusFilter\"K\n" +
+	"\x15ListOpenRaidsResponse\x122\n" +
+	"\x05raids\x18\x01 \x03(\v2\x1c.raid_lobby.v1.OpenRaidEntryR\x05raids\"\xf8\x01\n" +
+	"\rOpenRaidEntry\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
+	"\x0fboss_pokemon_id\x18\x02 \x01(\tR\rbossPokemonId\x121\n" +
+	"\x14current_participants\x18\x03 \x01(\x05R\x13currentParticipants\x12\x16\n" +
+	"\x06status\x18\x04 \x01(\tR\x06status\x129\n" +
+	"\n" +
+	"created_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\tcreatedAt\x12)\n" +
+	"\x10max_participants\x18\x06 \x01(\x05R\x0fmaxParticipants2\xc6\x03\n" +
 	"\x10RaidLobbyService\x12S\n" +
 	"\n" +
 	"CreateRaid\x12 .raid_lobby.v1.CreateRaidRequest\x1a!.raid_lobby.v1.CreateRaidResponse\"\x00\x12M\n" +
 	"\bJoinRaid\x12\x1e.raid_lobby.v1.JoinRaidRequest\x1a\x1f.raid_lobby.v1.JoinRaidResponse\"\x00\x12V\n" +
 	"\vStartBattle\x12!.raid_lobby.v1.StartBattleRequest\x1a\".raid_lobby.v1.StartBattleResponse\"\x00\x12X\n" +
-	"\vStreamLobby\x12!.raid_lobby.v1.StreamLobbyRequest\x1a\".raid_lobby.v1.StreamLobbyResponse\"\x000\x01BZZXgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1;raid_lobbyv1b\x06proto3"
+	"\vStreamLobby\x12!.raid_lobby.v1.StreamLobbyRequest\x1a\".raid_lobby.v1.StreamLobbyResponse\"\x000\x01\x12\\\n" +
+	"\rListOpenRaids\x12#.raid_lobby.v1.ListOpenRaidsRequest\x1a$.raid_lobby.v1.ListOpenRaidsResponse\"\x00BZZXgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1;raid_lobbyv1b\x06proto3"
 
 var (
 	file_raid_lobby_v1_raid_lobby_proto_rawDescOnce sync.Once
@@ -441,31 +627,39 @@ func file_raid_lobby_v1_raid_lobby_proto_rawDescGZIP() []byte {
 	return file_raid_lobby_v1_raid_lobby_proto_rawDescData
 }
 
-var file_raid_lobby_v1_raid_lobby_proto_msgTypes = make([]protoimpl.MessageInfo, 8)
+var file_raid_lobby_v1_raid_lobby_proto_msgTypes = make([]protoimpl.MessageInfo, 11)
 var file_raid_lobby_v1_raid_lobby_proto_goTypes = []any{
-	(*CreateRaidRequest)(nil),   // 0: raid_lobby.v1.CreateRaidRequest
-	(*CreateRaidResponse)(nil),  // 1: raid_lobby.v1.CreateRaidResponse
-	(*JoinRaidRequest)(nil),     // 2: raid_lobby.v1.JoinRaidRequest
-	(*JoinRaidResponse)(nil),    // 3: raid_lobby.v1.JoinRaidResponse
-	(*StartBattleRequest)(nil),  // 4: raid_lobby.v1.StartBattleRequest
-	(*StartBattleResponse)(nil), // 5: raid_lobby.v1.StartBattleResponse
-	(*StreamLobbyRequest)(nil),  // 6: raid_lobby.v1.StreamLobbyRequest
-	(*StreamLobbyResponse)(nil), // 7: raid_lobby.v1.StreamLobbyResponse
+	(*CreateRaidRequest)(nil),     // 0: raid_lobby.v1.CreateRaidRequest
+	(*CreateRaidResponse)(nil),    // 1: raid_lobby.v1.CreateRaidResponse
+	(*JoinRaidRequest)(nil),       // 2: raid_lobby.v1.JoinRaidRequest
+	(*JoinRaidResponse)(nil),      // 3: raid_lobby.v1.JoinRaidResponse
+	(*StartBattleRequest)(nil),    // 4: raid_lobby.v1.StartBattleRequest
+	(*StartBattleResponse)(nil),   // 5: raid_lobby.v1.StartBattleResponse
+	(*StreamLobbyRequest)(nil),    // 6: raid_lobby.v1.StreamLobbyRequest
+	(*StreamLobbyResponse)(nil),   // 7: raid_lobby.v1.StreamLobbyResponse
+	(*ListOpenRaidsRequest)(nil),  // 8: raid_lobby.v1.ListOpenRaidsRequest
+	(*ListOpenRaidsResponse)(nil), // 9: raid_lobby.v1.ListOpenRaidsResponse
+	(*OpenRaidEntry)(nil),         // 10: raid_lobby.v1.OpenRaidEntry
+	(*timestamppb.Timestamp)(nil), // 11: google.protobuf.Timestamp
 }
 var file_raid_lobby_v1_raid_lobby_proto_depIdxs = []int32{
-	0, // 0: raid_lobby.v1.RaidLobbyService.CreateRaid:input_type -> raid_lobby.v1.CreateRaidRequest
-	2, // 1: raid_lobby.v1.RaidLobbyService.JoinRaid:input_type -> raid_lobby.v1.JoinRaidRequest
-	4, // 2: raid_lobby.v1.RaidLobbyService.StartBattle:input_type -> raid_lobby.v1.StartBattleRequest
-	6, // 3: raid_lobby.v1.RaidLobbyService.StreamLobby:input_type -> raid_lobby.v1.StreamLobbyRequest
-	1, // 4: raid_lobby.v1.RaidLobbyService.CreateRaid:output_type -> raid_lobby.v1.CreateRaidResponse
-	3, // 5: raid_lobby.v1.RaidLobbyService.JoinRaid:output_type -> raid_lobby.v1.JoinRaidResponse
-	5, // 6: raid_lobby.v1.RaidLobbyService.StartBattle:output_type -> raid_lobby.v1.StartBattleResponse
-	7, // 7: raid_lobby.v1.RaidLobbyService.StreamLobby:output_type -> raid_lobby.v1.StreamLobbyResponse
-	4, // [4:8] is the sub-list for method output_type
-	0, // [0:4] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	10, // 0: raid_lobby.v1.ListOpenRaidsResponse.raids:type_name -> raid_lobby.v1.OpenRaidEntry
+	11, // 1: raid_lobby.v1.OpenRaidEntry.created_at:type_name -> google.protobuf.Timestamp
+	0,  // 2: raid_lobby.v1.RaidLobbyService.CreateRaid:input_type -> raid_lobby.v1.CreateRaidRequest
+	2,  // 3: raid_lobby.v1.RaidLobbyService.JoinRaid:input_type -> raid_lobby.v1.JoinRaidRequest
+	4,  // 4: raid_lobby.v1.RaidLobbyService.StartBattle:input_type -> raid_lobby.v1.StartBattleRequest
+	6,  // 5: raid_lobby.v1.RaidLobbyService.StreamLobby:input_type -> raid_lobby.v1.StreamLobbyRequest
+	8,  // 6: raid_lobby.v1.RaidLobbyService.ListOpenRaids:input_type -> raid_lobby.v1.ListOpenRaidsRequest
+	1,  // 7: raid_lobby.v1.RaidLobbyService.CreateRaid:output_type -> raid_lobby.v1.CreateRaidResponse
+	3,  // 8: raid_lobby.v1.RaidLobbyService.JoinRaid:output_type -> raid_lobby.v1.JoinRaidResponse
+	5,  // 9: raid_lobby.v1.RaidLobbyService.StartBattle:output_type -> raid_lobby.v1.StartBattleResponse
+	7,  // 10: raid_lobby.v1.RaidLobbyService.StreamLobby:output_type -> raid_lobby.v1.StreamLobbyResponse
+	9,  // 11: raid_lobby.v1.RaidLobbyService.ListOpenRaids:output_type -> raid_lobby.v1.ListOpenRaidsResponse
+	7,  // [7:12] is the sub-list for method output_type
+	2,  // [2:7] is the sub-list for method input_type
+	2,  // [2:2] is the sub-list for extension type_name
+	2,  // [2:2] is the sub-list for extension extendee
+	0,  // [0:2] is the sub-list for field type_name
 }
 
 func init() { file_raid_lobby_v1_raid_lobby_proto_init() }
@@ -479,7 +673,7 @@ func file_raid_lobby_v1_raid_lobby_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_raid_lobby_v1_raid_lobby_proto_rawDesc), len(file_raid_lobby_v1_raid_lobby_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   8,
+			NumMessages:   11,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

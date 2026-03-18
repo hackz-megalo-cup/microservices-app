@@ -94,19 +94,130 @@
 
           # Microservices (connect-go) — go.mod requires go 1.26
           buildGoModule = pkgs.buildGo126Module;
+          goServiceVersion = "0.1.0";
+          goVendorHash = "sha256-OgzMqWVOxW4a+fwFrukAmR/Rg0g0mQOFsggAkCPA790=";
+          servicesRoot = toString ./services;
+          goServiceInputs = {
+            auth = {
+              internals = [ "auth" ];
+              gen = [ "auth" ];
+            };
+            caller = {
+              internals = [ "caller" ];
+              gen = [ "caller" ];
+            };
+            gateway = {
+              internals = [ "gateway" ];
+              gen = [ "gateway" ];
+            };
+            greeter = {
+              internals = [ "greeter" ];
+              gen = [
+                "caller"
+                "greeter"
+              ];
+            };
+            item = {
+              internals = [ "item" ];
+              gen = [ "item" ];
+            };
+            masterdata = {
+              internals = [ "masterdata" ];
+              gen = [ "masterdata" ];
+            };
+            projector = {
+              internals = [
+                "item"
+                "projector"
+              ];
+              gen = [ "item" ];
+            };
+            raid-lobby = {
+              internals = [ "raid_lobby" ];
+              gen = [
+                "masterdata"
+                "raid_lobby"
+              ];
+            };
+            capture = {
+              internals = [ "capture" ];
+              gen = [
+                "capture"
+                "item"
+                "masterdata"
+              ];
+            };
+          };
+          goServiceSource =
+            name:
+            let
+              cfg = goServiceInputs.${name};
+              matchesTree =
+                relPath: prefix:
+                relPath == prefix || lib.hasPrefix "${prefix}/" relPath || lib.hasPrefix "${relPath}/" prefix;
+            in
+            lib.cleanSourceWith {
+              src = ./services;
+              filter =
+                path: type:
+                let
+                  pathStr = toString path;
+                  relPath = lib.removePrefix "${servicesRoot}/" pathStr;
+                in
+                lib.cleanSourceFilter path type
+                && (
+                  pathStr == servicesRoot
+                  || relPath == "go.mod"
+                  || relPath == "go.sum"
+                  || matchesTree relPath "cmd/${name}"
+                  || matchesTree relPath "internal/platform"
+                  || lib.any (prefix: matchesTree relPath "internal/${prefix}") cfg.internals
+                  || lib.any (prefix: matchesTree relPath "gen/go/${prefix}") cfg.gen
+                );
+            };
+          # Build go-services with full source — its goModules is reused by per-service builds.
+          go-services = buildGoModule {
+            pname = "go-services";
+            version = goServiceVersion;
+            src = ./services;
+            vendorHash = goVendorHash;
+            subPackages = [
+              "cmd/auth"
+              "cmd/caller"
+              "cmd/gateway"
+              "cmd/greeter"
+              "cmd/item"
+              "cmd/masterdata"
+              "cmd/projector"
+              "cmd/raid-lobby"
+              "cmd/capture"
+            ];
+            doCheck = false;
+            env.CGO_ENABLED = 0;
+            ldflags = [
+              "-s"
+              "-w"
+            ];
+          };
+          # Per-service builds: vendorHash = null + copy vendor from go-services.goModules.
+          # Only ONE vendorHash (goVendorHash) needs to be maintained.
           buildGoService =
             name:
             buildGoModule {
               pname = name;
-              version = "0.1.0";
-              src = ./services;
-              vendorHash = "sha256-fzgNa+0Y5biTxqcK6VelnCzzIElzxeiLb653GhKKR7E=";
+              version = goServiceVersion;
+              src = goServiceSource name;
+              vendorHash = null;
+              subPackages = [ "cmd/${name}" ];
+              doCheck = false;
               env.CGO_ENABLED = 0;
               ldflags = [
                 "-s"
                 "-w"
               ];
-              subPackages = [ "cmd/${name}" ];
+              preBuild = ''
+                cp -r --reflink=auto ${go-services.goModules} vendor
+              '';
             };
 
           buildGoServiceImage =
@@ -122,26 +233,41 @@
               ];
             };
 
+          auth = buildGoService "auth";
+          auth-image = buildGoServiceImage "auth" auth;
+          auth-release-image = buildGoServiceImage "auth" go-services;
+
           caller = buildGoService "caller";
           caller-image = buildGoServiceImage "caller" caller;
+          caller-release-image = buildGoServiceImage "caller" go-services;
 
           gateway = buildGoService "gateway";
           gateway-image = buildGoServiceImage "gateway" gateway;
+          gateway-release-image = buildGoServiceImage "gateway" go-services;
 
           greeter = buildGoService "greeter";
           greeter-image = buildGoServiceImage "greeter" greeter;
+          greeter-release-image = buildGoServiceImage "greeter" go-services;
 
           item = buildGoService "item";
           item-image = buildGoServiceImage "item" item;
+          item-release-image = buildGoServiceImage "item" go-services;
 
           masterdata = buildGoService "masterdata";
           masterdata-image = buildGoServiceImage "masterdata" masterdata;
+          masterdata-release-image = buildGoServiceImage "masterdata" go-services;
 
           projector = buildGoService "projector";
           projector-image = buildGoServiceImage "projector" projector;
+          projector-release-image = buildGoServiceImage "projector" go-services;
 
           raid-lobby = buildGoService "raid-lobby";
           raid-lobby-image = buildGoServiceImage "raid-lobby" raid-lobby;
+          raid-lobby-release-image = buildGoServiceImage "raid-lobby" go-services;
+
+          capture = buildGoService "capture";
+          capture-image = buildGoServiceImage "capture" capture;
+          capture-release-image = buildGoServiceImage "capture" go-services;
 
           buildNodeService =
             name: nodeModules:
@@ -194,9 +320,6 @@
                 })
               ];
             };
-
-          auth-service = buildNodeService "auth-service" (nodeServiceNodeModules "auth-service");
-          auth-service-image = buildNodeServiceImage "auth-service" auth-service;
 
           custom-lang-service = buildNodeService "custom-lang-service" (
             nodeServiceNodeModules "custom-lang-service"
@@ -321,24 +444,37 @@
           # Microservices
           packages.caller = caller;
           packages.caller-image = caller-image;
-          packages.auth-service = auth-service;
-          packages.auth-service-image = auth-service-image;
+          packages.caller-release-image = caller-release-image;
+          packages.auth = auth;
+          packages.auth-service-image = auth-image;
+          packages.auth-image = auth-image;
+          packages.auth-release-image = auth-release-image;
           packages.custom-lang-service = custom-lang-service;
           packages.custom-lang-service-image = custom-lang-service-image;
           packages.frontend = frontend-assets;
           packages.frontend-image = frontend-image;
+          packages.go-services = go-services;
           packages.gateway = gateway;
           packages.gateway-image = gateway-image;
+          packages.gateway-release-image = gateway-release-image;
           packages.greeter = greeter;
           packages.greeter-image = greeter-image;
+          packages.greeter-release-image = greeter-release-image;
           packages.item = item;
           packages.item-image = item-image;
+          packages.item-release-image = item-release-image;
           packages.masterdata = masterdata;
           packages.masterdata-image = masterdata-image;
+          packages.masterdata-release-image = masterdata-release-image;
           packages.projector = projector;
           packages.projector-image = projector-image;
+          packages.projector-release-image = projector-release-image;
           packages.raid-lobby = raid-lobby;
           packages.raid-lobby-image = raid-lobby-image;
+          packages.raid-lobby-release-image = raid-lobby-release-image;
+          packages.capture = capture;
+          packages.capture-image = capture-image;
+          packages.capture-release-image = capture-release-image;
         };
     };
 }

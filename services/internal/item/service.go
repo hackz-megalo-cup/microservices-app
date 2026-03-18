@@ -15,14 +15,14 @@ import (
 type Service struct {
 	eventStore *platform.EventStore
 	outbox     *platform.OutboxStore
-	pool       *pgxpool.Pool
+	dbPool     *pgxpool.Pool
 }
 
-func NewService(eventStore *platform.EventStore, outbox *platform.OutboxStore, pool *pgxpool.Pool) *Service {
+func NewService(eventStore *platform.EventStore, outbox *platform.OutboxStore, dbPool *pgxpool.Pool) *Service {
 	return &Service{
 		eventStore: eventStore,
 		outbox:     outbox,
-		pool:       pool,
+		dbPool:     dbPool,
 	}
 }
 
@@ -97,39 +97,53 @@ func (s *Service) UseItem(ctx context.Context, req *connect.Request[pb.UseItemRe
 	return connect.NewResponse(&pb.UseItemResponse{}), nil
 }
 
-// GetInventory — ユーザーの所持アイテム一覧を取得する
-func (s *Service) GetInventory(ctx context.Context, req *connect.Request[pb.GetInventoryRequest]) (*connect.Response[pb.GetInventoryResponse], error) {
+// GetUserItems — ユーザーが所持しているアイテムの一覧を取得する
+func (s *Service) GetUserItems(ctx context.Context, req *connect.Request[pb.GetUserItemsRequest]) (*connect.Response[pb.GetUserItemsResponse], error) {
 	userID := req.Msg.GetUserId()
 	if userID == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id is required"))
 	}
 
-	// Read Model からユーザーの所持アイテムを取得
-	rows, err := s.pool.Query(ctx,
-		`SELECT item_id, quantity FROM user_item WHERE user_id = $1 AND quantity > 0`,
-		userID,
-	)
+	// EventStore から user_id にマッチする全ストリームを取得
+	// stream_id パターン: "user_id:item_id"
+	rows, err := s.dbPool.Query(ctx, `
+		SELECT DISTINCT stream_id
+		FROM event_store
+		WHERE stream_type = 'item'
+		  AND stream_id LIKE $1 || ':%'
+		ORDER BY stream_id
+	`, userID)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to query inventory"))
+		slog.Error("failed to query user items", "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to query items"))
 	}
 	defer rows.Close()
 
-	var items []*pb.InventoryItem
+	var items []*pb.UserItem
 	for rows.Next() {
-		var itemID string
-		var qty int32
-		if err := rows.Scan(&itemID, &qty); err != nil {
-			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to scan inventory row"))
+		var streamID string
+		if err := rows.Scan(&streamID); err != nil {
+			continue
 		}
-		items = append(items, &pb.InventoryItem{
-			ItemId:   itemID,
-			Quantity: qty,
-		})
+
+		// 各集約をロードして現在の状態を取得
+		agg := NewItemAggregate(streamID)
+		if err := platform.LoadAggregate(ctx, s.eventStore, agg); err != nil {
+			slog.Warn("failed to load aggregate", "stream_id", streamID, "error", err)
+			continue
+		}
+
+		// quantity が 0 より大きいもののみ返す
+		if agg.Quantity > 0 {
+			items = append(items, &pb.UserItem{
+				ItemId:   agg.ItemID,
+				Quantity: agg.Quantity,
+				Status:   agg.Status,
+			})
+		}
 	}
 
-	if err := rows.Err(); err != nil {
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to iterate inventory rows"))
-	}
-
-	return connect.NewResponse(&pb.GetInventoryResponse{Items: items}), nil
+	return connect.NewResponse(&pb.GetUserItemsResponse{
+		Items: items,
+	}), nil
 }

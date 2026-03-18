@@ -1,0 +1,76 @@
+syntax = "proto3";
+
+package auth.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/auth/v1;authv1";
+
+// AuthService は認証とユーザー管理を提供します
+service AuthService {
+  // ユーザー登録
+  rpc RegisterUser(RegisterUserRequest) returns (RegisterUserResponse) {}
+
+  // ログイン
+  rpc LoginUser(LoginUserRequest) returns (LoginUserResponse) {}
+
+  // ユーザープロフィール取得
+  rpc GetUserProfile(GetUserProfileRequest) returns (GetUserProfileResponse) {}
+
+  // ユーザーが所持するポケモンID一覧取得
+  rpc GetUserPokemon(GetUserPokemonRequest) returns (GetUserPokemonResponse) {}
+}
+
+// ユーザー登録リクエスト
+message RegisterUserRequest {
+  string email = 1;
+  string password = 2;
+  string name = 3;
+}
+
+// ログインリクエスト
+message LoginUserRequest {
+  string email = 1;
+  string password = 2;
+}
+
+// ユーザープロフィール取得リクエスト
+message GetUserProfileRequest {
+  string user_id = 1;
+}
+
+// ユーザー情報（共通メッセージ）
+message User {
+  string id = 1;
+  string email = 2;
+  string role = 3;
+  google.protobuf.Timestamp created_at = 4;
+  google.protobuf.Timestamp last_login_at = 5;
+  string name = 6;
+}
+
+// ユーザー登録レスポンス
+message RegisterUserResponse {
+  User user = 1;
+}
+
+// ログインレスポンス
+message LoginUserResponse {
+  string token = 1;
+  User user = 2;
+}
+
+// ユーザープロフィール取得レスポンス
+message GetUserProfileResponse {
+  User user = 1;
+}
+
+// ユーザーポケモン取得リクエスト
+message GetUserPokemonRequest {
+  string user_id = 1;
+}
+
+// ユーザーポケモン取得レスポンス
+message GetUserPokemonResponse {
+  repeated string pokemon_ids = 1;
+}

@@ -45,6 +45,9 @@ const (
 	// RaidLobbyServiceStreamLobbyProcedure is the fully-qualified name of the RaidLobbyService's
 	// StreamLobby RPC.
 	RaidLobbyServiceStreamLobbyProcedure = "/raid_lobby.v1.RaidLobbyService/StreamLobby"
+	// RaidLobbyServiceListOpenRaidsProcedure is the fully-qualified name of the RaidLobbyService's
+	// ListOpenRaids RPC.
+	RaidLobbyServiceListOpenRaidsProcedure = "/raid_lobby.v1.RaidLobbyService/ListOpenRaids"
 )
 
 // RaidLobbyServiceClient is a client for the raid_lobby.v1.RaidLobbyService service.
@@ -53,6 +56,7 @@ type RaidLobbyServiceClient interface {
 	JoinRaid(context.Context, *connect.Request[v1.JoinRaidRequest]) (*connect.Response[v1.JoinRaidResponse], error)
 	StartBattle(context.Context, *connect.Request[v1.StartBattleRequest]) (*connect.Response[v1.StartBattleResponse], error)
 	StreamLobby(context.Context, *connect.Request[v1.StreamLobbyRequest]) (*connect.ServerStreamForClient[v1.StreamLobbyResponse], error)
+	ListOpenRaids(context.Context, *connect.Request[v1.ListOpenRaidsRequest]) (*connect.Response[v1.ListOpenRaidsResponse], error)
 }
 
 // NewRaidLobbyServiceClient constructs a client for the raid_lobby.v1.RaidLobbyService service. By
@@ -90,15 +94,22 @@ func NewRaidLobbyServiceClient(httpClient connect.HTTPClient, baseURL string, op
 			connect.WithSchema(raidLobbyServiceMethods.ByName("StreamLobby")),
 			connect.WithClientOptions(opts...),
 		),
+		listOpenRaids: connect.NewClient[v1.ListOpenRaidsRequest, v1.ListOpenRaidsResponse](
+			httpClient,
+			baseURL+RaidLobbyServiceListOpenRaidsProcedure,
+			connect.WithSchema(raidLobbyServiceMethods.ByName("ListOpenRaids")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
 // raidLobbyServiceClient implements RaidLobbyServiceClient.
 type raidLobbyServiceClient struct {
-	createRaid  *connect.Client[v1.CreateRaidRequest, v1.CreateRaidResponse]
-	joinRaid    *connect.Client[v1.JoinRaidRequest, v1.JoinRaidResponse]
-	startBattle *connect.Client[v1.StartBattleRequest, v1.StartBattleResponse]
-	streamLobby *connect.Client[v1.StreamLobbyRequest, v1.StreamLobbyResponse]
+	createRaid    *connect.Client[v1.CreateRaidRequest, v1.CreateRaidResponse]
+	joinRaid      *connect.Client[v1.JoinRaidRequest, v1.JoinRaidResponse]
+	startBattle   *connect.Client[v1.StartBattleRequest, v1.StartBattleResponse]
+	streamLobby   *connect.Client[v1.StreamLobbyRequest, v1.StreamLobbyResponse]
+	listOpenRaids *connect.Client[v1.ListOpenRaidsRequest, v1.ListOpenRaidsResponse]
 }
 
 // CreateRaid calls raid_lobby.v1.RaidLobbyService.CreateRaid.
@@ -121,12 +132,18 @@ func (c *raidLobbyServiceClient) StreamLobby(ctx context.Context, req *connect.R
 	return c.streamLobby.CallServerStream(ctx, req)
 }
 
+// ListOpenRaids calls raid_lobby.v1.RaidLobbyService.ListOpenRaids.
+func (c *raidLobbyServiceClient) ListOpenRaids(ctx context.Context, req *connect.Request[v1.ListOpenRaidsRequest]) (*connect.Response[v1.ListOpenRaidsResponse], error) {
+	return c.listOpenRaids.CallUnary(ctx, req)
+}
+
 // RaidLobbyServiceHandler is an implementation of the raid_lobby.v1.RaidLobbyService service.
 type RaidLobbyServiceHandler interface {
 	CreateRaid(context.Context, *connect.Request[v1.CreateRaidRequest]) (*connect.Response[v1.CreateRaidResponse], error)
 	JoinRaid(context.Context, *connect.Request[v1.JoinRaidRequest]) (*connect.Response[v1.JoinRaidResponse], error)
 	StartBattle(context.Context, *connect.Request[v1.StartBattleRequest]) (*connect.Response[v1.StartBattleResponse], error)
 	StreamLobby(context.Context, *connect.Request[v1.StreamLobbyRequest], *connect.ServerStream[v1.StreamLobbyResponse]) error
+	ListOpenRaids(context.Context, *connect.Request[v1.ListOpenRaidsRequest]) (*connect.Response[v1.ListOpenRaidsResponse], error)
 }
 
 // NewRaidLobbyServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -160,6 +177,12 @@ func NewRaidLobbyServiceHandler(svc RaidLobbyServiceHandler, opts ...connect.Han
 		connect.WithSchema(raidLobbyServiceMethods.ByName("StreamLobby")),
 		connect.WithHandlerOptions(opts...),
 	)
+	raidLobbyServiceListOpenRaidsHandler := connect.NewUnaryHandler(
+		RaidLobbyServiceListOpenRaidsProcedure,
+		svc.ListOpenRaids,
+		connect.WithSchema(raidLobbyServiceMethods.ByName("ListOpenRaids")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/raid_lobby.v1.RaidLobbyService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case RaidLobbyServiceCreateRaidProcedure:
@@ -170,6 +193,8 @@ func NewRaidLobbyServiceHandler(svc RaidLobbyServiceHandler, opts ...connect.Han
 			raidLobbyServiceStartBattleHandler.ServeHTTP(w, r)
 		case RaidLobbyServiceStreamLobbyProcedure:
 			raidLobbyServiceStreamLobbyHandler.ServeHTTP(w, r)
+		case RaidLobbyServiceListOpenRaidsProcedure:
+			raidLobbyServiceListOpenRaidsHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -193,4 +218,8 @@ func (UnimplementedRaidLobbyServiceHandler) StartBattle(context.Context, *connec
 
 func (UnimplementedRaidLobbyServiceHandler) StreamLobby(context.Context, *connect.Request[v1.StreamLobbyRequest], *connect.ServerStream[v1.StreamLobbyResponse]) error {
 	return connect.NewError(connect.CodeUnimplemented, errors.New("raid_lobby.v1.RaidLobbyService.StreamLobby is not implemented"))
+}
+
+func (UnimplementedRaidLobbyServiceHandler) ListOpenRaids(context.Context, *connect.Request[v1.ListOpenRaidsRequest]) (*connect.Response[v1.ListOpenRaidsResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("raid_lobby.v1.RaidLobbyService.ListOpenRaids is not implemented"))
 }

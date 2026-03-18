@@ -27,6 +27,11 @@ export const queryClient = new QueryClient({
   queryCache: new QueryCache({
     onError: (error) => {
       console.error("query failed", error);
+      if (error instanceof ConnectError && error.code === Code.Unauthenticated) {
+        localStorage.removeItem("demo_jwt");
+        localStorage.removeItem("auth_user");
+        window.location.href = "/login";
+      }
     },
   }),
 });

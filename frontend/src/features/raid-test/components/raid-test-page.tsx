@@ -74,10 +74,33 @@ function timestamp(): string {
   return new Date().toLocaleTimeString("ja-JP", { hour12: false });
 }
 
+function isIosDevice(): boolean {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+
+  return (
+    /iP(hone|ad|od)/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+}
+
+function supportsWebTransport(): boolean {
+  return typeof WebTransport !== "undefined";
+}
+
+function toWebSocketUrl(url: string): string {
+  const wsUrl = new URL(url, typeof window !== "undefined" ? window.location.href : undefined);
+  wsUrl.protocol = wsUrl.protocol === "https:" ? "wss:" : "ws:";
+  return wsUrl.toString();
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
 const allocateApiUrl = resolveApiUrl("/api/raid/allocate");
+const joinApiUrl = resolveApiUrl("/api/raid/join");
+const activeApiUrl = resolveApiUrl("/api/raid/active");
 
 export function RaidTestPage() {
   // --- Form state ---
@@ -86,6 +109,9 @@ export function RaidTestPage() {
   const [certHash, setCertHash] = useState("");
   const [protocol, setProtocol] = useState<"wt" | "ws">("wt");
   const [userId] = useState(generateUuid);
+  const [joinLobbyId, setJoinLobbyId] = useState("");
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [currentLobbyId, setCurrentLobbyId] = useState("");
 
   // --- Connection state ---
   const [connectionState, setConnectionState] = useState<ConnectionState>("disconnected");
@@ -267,52 +293,147 @@ export function RaidTestPage() {
     [readStream],
   );
 
+  const closeActiveConnections = useCallback(() => {
+    if (transportRef.current) {
+      transportRef.current.close();
+      transportRef.current = null;
+      dgWriterRef.current = null;
+    }
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+  }, []);
+
+  const connectViaWebTransport = useCallback(
+    async ({
+      connectHost,
+      connectPort,
+      hash,
+      autoJoin = false,
+    }: {
+      connectHost: string;
+      connectPort: string;
+      hash: string;
+      autoJoin?: boolean;
+    }) => {
+      closeActiveConnections();
+      setConnectionState("connecting");
+      setResult(null);
+      setWtTapCount(0);
+
+      const hashBytes = hexToUint8Array(hash);
+      const transport = new WebTransport(`https://${connectHost}:${connectPort}/wt`, {
+        serverCertificateHashes: [{ algorithm: "sha-256", value: hashBytes.buffer as ArrayBuffer }],
+      });
+      await transport.ready;
+      transportRef.current = transport;
+
+      dgWriterRef.current = transport.datagrams.writable.getWriter();
+      readDatagrams(transport);
+      readIncomingUniStreams(transport);
+      setConnectionState("connected");
+
+      transport.closed
+        .then(() => setConnectionState("disconnected"))
+        .catch(() => setConnectionState("disconnected"));
+
+      if (!autoJoin) {
+        return;
+      }
+
+      const joinPayload = JSON.stringify({ t: "join", userId });
+      addLog("→", joinPayload);
+      const stream = await transport.createBidirectionalStream();
+      const writer = stream.writable.getWriter();
+      await writer.write(new TextEncoder().encode(joinPayload));
+      await writer.close();
+      const reader = stream.readable.getReader();
+      try {
+        while (!(await reader.read()).done) {
+          // drain
+        }
+      } catch {
+        // stream closed
+      }
+    },
+    [addLog, closeActiveConnections, readDatagrams, readIncomingUniStreams, userId],
+  );
+
+  const connectViaWebSocket = useCallback(
+    async ({
+      connectHost,
+      connectPort,
+      lobbyId,
+      autoJoin = false,
+    }: {
+      connectHost: string;
+      connectPort: string;
+      lobbyId?: string;
+      autoJoin?: boolean;
+    }) => {
+      closeActiveConnections();
+      setConnectionState("connecting");
+      setResult(null);
+      setWsTapCount(0);
+
+      const wsUrl = lobbyId
+        ? (() => {
+            const base = new URL(resolveApiUrl("/api/raid/ws"));
+            base.searchParams.set("lobbyId", lobbyId);
+            return toWebSocketUrl(base.toString());
+          })()
+        : `wss://${connectHost}:${connectPort}/ws`;
+
+      const ws = await new Promise<WebSocket>((resolve, reject) => {
+        const socket = new WebSocket(wsUrl);
+        let settled = false;
+
+        socket.onopen = () => {
+          settled = true;
+          resolve(socket);
+        };
+        socket.onerror = () => {
+          if (!settled) {
+            settled = true;
+            reject(new Error(`WebSocket connection failed: ${wsUrl}`));
+          }
+        };
+        socket.onclose = (event) => {
+          if (!settled) {
+            settled = true;
+            reject(new Error(`WebSocket closed during connect: ${event.code}`));
+          }
+        };
+      });
+
+      wsRef.current = ws;
+      ws.onmessage = (event) => handleMessage(String(event.data));
+      ws.onclose = () => setConnectionState("disconnected");
+      ws.onerror = () => setConnectionState("error");
+
+      setConnectionState("connected");
+
+      if (autoJoin) {
+        const joinPayload = JSON.stringify({ t: "join", userId });
+        addLog("→", joinPayload);
+        ws.send(joinPayload);
+      }
+    },
+    [addLog, closeActiveConnections, handleMessage, userId],
+  );
+
   // --- Connect ---
   const connect = useCallback(async () => {
-    setConnectionState("connecting");
-    setResult(null);
-    if (protocol === "wt") {
-      setWtTapCount(0);
-    } else {
-      setWsTapCount(0);
-    }
-
     try {
       if (protocol === "wt") {
-        const hashBytes = hexToUint8Array(certHash);
-        const transport = new WebTransport(`https://${host}:${port}/wt`, {
-          serverCertificateHashes: [
-            {
-              algorithm: "sha-256",
-              value: hashBytes.buffer as ArrayBuffer,
-            },
-          ],
-        });
-        await transport.ready;
-        transportRef.current = transport;
-
-        const dgWriter = transport.datagrams.writable.getWriter();
-        dgWriterRef.current = dgWriter;
-
-        readDatagrams(transport);
-        readIncomingUniStreams(transport);
-
-        setConnectionState("connected");
-
-        transport.closed
-          .then(() => {
-            setConnectionState("disconnected");
-          })
-          .catch(() => {
-            setConnectionState("disconnected");
-          });
+        await connectViaWebTransport({ connectHost: host, connectPort: port, hash: certHash });
       } else {
-        const ws = new WebSocket(`wss://${host}:${port}/ws`);
-        wsRef.current = ws;
-        ws.onopen = () => setConnectionState("connected");
-        ws.onmessage = (event) => handleMessage(String(event.data));
-        ws.onclose = () => setConnectionState("disconnected");
-        ws.onerror = () => setConnectionState("error");
+        await connectViaWebSocket({
+          connectHost: host,
+          connectPort: port,
+          lobbyId: currentLobbyId || undefined,
+        });
       }
     } catch (err) {
       setConnectionState("error");
@@ -323,10 +444,10 @@ export function RaidTestPage() {
     host,
     port,
     certHash,
-    handleMessage,
+    currentLobbyId,
+    connectViaWebSocket,
+    connectViaWebTransport,
     addLog,
-    readDatagrams,
-    readIncomingUniStreams,
   ]);
 
   // --- Auto-connect on mount ---
@@ -342,13 +463,15 @@ export function RaidTestPage() {
       host: string;
       port: string;
       certHash: string;
+      lobbyId?: string;
     } | null> => {
       try {
+        const lobbyId = generateUuid();
         const res = await fetch(allocateApiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            lobbyId: generateUuid(),
+            lobbyId,
             bossPokemonId: generateUuid(),
           }),
           signal: abort.signal,
@@ -360,7 +483,13 @@ export function RaidTestPage() {
         if (!data.host || !data.certHash) {
           return null;
         }
-        return { host: data.host, port: String(data.port), certHash: data.certHash.trim() };
+        setCurrentLobbyId(lobbyId);
+        return {
+          host: data.host,
+          port: String(data.port),
+          certHash: data.certHash.trim(),
+          lobbyId,
+        };
       } catch {
         return null;
       }
@@ -370,6 +499,7 @@ export function RaidTestPage() {
       host: string;
       port: string;
       certHash: string;
+      lobbyId?: string;
     } | null> => {
       if (!gameServerUrl || !parsedGameServerUrl) {
         return null;
@@ -390,56 +520,84 @@ export function RaidTestPage() {
       }
     };
 
+    const findActiveRaid = async (): Promise<{
+      host: string;
+      port: string;
+      certHash: string;
+      lobbyId?: string;
+    } | null> => {
+      try {
+        const res = await fetch(activeApiUrl, { signal: abort.signal });
+        if (!res.ok) {
+          return null;
+        }
+        const data = await res.json();
+        if (!data.host || !data.certHash) {
+          return null;
+        }
+        return {
+          host: data.host,
+          port: String(data.port),
+          certHash: String(data.certHash).trim(),
+          lobbyId: data.lobbyId,
+        };
+      } catch {
+        return null;
+      }
+    };
+
     const autoConnect = async () => {
       try {
-        // Try Gateway allocate first (EKS), then fallback to direct game server (local dev)
-        const conn = (await allocateViaGateway()) ?? (await fallbackDirect());
+        // 1. Try to join an active raid, 2. allocate new, 3. direct fallback (local dev)
+        const conn =
+          (await findActiveRaid()) ?? (await allocateViaGateway()) ?? (await fallbackDirect());
         if (!conn) {
           return;
         }
 
         const { host: connectHost, port: connectPort, certHash: hash } = conn;
+        const activeLobbyId =
+          typeof conn.lobbyId === "string" && conn.lobbyId ? conn.lobbyId : undefined;
+        if (activeLobbyId) {
+          setCurrentLobbyId(activeLobbyId);
+        }
 
         setHost(connectHost);
         setPort(connectPort);
         setCertHash(hash);
 
-        const hashBytes = hexToUint8Array(hash);
-        setConnectionState("connecting");
+        const shouldUseWebSocket = isIosDevice() || !supportsWebTransport();
+        setProtocol(shouldUseWebSocket ? "ws" : "wt");
 
-        const transport = new WebTransport(`https://${connectHost}:${connectPort}/wt`, {
-          serverCertificateHashes: [
-            { algorithm: "sha-256", value: hashBytes.buffer as ArrayBuffer },
-          ],
-        });
-        await transport.ready;
-        transportRef.current = transport;
+        if (shouldUseWebSocket) {
+          await connectViaWebSocket({
+            connectHost,
+            connectPort,
+            lobbyId: activeLobbyId,
+            autoJoin: true,
+          });
+          return;
+        }
 
-        const dgWriter = transport.datagrams.writable.getWriter();
-        dgWriterRef.current = dgWriter;
-
-        readDatagrams(transport);
-        readIncomingUniStreams(transport);
-        setConnectionState("connected");
-
-        transport.closed
-          .then(() => setConnectionState("disconnected"))
-          .catch(() => setConnectionState("disconnected"));
-
-        // Auto-join
-        const joinPayload = JSON.stringify({ t: "join", userId });
-        addLog("\u2192", joinPayload);
-        const stream = await transport.createBidirectionalStream();
-        const writer = stream.writable.getWriter();
-        await writer.write(new TextEncoder().encode(joinPayload));
-        await writer.close();
-        const reader = stream.readable.getReader();
         try {
-          while (!(await reader.read()).done) {
-            /* drain */
+          await connectViaWebTransport({
+            connectHost,
+            connectPort,
+            hash,
+            autoJoin: true,
+          });
+        } catch (wtErr) {
+          if (activeLobbyId) {
+            setProtocol("ws");
+            await connectViaWebSocket({
+              connectHost,
+              connectPort,
+              lobbyId: activeLobbyId,
+              autoJoin: true,
+            });
+            return;
           }
-        } catch {
-          /* stream closed */
+          throw wtErr;
         }
       } catch (err) {
         if (!abort.signal.aborted) {
@@ -453,27 +611,65 @@ export function RaidTestPage() {
 
     return () => {
       abort.abort();
-      if (transportRef.current) {
-        transportRef.current.close();
-        transportRef.current = null;
-        dgWriterRef.current = null;
-      }
+      closeActiveConnections();
     };
-  }, [addLog, readDatagrams, readIncomingUniStreams, userId]);
+  }, [closeActiveConnections, connectViaWebSocket, connectViaWebTransport]);
 
   // --- Disconnect ---
   const disconnect = useCallback(() => {
-    if (transportRef.current) {
-      transportRef.current.close();
-      transportRef.current = null;
-      dgWriterRef.current = null;
-    }
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
+    closeActiveConnections();
     setConnectionState("disconnected");
-  }, []);
+  }, [closeActiveConnections]);
+
+  // --- Join existing raid ---
+  const joinExistingRaid = useCallback(async () => {
+    if (!joinLobbyId.trim()) {
+      return;
+    }
+    setJoinLoading(true);
+    try {
+      const res = await fetch(`${joinApiUrl}?lobbyId=${encodeURIComponent(joinLobbyId.trim())}`);
+      if (!res.ok) {
+        const text = await res.text();
+        addLog("\u2190", `JOIN ERROR: ${res.status} ${text}`);
+        return;
+      }
+      const data = await res.json();
+      if (!data.host || !data.certHash) {
+        addLog("\u2190", "JOIN ERROR: invalid response from server");
+        return;
+      }
+      const connectHost = data.host;
+      const connectPort = String(data.port);
+      const hash = String(data.certHash).trim();
+
+      setHost(connectHost);
+      setPort(connectPort);
+      setCertHash(hash);
+      setCurrentLobbyId(joinLobbyId.trim());
+
+      if (protocol === "ws") {
+        await connectViaWebSocket({
+          connectHost,
+          connectPort,
+          lobbyId: joinLobbyId.trim(),
+          autoJoin: true,
+        });
+      } else {
+        await connectViaWebTransport({
+          connectHost,
+          connectPort,
+          hash,
+          autoJoin: true,
+        });
+      }
+    } catch (err) {
+      addLog("\u2190", `JOIN ERROR: ${err instanceof Error ? err.message : String(err)}`);
+      setConnectionState("disconnected");
+    } finally {
+      setJoinLoading(false);
+    }
+  }, [joinLobbyId, protocol, connectViaWebSocket, connectViaWebTransport, addLog]);
 
   // --- Actions ---
   const handleJoin = () => {
@@ -631,14 +827,46 @@ export function RaidTestPage() {
           </div>
         </section>
 
+        {/* Join Existing Raid */}
+        <section className="rounded-xl bg-bg-card p-5 shadow-card space-y-4">
+          <h2 className="text-sm font-semibold text-text-secondary">Join Existing Raid</h2>
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={joinLobbyId}
+              onChange={(e) => setJoinLobbyId(e.target.value)}
+              placeholder="Lobby ID"
+              className="flex-1 rounded-lg bg-bg-primary px-3 py-2 text-sm font-mono text-text-primary border border-bg-hover focus:border-accent focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={joinExistingRaid}
+              disabled={joinLoading || !joinLobbyId.trim() || isConnected}
+              className="rounded-lg bg-green px-5 py-2 text-sm font-semibold text-bg-primary hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              {joinLoading ? "JOINING..." : "JOIN RAID"}
+            </button>
+          </div>
+        </section>
+
         {/* Status */}
-        <section className="rounded-xl bg-bg-card p-4 shadow-card flex items-center gap-3">
-          <span className="text-lg">{statusIndicator}</span>
-          <span className="text-sm font-medium capitalize">{connectionState}</span>
-          {result && (
-            <span className="ml-auto rounded-full bg-accent/20 px-3 py-1 text-xs font-semibold text-accent">
-              {result}
-            </span>
+        <section className="rounded-xl bg-bg-card p-4 shadow-card space-y-2">
+          <div className="flex items-center gap-3">
+            <span className="text-lg">{statusIndicator}</span>
+            <span className="text-sm font-medium capitalize">{connectionState}</span>
+            {result && (
+              <span className="ml-auto rounded-full bg-accent/20 px-3 py-1 text-xs font-semibold text-accent">
+                {result}
+              </span>
+            )}
+          </div>
+          {currentLobbyId && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-text-secondary">Lobby ID:</span>
+              <span className="text-xs font-mono text-text-primary select-all">
+                {currentLobbyId}
+              </span>
+            </div>
           )}
         </section>
 

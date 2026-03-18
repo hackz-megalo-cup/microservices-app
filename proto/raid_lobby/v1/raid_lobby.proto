@@ -2,6 +2,8 @@ syntax = "proto3";
 
 package raid_lobby.v1;
 
+import "google/protobuf/timestamp.proto";
+
 option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1;raid_lobbyv1";
 
 service RaidLobbyService {
@@ -9,6 +11,7 @@ service RaidLobbyService {
   rpc JoinRaid(JoinRaidRequest) returns (JoinRaidResponse) {}
   rpc StartBattle(StartBattleRequest) returns (StartBattleResponse) {}
   rpc StreamLobby(StreamLobbyRequest) returns (stream StreamLobbyResponse) {}
+  rpc ListOpenRaids(ListOpenRaidsRequest) returns (ListOpenRaidsResponse) {}
 }
 
 message CreateRaidRequest {
@@ -44,4 +47,21 @@ message StreamLobbyResponse {
   string event_type = 1;
   string lobby_id = 2;
   string payload = 3;
+}
+
+message ListOpenRaidsRequest {
+  string status_filter = 1; // optional: "waiting", "in_battle", "" (全件)
+}
+
+message ListOpenRaidsResponse {
+  repeated OpenRaidEntry raids = 1;
+}
+
+message OpenRaidEntry {
+  string id                   = 1;
+  string boss_pokemon_id      = 2;
+  int32  current_participants = 3;
+  string status               = 4;
+  google.protobuf.Timestamp created_at = 5;
+  int32  max_participants     = 6;
 }

@@ -125,13 +125,17 @@ func run() error {
 	mux := http.NewServeMux()
 	mux.Handle(path, handler)
 
-	// Raid allocate endpoint (REST, not connect-rpc)
-	allocateHandler, allocErr := gateway.NewAllocateHandler("default")
+	// Raid allocate & join endpoints (REST, not connect-rpc)
+	allocationStore := gateway.NewAllocationStore()
+	allocateHandler, allocErr := gateway.NewAllocateHandler("default", allocationStore)
 	if allocErr != nil {
 		slog.Warn("agones allocator not available (not running in k8s?)", "error", allocErr)
 	} else {
 		mux.Handle("/api/raid/allocate", allocateHandler)
 	}
+	mux.Handle("/api/raid/join", gateway.NewJoinHandler("default", allocationStore))
+	mux.Handle("/api/raid/active", gateway.NewActiveHandler("default", allocationStore))
+	mux.Handle("/api/raid/ws", gateway.NewWSProxyHandler("default", allocationStore))
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if dbPool != nil {
