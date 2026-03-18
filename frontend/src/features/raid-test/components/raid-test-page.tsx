@@ -74,6 +74,27 @@ function timestamp(): string {
   return new Date().toLocaleTimeString("ja-JP", { hour12: false });
 }
 
+function isIosDevice(): boolean {
+  if (typeof navigator === "undefined") {
+    return false;
+  }
+
+  return (
+    /iP(hone|ad|od)/.test(navigator.userAgent) ||
+    (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1)
+  );
+}
+
+function supportsWebTransport(): boolean {
+  return typeof WebTransport !== "undefined";
+}
+
+function toWebSocketUrl(url: string): string {
+  const wsUrl = new URL(url, typeof window !== "undefined" ? window.location.href : undefined);
+  wsUrl.protocol = wsUrl.protocol === "https:" ? "wss:" : "ws:";
+  return wsUrl.toString();
+}
+
 // ---------------------------------------------------------------------------
 // Component
 // ---------------------------------------------------------------------------
@@ -272,52 +293,147 @@ export function RaidTestPage() {
     [readStream],
   );
 
+  const closeActiveConnections = useCallback(() => {
+    if (transportRef.current) {
+      transportRef.current.close();
+      transportRef.current = null;
+      dgWriterRef.current = null;
+    }
+    if (wsRef.current) {
+      wsRef.current.close();
+      wsRef.current = null;
+    }
+  }, []);
+
+  const connectViaWebTransport = useCallback(
+    async ({
+      connectHost,
+      connectPort,
+      hash,
+      autoJoin = false,
+    }: {
+      connectHost: string;
+      connectPort: string;
+      hash: string;
+      autoJoin?: boolean;
+    }) => {
+      closeActiveConnections();
+      setConnectionState("connecting");
+      setResult(null);
+      setWtTapCount(0);
+
+      const hashBytes = hexToUint8Array(hash);
+      const transport = new WebTransport(`https://${connectHost}:${connectPort}/wt`, {
+        serverCertificateHashes: [{ algorithm: "sha-256", value: hashBytes.buffer as ArrayBuffer }],
+      });
+      await transport.ready;
+      transportRef.current = transport;
+
+      dgWriterRef.current = transport.datagrams.writable.getWriter();
+      readDatagrams(transport);
+      readIncomingUniStreams(transport);
+      setConnectionState("connected");
+
+      transport.closed
+        .then(() => setConnectionState("disconnected"))
+        .catch(() => setConnectionState("disconnected"));
+
+      if (!autoJoin) {
+        return;
+      }
+
+      const joinPayload = JSON.stringify({ t: "join", userId });
+      addLog("→", joinPayload);
+      const stream = await transport.createBidirectionalStream();
+      const writer = stream.writable.getWriter();
+      await writer.write(new TextEncoder().encode(joinPayload));
+      await writer.close();
+      const reader = stream.readable.getReader();
+      try {
+        while (!(await reader.read()).done) {
+          // drain
+        }
+      } catch {
+        // stream closed
+      }
+    },
+    [addLog, closeActiveConnections, readDatagrams, readIncomingUniStreams, userId],
+  );
+
+  const connectViaWebSocket = useCallback(
+    async ({
+      connectHost,
+      connectPort,
+      lobbyId,
+      autoJoin = false,
+    }: {
+      connectHost: string;
+      connectPort: string;
+      lobbyId?: string;
+      autoJoin?: boolean;
+    }) => {
+      closeActiveConnections();
+      setConnectionState("connecting");
+      setResult(null);
+      setWsTapCount(0);
+
+      const wsUrl = lobbyId
+        ? (() => {
+            const base = new URL(resolveApiUrl("/api/raid/ws"));
+            base.searchParams.set("lobbyId", lobbyId);
+            return toWebSocketUrl(base.toString());
+          })()
+        : `wss://${connectHost}:${connectPort}/ws`;
+
+      const ws = await new Promise<WebSocket>((resolve, reject) => {
+        const socket = new WebSocket(wsUrl);
+        let settled = false;
+
+        socket.onopen = () => {
+          settled = true;
+          resolve(socket);
+        };
+        socket.onerror = () => {
+          if (!settled) {
+            settled = true;
+            reject(new Error(`WebSocket connection failed: ${wsUrl}`));
+          }
+        };
+        socket.onclose = (event) => {
+          if (!settled) {
+            settled = true;
+            reject(new Error(`WebSocket closed during connect: ${event.code}`));
+          }
+        };
+      });
+
+      wsRef.current = ws;
+      ws.onmessage = (event) => handleMessage(String(event.data));
+      ws.onclose = () => setConnectionState("disconnected");
+      ws.onerror = () => setConnectionState("error");
+
+      setConnectionState("connected");
+
+      if (autoJoin) {
+        const joinPayload = JSON.stringify({ t: "join", userId });
+        addLog("→", joinPayload);
+        ws.send(joinPayload);
+      }
+    },
+    [addLog, closeActiveConnections, handleMessage, userId],
+  );
+
   // --- Connect ---
   const connect = useCallback(async () => {
-    setConnectionState("connecting");
-    setResult(null);
-    if (protocol === "wt") {
-      setWtTapCount(0);
-    } else {
-      setWsTapCount(0);
-    }
-
     try {
       if (protocol === "wt") {
-        const hashBytes = hexToUint8Array(certHash);
-        const transport = new WebTransport(`https://${host}:${port}/wt`, {
-          serverCertificateHashes: [
-            {
-              algorithm: "sha-256",
-              value: hashBytes.buffer as ArrayBuffer,
-            },
-          ],
-        });
-        await transport.ready;
-        transportRef.current = transport;
-
-        const dgWriter = transport.datagrams.writable.getWriter();
-        dgWriterRef.current = dgWriter;
-
-        readDatagrams(transport);
-        readIncomingUniStreams(transport);
-
-        setConnectionState("connected");
-
-        transport.closed
-          .then(() => {
-            setConnectionState("disconnected");
-          })
-          .catch(() => {
-            setConnectionState("disconnected");
-          });
+        await connectViaWebTransport({ connectHost: host, connectPort: port, hash: certHash });
       } else {
-        const ws = new WebSocket(`wss://${host}:${port}/ws`);
-        wsRef.current = ws;
-        ws.onopen = () => setConnectionState("connected");
-        ws.onmessage = (event) => handleMessage(String(event.data));
-        ws.onclose = () => setConnectionState("disconnected");
-        ws.onerror = () => setConnectionState("error");
+        await connectViaWebSocket({
+          connectHost: host,
+          connectPort: port,
+          lobbyId: currentLobbyId || undefined,
+        });
       }
     } catch (err) {
       setConnectionState("error");
@@ -328,10 +444,10 @@ export function RaidTestPage() {
     host,
     port,
     certHash,
-    handleMessage,
+    currentLobbyId,
+    connectViaWebSocket,
+    connectViaWebTransport,
     addLog,
-    readDatagrams,
-    readIncomingUniStreams,
   ]);
 
   // --- Auto-connect on mount ---
@@ -347,6 +463,7 @@ export function RaidTestPage() {
       host: string;
       port: string;
       certHash: string;
+      lobbyId?: string;
     } | null> => {
       try {
         const lobbyId = generateUuid();
@@ -367,7 +484,12 @@ export function RaidTestPage() {
           return null;
         }
         setCurrentLobbyId(lobbyId);
-        return { host: data.host, port: String(data.port), certHash: data.certHash.trim() };
+        return {
+          host: data.host,
+          port: String(data.port),
+          certHash: data.certHash.trim(),
+          lobbyId,
+        };
       } catch {
         return null;
       }
@@ -377,6 +499,7 @@ export function RaidTestPage() {
       host: string;
       port: string;
       certHash: string;
+      lobbyId?: string;
     } | null> => {
       if (!gameServerUrl || !parsedGameServerUrl) {
         return null;
@@ -433,50 +556,48 @@ export function RaidTestPage() {
         }
 
         const { host: connectHost, port: connectPort, certHash: hash } = conn;
-        if ("lobbyId" in conn && conn.lobbyId) {
-          setCurrentLobbyId(conn.lobbyId as string);
+        const activeLobbyId =
+          typeof conn.lobbyId === "string" && conn.lobbyId ? conn.lobbyId : undefined;
+        if (activeLobbyId) {
+          setCurrentLobbyId(activeLobbyId);
         }
 
         setHost(connectHost);
         setPort(connectPort);
         setCertHash(hash);
 
-        const hashBytes = hexToUint8Array(hash);
-        setConnectionState("connecting");
+        const shouldUseWebSocket = isIosDevice() || !supportsWebTransport();
+        setProtocol(shouldUseWebSocket ? "ws" : "wt");
 
-        const transport = new WebTransport(`https://${connectHost}:${connectPort}/wt`, {
-          serverCertificateHashes: [
-            { algorithm: "sha-256", value: hashBytes.buffer as ArrayBuffer },
-          ],
-        });
-        await transport.ready;
-        transportRef.current = transport;
+        if (shouldUseWebSocket) {
+          await connectViaWebSocket({
+            connectHost,
+            connectPort,
+            lobbyId: activeLobbyId,
+            autoJoin: true,
+          });
+          return;
+        }
 
-        const dgWriter = transport.datagrams.writable.getWriter();
-        dgWriterRef.current = dgWriter;
-
-        readDatagrams(transport);
-        readIncomingUniStreams(transport);
-        setConnectionState("connected");
-
-        transport.closed
-          .then(() => setConnectionState("disconnected"))
-          .catch(() => setConnectionState("disconnected"));
-
-        // Auto-join
-        const joinPayload = JSON.stringify({ t: "join", userId });
-        addLog("\u2192", joinPayload);
-        const stream = await transport.createBidirectionalStream();
-        const writer = stream.writable.getWriter();
-        await writer.write(new TextEncoder().encode(joinPayload));
-        await writer.close();
-        const reader = stream.readable.getReader();
         try {
-          while (!(await reader.read()).done) {
-            /* drain */
+          await connectViaWebTransport({
+            connectHost,
+            connectPort,
+            hash,
+            autoJoin: true,
+          });
+        } catch (wtErr) {
+          if (activeLobbyId) {
+            setProtocol("ws");
+            await connectViaWebSocket({
+              connectHost,
+              connectPort,
+              lobbyId: activeLobbyId,
+              autoJoin: true,
+            });
+            return;
           }
-        } catch {
-          /* stream closed */
+          throw wtErr;
         }
       } catch (err) {
         if (!abort.signal.aborted) {
@@ -490,27 +611,15 @@ export function RaidTestPage() {
 
     return () => {
       abort.abort();
-      if (transportRef.current) {
-        transportRef.current.close();
-        transportRef.current = null;
-        dgWriterRef.current = null;
-      }
+      closeActiveConnections();
     };
-  }, [addLog, readDatagrams, readIncomingUniStreams, userId]);
+  }, [closeActiveConnections, connectViaWebSocket, connectViaWebTransport]);
 
   // --- Disconnect ---
   const disconnect = useCallback(() => {
-    if (transportRef.current) {
-      transportRef.current.close();
-      transportRef.current = null;
-      dgWriterRef.current = null;
-    }
-    if (wsRef.current) {
-      wsRef.current.close();
-      wsRef.current = null;
-    }
+    closeActiveConnections();
     setConnectionState("disconnected");
-  }, []);
+  }, [closeActiveConnections]);
 
   // --- Join existing raid ---
   const joinExistingRaid = useCallback(async () => {
@@ -537,42 +646,22 @@ export function RaidTestPage() {
       setHost(connectHost);
       setPort(connectPort);
       setCertHash(hash);
+      setCurrentLobbyId(joinLobbyId.trim());
 
-      setConnectionState("connecting");
-      setResult(null);
-
-      const hashBytes = hexToUint8Array(hash);
-      const transport = new WebTransport(`https://${connectHost}:${connectPort}/wt`, {
-        serverCertificateHashes: [{ algorithm: "sha-256", value: hashBytes.buffer as ArrayBuffer }],
-      });
-      await transport.ready;
-      transportRef.current = transport;
-
-      const dgWriter = transport.datagrams.writable.getWriter();
-      dgWriterRef.current = dgWriter;
-
-      readDatagrams(transport);
-      readIncomingUniStreams(transport);
-      setConnectionState("connected");
-
-      transport.closed
-        .then(() => setConnectionState("disconnected"))
-        .catch(() => setConnectionState("disconnected"));
-
-      // Auto-join the battle session
-      const joinPayload = JSON.stringify({ t: "join", userId });
-      addLog("\u2192", joinPayload);
-      const stream = await transport.createBidirectionalStream();
-      const writer = stream.writable.getWriter();
-      await writer.write(new TextEncoder().encode(joinPayload));
-      await writer.close();
-      const reader = stream.readable.getReader();
-      try {
-        while (!(await reader.read()).done) {
-          /* drain */
-        }
-      } catch {
-        /* stream closed */
+      if (protocol === "ws") {
+        await connectViaWebSocket({
+          connectHost,
+          connectPort,
+          lobbyId: joinLobbyId.trim(),
+          autoJoin: true,
+        });
+      } else {
+        await connectViaWebTransport({
+          connectHost,
+          connectPort,
+          hash,
+          autoJoin: true,
+        });
       }
     } catch (err) {
       addLog("\u2190", `JOIN ERROR: ${err instanceof Error ? err.message : String(err)}`);
@@ -580,7 +669,7 @@ export function RaidTestPage() {
     } finally {
       setJoinLoading(false);
     }
-  }, [joinLobbyId, userId, addLog, readDatagrams, readIncomingUniStreams]);
+  }, [joinLobbyId, protocol, connectViaWebSocket, connectViaWebTransport, addLog]);
 
   // --- Actions ---
   const handleJoin = () => {
