@@ -98,6 +98,10 @@
           goVendorHash = "sha256-9mDtmS5axcsP/YiqrIcZT6YkysC0OegilaNfWNPvp80=";
           servicesRoot = toString ./services;
           goServiceInputs = {
+            auth = {
+              internals = [ "auth" ];
+              gen = [ "auth" ];
+            };
             caller = {
               internals = [ "caller" ];
               gen = [ "caller" ];
@@ -205,6 +209,7 @@
             name = "go-services";
             src = ./services;
             subPackages = [
+              "cmd/auth"
               "cmd/caller"
               "cmd/gateway"
               "cmd/greeter"
@@ -228,6 +233,10 @@
                 (nix2containerPkgs.nix2container.buildLayer { deps = [ package ]; })
               ];
             };
+
+          auth = buildGoService "auth";
+          auth-image = buildGoServiceImage "auth" auth;
+          auth-release-image = buildGoServiceImage "auth" go-services;
 
           caller = buildGoService "caller";
           caller-image = buildGoServiceImage "caller" caller;
@@ -312,9 +321,6 @@
                 })
               ];
             };
-
-          auth-service = buildNodeService "auth-service" (nodeServiceNodeModules "auth-service");
-          auth-service-image = buildNodeServiceImage "auth-service" auth-service;
 
           custom-lang-service = buildNodeService "custom-lang-service" (
             nodeServiceNodeModules "custom-lang-service"
@@ -440,8 +446,9 @@
           packages.caller = caller;
           packages.caller-image = caller-image;
           packages.caller-release-image = caller-release-image;
-          packages.auth-service = auth-service;
-          packages.auth-service-image = auth-service-image;
+          packages.auth = auth;
+          packages.auth-image = auth-image;
+          packages.auth-release-image = auth-release-image;
           packages.custom-lang-service = custom-lang-service;
           packages.custom-lang-service-image = custom-lang-service-image;
           packages.frontend = frontend-assets;
