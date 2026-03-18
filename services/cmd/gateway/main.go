@@ -133,8 +133,8 @@ func run() error {
 	} else {
 		mux.Handle("/api/raid/allocate", allocateHandler)
 	}
-	mux.Handle("/api/raid/join", gateway.NewJoinHandler(allocationStore))
-	mux.Handle("/api/raid/active", gateway.NewActiveHandler(allocationStore))
+	mux.Handle("/api/raid/join", gateway.NewJoinHandler("default", allocationStore))
+	mux.Handle("/api/raid/active", gateway.NewActiveHandler("default", allocationStore))
 
 	mux.HandleFunc("/healthz", func(w http.ResponseWriter, r *http.Request) {
 		if dbPool != nil {
