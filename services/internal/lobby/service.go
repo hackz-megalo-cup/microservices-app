@@ -260,6 +260,10 @@ func (s *Service) fetchAllPokemon(ctx context.Context) ([]*masterdatav1.Pokemon,
 }
 
 // fetchCaughtPokemon queries auth DB for all pokemon the user has caught.
+// NOTE: If authDB is nil (AUTH_DATABASE_URL not set or connection failed at startup),
+// this returns (nil, nil) — buildPokedex will treat every entry as caught=false,
+// so the entire pokedex will appear uncaught. This matches the behaviour of
+// SetActivePokemon skipping ownership checks when authDB is nil.
 func (s *Service) fetchCaughtPokemon(ctx context.Context, userID string) (map[string]bool, error) {
 	if s.authDB == nil {
 		return nil, nil
