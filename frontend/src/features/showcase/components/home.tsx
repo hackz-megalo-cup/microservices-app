@@ -1,38 +1,10 @@
-import { useQuery } from "@tanstack/react-query";
-import type { Raid } from "../types";
 import "../../../styles/global.css";
+import { useOpenRaids } from "../hooks/use-open-raids";
 import { RaidCard } from "./ui/raid-card";
 import { TabBar } from "./ui/tab-bar";
 
-// TODO: proto実装後、以下に置き換え
-// import { useQuery } from "@connectrpc/connect-query";
-// import { listRaids } from "../../../gen/raid_lobby/v1/raid_lobby-RaidLobbyService_connectquery";
-
-async function fetchListRaids(): Promise<{ raids: Raid[] }> {
-  const response = await fetch(`${apiBaseUrl}/raid_lobby.v1.RaidLobbyService/ListRaids`, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify({}),
-  });
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch raids: ${response.statusText}`);
-  }
-
-  return response.json() as Promise<{ raids: Raid[] }>;
-}
-
 export function Home() {
-  // TODO: proto実装後、以下に置き換え
-  // const { data, isLoading, error } = useQuery(listRaids, {});
-  const { data, isLoading, error } = useQuery({
-    queryKey: ["listRaids"],
-    queryFn: fetchListRaids,
-  });
-
-  const raids = data?.raids ?? [];
+  const { raids, isLoading, error } = useOpenRaids();
 
   return (
     <div className="showcase-screen">

@@ -57,30 +57,30 @@ const mockPokemon = [
   },
 ];
 
-const mockRaids = [
+const mockOpenRaids = [
   {
     id: "raid-1",
-    name: "JavaScript",
-    type: "Dynamic / JIT Compiled",
-    players: "5/10",
-    timer: "12:34",
-    image: "/images/raid-javascript.png",
+    bossPokemonId: "1",
+    currentParticipants: 5,
+    maxParticipants: 10,
+    status: "waiting",
+    createdAt: "2026-03-18T10:48:00Z",
   },
   {
     id: "raid-2",
-    name: "Rust",
-    type: "Static / Compiled",
-    players: "8/10",
-    timer: "05:12",
-    image: "/images/raid-rust.png",
+    bossPokemonId: "2",
+    currentParticipants: 8,
+    maxParticipants: 10,
+    status: "waiting",
+    createdAt: "2026-03-18T10:55:00Z",
   },
   {
     id: "raid-3",
-    name: "Go",
-    type: "Static / Compiled",
-    players: "3/10",
-    timer: "23:45",
-    image: "/images/raid-go.png",
+    bossPokemonId: "3",
+    currentParticipants: 3,
+    maxParticipants: 10,
+    status: "in_battle",
+    createdAt: "2026-03-18T10:37:00Z",
   },
 ];
 
@@ -121,8 +121,7 @@ export const handlers = [
 
   // JoinRaid (Unary)
   http.post(`${baseUrl}/raid_lobby.v1.RaidLobbyService/JoinRaid`, async ({ request }) => {
-    const body = (await request.json()) as { lobbyId?: string; userId?: string };
-    console.log("[MSW] JoinRaid:", body);
+    await request.json();
 
     return HttpResponse.json({
       participantId: `participant-${Math.random().toString(36).substring(7)}`,
@@ -131,8 +130,7 @@ export const handlers = [
 
   // StartBattle (Unary)
   http.post(`${baseUrl}/raid_lobby.v1.RaidLobbyService/StartBattle`, async ({ request }) => {
-    const body = (await request.json()) as { lobbyId?: string };
-    console.log("[MSW] StartBattle:", body);
+    await request.json();
 
     return HttpResponse.json({
       battleSessionId: `battle-${Math.random().toString(36).substring(7)}`,
@@ -142,7 +140,7 @@ export const handlers = [
   // ListRaids (Unary)
   http.post(`${baseUrl}/raid_lobby.v1.RaidLobbyService/ListOpenRaids`, async () => {
     return HttpResponse.json({
-      raids: mockRaids,
+      raids: mockOpenRaids,
     });
   }),
 
