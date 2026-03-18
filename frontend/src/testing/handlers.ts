@@ -88,23 +88,38 @@ const mockItems = [
   {
     id: "capture-ball-basic",
     name: "Basic Ball",
-    effectType: "capture_rate",
-    targetType: "self",
-    captureRateBonus: 0.1,
+    effects: [
+      {
+        effectType: "capture_rate_up",
+        targetType: "",
+        captureRateBonus: 0.1,
+        flavorText: "Basic Poké Ball",
+      },
+    ],
   },
   {
     id: "capture-ball-super",
     name: "Super Ball",
-    effectType: "capture_rate",
-    targetType: "self",
-    captureRateBonus: 0.2,
+    effects: [
+      {
+        effectType: "capture_rate_up",
+        targetType: "",
+        captureRateBonus: 0.2,
+        flavorText: "Super Poké Ball",
+      },
+    ],
   },
   {
     id: "capture-ball-ultra",
     name: "Ultra Ball",
-    effectType: "capture_rate",
-    targetType: "self",
-    captureRateBonus: 0.35,
+    effects: [
+      {
+        effectType: "capture_rate_up",
+        targetType: "",
+        captureRateBonus: 0.35,
+        flavorText: "Ultra Poké Ball",
+      },
+    ],
   },
 ];
 
