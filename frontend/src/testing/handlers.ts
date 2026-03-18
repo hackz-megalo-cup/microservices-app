@@ -146,7 +146,6 @@ function pickNumber(body: unknown, keys: string[]): number | null {
   return null;
 }
 
->>>>>>> 7ea7beb (feat: merge feature/79-integrate-capture-ui)
 export const handlers = [
   http.post(`${baseUrl}/gateway.v1.GatewayService/InvokeCustom`, async ({ request }) => {
     const body = (await request.json()) as { name?: string };
