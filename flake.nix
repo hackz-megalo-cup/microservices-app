@@ -95,7 +95,7 @@
           # Microservices (connect-go) — go.mod requires go 1.26
           buildGoModule = pkgs.buildGo126Module;
           goServiceVersion = "0.1.0";
-          goVendorHash = "sha256-MMHm0r37BNzgmkrZUb+OCbbcptqpBJEoK1hSgBM+ceY=";
+          goVendorHash = "sha256-DW+NKaC3W4XXy1/tGCOgwbwqnwiwVwcZvtffZ7dPrcU=";
           servicesRoot = toString ./services;
           goServiceInputs = {
             auth = {
@@ -146,7 +146,6 @@
                 "item"
                 "masterdata"
               ];
-              vendorHash = "sha256-DW+NKaC3W4XXy1/tGCOgwbwqnwiwVwcZvtffZ7dPrcU=";
             };
           };
           goServiceSource =
@@ -219,6 +218,7 @@
               "cmd/raid-lobby"
               "cmd/capture"
             ];
+            vendorHash = "sha256-MMHm0r37BNzgmkrZUb+OCbbcptqpBJEoK1hSgBM+ceY=";
           };
 
           buildGoServiceImage =
