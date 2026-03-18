@@ -2,11 +2,12 @@ package lobby
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"log/slog"
 
 	"connectrpc.com/connect"
-	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	pb "github.com/hackz-megalo-cup/microservices-app/services/gen/go/lobby/v1"
@@ -18,6 +19,8 @@ import (
 type Service struct {
 	eventStore       *platform.EventStore
 	outbox           *platform.OutboxStore
+	lobbyDB          *pgxpool.Pool
+	authDB           *pgxpool.Pool
 	itemDB           *pgxpool.Pool
 	raidLobbyDB      *pgxpool.Pool
 	masterdataClient masterdatav1connect.MasterdataServiceClient
@@ -26,6 +29,8 @@ type Service struct {
 func NewService(
 	eventStore *platform.EventStore,
 	outbox *platform.OutboxStore,
+	lobbyDB *pgxpool.Pool,
+	authDB *pgxpool.Pool,
 	itemDB *pgxpool.Pool,
 	raidLobbyDB *pgxpool.Pool,
 	masterdataClient masterdatav1connect.MasterdataServiceClient,
@@ -33,6 +38,8 @@ func NewService(
 	return &Service{
 		eventStore:       eventStore,
 		outbox:           outbox,
+		lobbyDB:          lobbyDB,
+		authDB:           authDB,
 		itemDB:           itemDB,
 		raidLobbyDB:      raidLobbyDB,
 		masterdataClient: masterdataClient,
@@ -46,11 +53,29 @@ func (s *Service) SetActivePokemon(ctx context.Context, req *connect.Request[pb.
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id and pokemon_id are required"))
 	}
 
-	agg := NewAggregate(uuid.NewString())
-	agg.Create()
-	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, LobbyTopicMapper); err != nil {
-		slog.Error("failed to save aggregate", "error", err)
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save"))
+	// 所有チェック: auth_db.user_pokemon を参照
+	if s.authDB != nil {
+		var exists bool
+		if err := s.authDB.QueryRow(ctx,
+			`SELECT EXISTS(SELECT 1 FROM user_pokemon WHERE user_id = $1 AND pokemon_id = $2)`,
+			userID, pokemonID,
+		).Scan(&exists); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("ownership check failed: %w", err))
+		}
+		if !exists {
+			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("pokemon not owned by user"))
+		}
+	}
+
+	// UPSERT: user_active_pokemon
+	if s.lobbyDB != nil {
+		if _, err := s.lobbyDB.Exec(ctx, `
+			INSERT INTO user_active_pokemon (user_id, pokemon_id, updated_at)
+			VALUES ($1, $2, now())
+			ON CONFLICT (user_id) DO UPDATE SET pokemon_id = $2, updated_at = now()
+		`, userID, pokemonID); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to set active pokemon: %w", err))
+		}
 	}
 
 	return connect.NewResponse(&pb.SetActivePokemonResponse{Success: true}), nil
@@ -62,7 +87,21 @@ func (s *Service) GetActivePokemon(ctx context.Context, req *connect.Request[pb.
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id is required"))
 	}
 
-	return connect.NewResponse(&pb.GetActivePokemonResponse{}), nil
+	var pokemonID string
+	if s.lobbyDB != nil {
+		err := s.lobbyDB.QueryRow(ctx,
+			`SELECT pokemon_id FROM user_active_pokemon WHERE user_id = $1`,
+			userID,
+		).Scan(&pokemonID)
+		if err != nil {
+			if errors.Is(err, pgx.ErrNoRows) {
+				return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("no active pokemon set"))
+			}
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get active pokemon: %w", err))
+		}
+	}
+
+	return connect.NewResponse(&pb.GetActivePokemonResponse{PokemonId: pokemonID}), nil
 }
 
 func (s *Service) GetLobbyOverview(ctx context.Context, req *connect.Request[pb.GetLobbyOverviewRequest]) (*connect.Response[pb.GetLobbyOverviewResponse], error) {

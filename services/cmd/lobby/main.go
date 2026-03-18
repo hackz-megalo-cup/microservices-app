@@ -89,6 +89,15 @@ func run() error {
 		defer raidLobbyDB.Close()
 	}
 
+	authDB, err := platform.NewDBPool(ctx, os.Getenv("AUTH_DATABASE_URL"))
+	if err != nil {
+		slog.WarnContext(ctx, "auth DB unavailable, ownership check will be skipped", "error", err)
+		authDB = nil
+	}
+	if authDB != nil {
+		defer authDB.Close()
+	}
+
 	// --- Masterdata client ---
 	var masterdataClient masterdatav1connect.MasterdataServiceClient
 	if masterdataURL := os.Getenv("MASTERDATA_URL"); masterdataURL != "" {
@@ -137,7 +146,7 @@ func run() error {
 	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
 
 	// --- Service ---
-	svc := lobby.NewService(eventStore, outbox, itemDB, raidLobbyDB, masterdataClient)
+	svc := lobby.NewService(eventStore, outbox, dbPool, authDB, itemDB, raidLobbyDB, masterdataClient)
 
 	// --- Connect-RPC Handler with interceptors ---
 	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
