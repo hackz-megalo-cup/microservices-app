@@ -68,6 +68,14 @@ _: {
           KAFKA_BROKERS = "redpanda.messaging:9092";
         };
       };
+      capture-secrets = {
+        type = "Opaque";
+        stringData = {
+          DATABASE_URL = "postgresql://devuser:devpass@postgresql.database:5432/capture_db";
+          KAFKA_BROKERS = "redpanda.messaging:9092";
+        };
+      };
+
     };
   };
 }
