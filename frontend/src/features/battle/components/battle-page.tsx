@@ -5,7 +5,7 @@ import "../../../styles/global.css";
 import { useAuthContext } from "../../../lib/auth";
 import { useGameConnection } from "../hooks/use-game-connection";
 import type { ServerMessage } from "../types";
-import { RaidBossModel } from "./raid-boss-model";
+import { RaidBossModel, useRaidBossModel } from "./raid-boss-model";
 import "./battle-page.css";
 
 interface FloatingDmg {
@@ -43,6 +43,7 @@ export function BattlePage() {
   const dmgSeq = useRef(0);
   const rippleSeq = useRef(0);
   const requiredForSpecial = 10;
+  const model = useRaidBossModel();
 
   const spawnDmg = useCallback((value: number, isSpecial: boolean) => {
     const x = 10 + Math.random() * 60;
@@ -151,7 +152,14 @@ export function BattlePage() {
   const timerDisplay = `${minutes}:${String(seconds).padStart(2, "0")}`;
 
   return (
-    <div className="showcase-screen">
+    <div
+      className="showcase-screen"
+      style={{
+        backgroundImage: `url(${model.bg})`,
+        backgroundSize: "cover",
+        backgroundPosition: "center",
+      }}
+    >
       {/* Boss info + HP bar */}
       <section className="flex flex-col gap-3 px-6 pt-4">
         <div className="flex items-center justify-center gap-3">
@@ -195,7 +203,7 @@ export function BattlePage() {
         className="flex-1 relative flex items-center justify-center cursor-pointer select-none overflow-hidden disabled:cursor-not-allowed"
       >
         <div className="w-[280px] h-[280px] rounded-2xl pointer-events-none overflow-hidden">
-          <RaidBossModel squashing={squashing} />
+          <RaidBossModel squashing={squashing} model={model} />
         </div>
 
         {ripples.map((r) => (

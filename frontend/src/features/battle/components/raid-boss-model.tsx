@@ -1,24 +1,48 @@
-import { OrbitControls, useGLTF } from "@react-three/drei";
+import { OrbitControls, useAnimations, useGLTF } from "@react-three/drei";
 import { Canvas, useFrame } from "@react-three/fiber";
-import { Suspense, useMemo, useRef } from "react";
+import { Suspense, useEffect, useMemo, useRef } from "react";
 import { type Group, Vector3 } from "three";
 
-const MODEL_PATHS = ["/python.glb", "/swift.glb"] as const;
-const MODEL_SCALE = 2.5;
-const SCALE_DEFAULT = new Vector3(MODEL_SCALE, MODEL_SCALE, MODEL_SCALE);
+const MODELS = [
+  { path: "/python.glb", rotationY: 0, bg: "/doukutu.png", scale: 2.5 },
+  { path: "/swift.glb", rotationY: Math.PI / 4 + Math.PI + 0.6, bg: "/sora.png", scale: 3.0 },
+] as const;
 
-function pickRandomModel(): string {
-  return MODEL_PATHS[Math.floor(Math.random() * MODEL_PATHS.length)];
+function pickRandomModel() {
+  return MODELS[Math.floor(Math.random() * MODELS.length)];
 }
 
 // Preload both models
-for (const path of MODEL_PATHS) {
+for (const { path } of MODELS) {
   useGLTF.preload(path);
 }
 
-function Model({ url, squashing }: { url: string; squashing: boolean }) {
+function Model({
+  url,
+  rotationY,
+  scale,
+  squashing,
+}: {
+  url: string;
+  rotationY: number;
+  scale: number;
+  squashing: boolean;
+}) {
   const group = useRef<Group>(null);
-  const { scene } = useGLTF(url);
+  const { scene, animations } = useGLTF(url);
+  const { actions, names } = useAnimations(animations, group);
+  const scaleDefault = useMemo(() => new Vector3(scale, scale, scale), [scale]);
+
+  useEffect(() => {
+    for (const name of names) {
+      actions[name]?.reset().play();
+    }
+    return () => {
+      for (const name of names) {
+        actions[name]?.stop();
+      }
+    };
+  }, [actions, names]);
 
   useFrame(() => {
     if (!group.current) {
@@ -26,22 +50,30 @@ function Model({ url, squashing }: { url: string; squashing: boolean }) {
     }
     // Squash effect on hit
     if (squashing) {
-      group.current.scale.set(MODEL_SCALE * 1.03, MODEL_SCALE * 0.97, MODEL_SCALE * 1.03);
+      group.current.scale.set(scale * 1.03, scale * 0.97, scale * 1.03);
     } else {
-      group.current.scale.lerp(SCALE_DEFAULT, 0.2);
+      group.current.scale.lerp(scaleDefault, 0.2);
     }
   });
 
   return (
-    <group ref={group}>
+    <group ref={group} rotation={[0, rotationY, 0]}>
       <primitive object={scene} />
     </group>
   );
 }
 
-export function RaidBossModel({ squashing }: { squashing: boolean }) {
-  const modelUrl = useMemo(() => pickRandomModel(), []);
+export function useRaidBossModel() {
+  return useMemo(() => pickRandomModel(), []);
+}
 
+export function RaidBossModel({
+  squashing,
+  model,
+}: {
+  squashing: boolean;
+  model: (typeof MODELS)[number];
+}) {
   return (
     <Canvas
       camera={{ position: [0, 1.5, 4], fov: 45, near: 0.1 }}
@@ -51,7 +83,12 @@ export function RaidBossModel({ squashing }: { squashing: boolean }) {
       <directionalLight position={[5, 5, 5]} intensity={1.2} />
       <directionalLight position={[-3, 2, -3]} intensity={0.4} />
       <Suspense fallback={null}>
-        <Model url={modelUrl} squashing={squashing} />
+        <Model
+          url={model.path}
+          rotationY={model.rotationY}
+          scale={model.scale}
+          squashing={squashing}
+        />
       </Suspense>
       <OrbitControls enabled={false} />
     </Canvas>
