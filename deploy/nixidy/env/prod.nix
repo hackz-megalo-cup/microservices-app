@@ -7,6 +7,9 @@
     ../../k8s/item.nix
     ../../k8s/masterdata.nix
     ../../k8s/raid-lobby.nix
+    ../../k8s/lobby.nix
+    ../../k8s/capture.nix
+    ../../k8s/projector.nix
     # Keep secrets.nix until the existing app path is migrated off repo-managed secrets.
     ../../k8s/secrets.nix
     # No traefik.nix — prod ingress managed by infra repo
