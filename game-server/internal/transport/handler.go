@@ -66,7 +66,7 @@ func (h *Handler) handleJoin(userID uuid.UUID) {
 		BossHP:       info.BossHP,
 		BossMaxHP:    info.BossMaxHP,
 		Participants: participants,
-		TimeoutSec:   int(info.TimeoutDuration / time.Second),
+		TimeoutSec:   int(h.session.RemainingTime() / time.Second),
 	}
 
 	data, err := MarshalJSON(joined)
@@ -163,11 +163,7 @@ func (h *Handler) StartTimeSync(ctx context.Context) {
 		case <-h.session.Done():
 			return
 		case <-ticker.C:
-			elapsed := time.Since(h.session.StartedAt)
-			remaining := h.session.TimeoutDuration - elapsed
-			if remaining < 0 {
-				remaining = 0
-			}
+			remaining := h.session.RemainingTime()
 
 			msg := TimeSyncMessage{
 				T:            "time_sync",

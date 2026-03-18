@@ -162,3 +162,13 @@ func (s *Session) ParticipantIDs() []uuid.UUID {
 func (s *Session) Done() <-chan struct{} {
 	return s.doneCh
 }
+
+func (s *Session) RemainingTime() time.Duration {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	remaining := s.TimeoutDuration - time.Since(s.StartedAt)
+	if remaining < 0 {
+		return 0
+	}
+	return remaining
+}
