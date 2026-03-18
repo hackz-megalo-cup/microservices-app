@@ -23,6 +23,16 @@ jobs:
       frontend: ${{ steps.filter.outputs.frontend }}
       node: ${{ steps.filter.outputs.node }}
       nix: ${{ steps.filter.outputs.nix }}
+      go_shared: ${{ steps.filter.outputs.go_shared }}
+      caller: ${{ steps.filter.outputs.caller }}
+      gateway: ${{ steps.filter.outputs.gateway }}
+      greeter: ${{ steps.filter.outputs.greeter }}
+      item: ${{ steps.filter.outputs.item }}
+      masterdata: ${{ steps.filter.outputs.masterdata }}
+      projector: ${{ steps.filter.outputs.projector }}
+      raid_lobby: ${{ steps.filter.outputs.raid_lobby }}
+      go_binary_attrs: ${{ steps.targets.outputs.go_binary_attrs }}
+      image_attrs: ${{ steps.targets.outputs.image_attrs }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -34,6 +44,43 @@ jobs:
             go:
               - 'services/**'
               - 'proto/**'
+            go_shared:
+              - 'services/go.mod'
+              - 'services/go.sum'
+              - 'services/internal/platform/**'
+            caller:
+              - 'services/cmd/caller/**'
+              - 'services/internal/caller/**'
+              - 'proto/caller/**'
+              - 'services/gen/go/caller/**'
+            gateway:
+              - 'services/cmd/gateway/**'
+              - 'services/internal/gateway/**'
+              - 'proto/gateway/**'
+              - 'services/gen/go/gateway/**'
+            greeter:
+              - 'services/cmd/greeter/**'
+              - 'services/internal/greeter/**'
+              - 'proto/greeter/**'
+              - 'services/gen/go/greeter/**'
+            item:
+              - 'services/cmd/item/**'
+              - 'services/internal/item/**'
+              - 'proto/item/**'
+              - 'services/gen/go/item/**'
+            masterdata:
+              - 'services/cmd/masterdata/**'
+              - 'services/internal/masterdata/**'
+              - 'proto/masterdata/**'
+              - 'services/gen/go/masterdata/**'
+            projector:
+              - 'services/cmd/projector/**'
+              - 'services/internal/projector/**'
+            raid_lobby:
+              - 'services/cmd/raid-lobby/**'
+              - 'services/internal/raid_lobby/**'
+              - 'proto/raid_lobby/**'
+              - 'services/gen/go/raid_lobby/**'
             frontend:
               - 'frontend/**'
             node:
@@ -42,6 +89,133 @@ jobs:
               - 'flake.nix'
               - 'flake.lock'
               - '**/*.nix'
+      - name: Select Nix build targets
+        id: targets
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          REF: ${{ github.ref }}
+          NIX_CHANGED: ${{ steps.filter.outputs.nix }}
+          NODE_CHANGED: ${{ steps.filter.outputs.node }}
+          FRONTEND_CHANGED: ${{ steps.filter.outputs.frontend }}
+          GO_SHARED_CHANGED: ${{ steps.filter.outputs.go_shared }}
+          CALLER_CHANGED: ${{ steps.filter.outputs.caller }}
+          GATEWAY_CHANGED: ${{ steps.filter.outputs.gateway }}
+          GREETER_CHANGED: ${{ steps.filter.outputs.greeter }}
+          ITEM_CHANGED: ${{ steps.filter.outputs.item }}
+          MASTERDATA_CHANGED: ${{ steps.filter.outputs.masterdata }}
+          PROJECTOR_CHANGED: ${{ steps.filter.outputs.projector }}
+          RAID_LOBBY_CHANGED: ${{ steps.filter.outputs.raid_lobby }}
+        run: |
+          set -euo pipefail
+
+          go_services=(caller gateway greeter item masterdata projector raid-lobby)
+          release_images=(
+            .#auth-service-image
+            .#custom-lang-service-image
+            .#frontend-image
+            .#caller-release-image
+            .#gateway-release-image
+            .#greeter-release-image
+            .#item-release-image
+            .#masterdata-release-image
+            .#projector-release-image
+            .#raid-lobby-release-image
+          )
+
+          declare -A selected_go=()
+          declare -A selected_pr_images=()
+
+          add_go() {
+            selected_go["$1"]=1
+          }
+
+          add_pr_image() {
+            selected_pr_images["$1"]=1
+          }
+
+          add_all_go() {
+            local svc
+            for svc in "${go_services[@]}"; do
+              add_go "$svc"
+            done
+          }
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" || "$REF" == "refs/heads/main" || "$NIX_CHANGED" == "true" || "$GO_SHARED_CHANGED" == "true" ]]; then
+            add_all_go
+          else
+            if [[ "$CALLER_CHANGED" == "true" ]]; then
+              add_go caller
+              add_go greeter
+            fi
+            if [[ "$GATEWAY_CHANGED" == "true" ]]; then
+              add_go gateway
+            fi
+            if [[ "$GREETER_CHANGED" == "true" ]]; then
+              add_go greeter
+            fi
+            if [[ "$ITEM_CHANGED" == "true" ]]; then
+              add_go item
+              add_go projector
+            fi
+            if [[ "$MASTERDATA_CHANGED" == "true" ]]; then
+              add_go masterdata
+              add_go raid-lobby
+            fi
+            if [[ "$PROJECTOR_CHANGED" == "true" ]]; then
+              add_go projector
+            fi
+            if [[ "$RAID_LOBBY_CHANGED" == "true" ]]; then
+              add_go raid-lobby
+            fi
+          fi
+
+          if [[ "$EVENT_NAME" == "workflow_dispatch" || "$REF" == "refs/heads/main" ]]; then
+            {
+              echo "go_binary_attrs=.#go-services"
+              echo "image_attrs=${release_images[*]}"
+            } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          go_binary_attrs=()
+          for svc in "${go_services[@]}"; do
+            if [[ -n "${selected_go[$svc]:-}" ]]; then
+              go_binary_attrs+=(".#${svc}")
+              add_pr_image ".#${svc}-image"
+            fi
+          done
+
+          if [[ "$NIX_CHANGED" == "true" || "$NODE_CHANGED" == "true" ]]; then
+            add_pr_image .#auth-service-image
+            add_pr_image .#custom-lang-service-image
+          fi
+          if [[ "$NIX_CHANGED" == "true" || "$FRONTEND_CHANGED" == "true" ]]; then
+            add_pr_image .#frontend-image
+          fi
+
+          image_attrs=()
+          pr_image_order=(
+            .#auth-service-image
+            .#custom-lang-service-image
+            .#frontend-image
+            .#caller-image
+            .#gateway-image
+            .#greeter-image
+            .#item-image
+            .#masterdata-image
+            .#projector-image
+            .#raid-lobby-image
+          )
+          for attr in "${pr_image_order[@]}"; do
+            if [[ -n "${selected_pr_images[$attr]:-}" ]]; then
+              image_attrs+=("$attr")
+            fi
+          done
+
+          {
+            echo "go_binary_attrs=${go_binary_attrs[*]}"
+            echo "image_attrs=${image_attrs[*]}"
+          } >> "$GITHUB_OUTPUT"
 
   contract:
     needs: [changes]
@@ -71,7 +245,7 @@ jobs:
     needs: [changes]
     if: >-
       needs.changes.outputs.go == 'true'
-      && github.event_name != 'push'
+      && github.event_name != 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -137,6 +311,7 @@ jobs:
     needs: [changes]
     if: >-
       github.event_name == 'workflow_dispatch'
+      || github.ref == 'refs/heads/main'
       || needs.changes.outputs.go == 'true'
       || needs.changes.outputs.node == 'true'
       || needs.changes.outputs.frontend == 'true'
@@ -160,18 +335,12 @@ jobs:
           authToken: ${{ secrets.CACHIX_AUTH_TOKEN }}
 
       - name: Build Go service binaries
-        run: >
-          nix build
-          .#caller .#gateway .#greeter
-          .#item .#masterdata .#projector .#raid-lobby
+        if: needs.changes.outputs.go_binary_attrs != ''
+        run: nix build ${{ needs.changes.outputs.go_binary_attrs }}
 
       - name: Build service images
-        run: >
-          nix build
-          .#auth-service-image .#custom-lang-service-image
-          .#caller-image .#gateway-image .#greeter-image
-          .#frontend-image
-          .#item-image .#masterdata-image .#projector-image .#raid-lobby-image
+        if: needs.changes.outputs.image_attrs != ''
+        run: nix build ${{ needs.changes.outputs.image_attrs }}
 
       - name: Push images to ghcr.io
         if: >-
@@ -189,7 +358,13 @@ jobs:
           export REGISTRY_AUTH_FILE="$RUNNER_TEMP/containers-auth.json"
           echo "$GITHUB_TOKEN" | skopeo login ghcr.io -u ${{ github.actor }} --password-stdin --authfile "$REGISTRY_AUTH_FILE"
           for svc in "${services[@]}"; do
-            nix run .#${svc}-image.copyTo -- \
+            image_attr="${svc}-image"
+            case "$svc" in
+              caller|gateway|greeter|item|masterdata|projector|raid-lobby)
+                image_attr="${svc}-release-image"
+                ;;
+            esac
+            nix run .#${image_attr}.copyTo -- \
               --authfile "$REGISTRY_AUTH_FILE" \
               docker://ghcr.io/hackz-megalo-cup/${svc}:${{ github.sha }}
             if [ "$GITHUB_REF" = "refs/heads/main" ]; then
