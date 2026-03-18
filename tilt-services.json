@@ -29,6 +29,11 @@
       "cmd_path": "cmd/raid-lobby",
       "port": 8086,
       "k8s_resource": "raid-lobby-service"
+    },
+    "lobby": {
+      "cmd_path": "cmd/lobby",
+      "port": 8089,
+      "k8s_resource": "lobby-service"
     }
   },
   "custom_services": {
