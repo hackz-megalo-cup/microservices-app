@@ -165,6 +165,9 @@ services:
       LOCAL_DEV: "true"
       PORT: "7777"
       KAFKA_BROKERS: "redpanda:9092"
+      WS_CERT_PATH: "/etc/tls/mkcert"
+    volumes:
+      - ./deploy/tls:/etc/tls/mkcert:ro
     depends_on:
       redpanda:
         condition: service_healthy
