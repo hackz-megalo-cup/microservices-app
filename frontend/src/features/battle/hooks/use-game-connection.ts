@@ -298,7 +298,7 @@ export function useGameConnection({
           return null;
         }
         const data = await res.json();
-        if (!data.host || !data.certHash) {
+        if (!data.host || !data.certHash || !data.port) {
           return null;
         }
         return {
@@ -327,7 +327,7 @@ export function useGameConnection({
           return null;
         }
         const data = await res.json();
-        if (!data.host || !data.certHash) {
+        if (!data.host || !data.certHash || !data.port) {
           return null;
         }
         return {
