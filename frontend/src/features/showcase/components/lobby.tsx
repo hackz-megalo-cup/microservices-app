@@ -38,11 +38,9 @@ export function Lobby() {
       .mutateAsync({ lobbyId })
       .then(() => {
         setHasJoined(true);
-        console.log("[JoinRaid] 成功");
       })
-      .catch((err) => {
+      .catch((_err) => {
         joinAttemptedLobbyRef.current = null;
-        console.error("[JoinRaid] 失敗:", err);
       });
   }, [lobbyId, hasJoined, joinMutation]);
 
@@ -69,13 +67,10 @@ export function Lobby() {
 
     try {
       const res = await startMutation.mutateAsync({ lobbyId });
-
-      // Stream disconnected時は mutation レスポンスを遷移フォールバックとして利用する
-      if (!isConnected) {
-        navigateToBattleOnce(res.battleSessionId);
-      }
-    } catch (err) {
-      console.error("[StartBattle] 失敗:", err);
+      // navigateToBattleOnce は ref ガードで重複遷移を防ぐため、常に呼び出して安全
+      navigateToBattleOnce(res.battleSessionId);
+    } catch (_err) {
+      // エラーは既に mutation の error state で扱われている
     }
   };
 

@@ -3,7 +3,11 @@ import { useTransport } from "@connectrpc/connect-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RaidLobbyService } from "../../../gen/raid_lobby/v1/raid_lobby_pb";
 import type { Participant } from "../types";
-import { parseBattleStarted, parseParticipants } from "../utils/parse-lobby-payload";
+import {
+  parseBattleStarted,
+  parseParticipantEvent,
+  parseParticipants,
+} from "../utils/parse-lobby-payload";
 
 interface UseLobbyStreamResult {
   participants: Participant[];
@@ -47,18 +51,29 @@ export function useLobbyStream(lobbyId: string): UseLobbyStreamResult {
         { lobbyId },
         { signal: abortController.signal },
       )) {
-        console.log("[StreamLobby]", event.eventType, event.payload);
-
         switch (event.eventType) {
-          case "participant_joined":
-          case "participant_left": {
+          case "raid.participant_snapshot":
+          case "raid.user_joined": {
+            const participantEvent = parseParticipantEvent(event.payload);
+            if (participantEvent) {
+              setParticipants((prev) => {
+                if (
+                  prev.some((participant) => participant.id === participantEvent.participant.id)
+                ) {
+                  return prev;
+                }
+                return [...prev, participantEvent.participant];
+              });
+              break;
+            }
+
             const parsed = parseParticipants(event.payload);
             if (parsed) {
               setParticipants(parsed.participants);
             }
             break;
           }
-          case "battle_started": {
+          case "raid.battle_started": {
             const parsed = parseBattleStarted(event.payload);
             if (parsed) {
               setBattleSessionId(parsed.battleSessionId);

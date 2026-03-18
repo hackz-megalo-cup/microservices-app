@@ -8,6 +8,10 @@ export interface BattleStartedPayload {
   battleSessionId: string;
 }
 
+export interface ParticipantEventPayload {
+  participant: Participant;
+}
+
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null;
 }
@@ -51,6 +55,34 @@ export function parseParticipants(payload: string): ParticipantPayload | null {
 
 /**
  * StreamLobbyResponse の payload (JSON文字列) を安全にパース
+ * raid.participant_snapshot / raid.user_joined イベント用
+ */
+export function parseParticipantEvent(payload: string): ParticipantEventPayload | null {
+  try {
+    const parsed: unknown = JSON.parse(payload);
+    if (!isRecord(parsed)) {
+      return null;
+    }
+
+    if (typeof parsed.participant_id !== "string" || typeof parsed.user_id !== "string") {
+      return null;
+    }
+
+    const participant: Participant = {
+      id: parsed.participant_id,
+      userId: parsed.user_id,
+      name: typeof parsed.name === "string" ? parsed.name : parsed.user_id,
+      pokemon: typeof parsed.pokemon === "string" ? parsed.pokemon : "-",
+      online: typeof parsed.online === "boolean" ? parsed.online : true,
+    };
+    return { participant };
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * StreamLobbyResponse の payload (JSON文字列) を安全にパース
  * battle_started イベント用
  */
 export function parseBattleStarted(payload: string): BattleStartedPayload | null {
@@ -60,8 +92,8 @@ export function parseBattleStarted(payload: string): BattleStartedPayload | null
       return null;
     }
 
-    if (typeof parsed.battleSessionId === "string") {
-      const result: BattleStartedPayload = { battleSessionId: parsed.battleSessionId };
+    if (typeof parsed.session_id === "string") {
+      const result: BattleStartedPayload = { battleSessionId: parsed.session_id };
       return result;
     }
 
