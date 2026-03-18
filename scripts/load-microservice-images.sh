@@ -6,18 +6,6 @@ REPO_ROOT="$(dirname "$SCRIPT_DIR")"
 
 CLUSTER_NAME="microservice-app"
 
-echo "==> Building caller Docker image..."
-docker build -t "caller:latest" -f "${REPO_ROOT}/deploy/docker/caller/Dockerfile" "${REPO_ROOT}"
-
-echo "==> Loading caller into kind cluster '${CLUSTER_NAME}'..."
-kind load docker-image "caller:latest" --name "${CLUSTER_NAME}"
-
-echo "==> Building greeter Docker image..."
-docker build -t "greeter:latest" -f "${REPO_ROOT}/deploy/docker/greeter/Dockerfile" "${REPO_ROOT}"
-
-echo "==> Loading greeter into kind cluster '${CLUSTER_NAME}'..."
-kind load docker-image "greeter:latest" --name "${CLUSTER_NAME}"
-
 echo "==> Building gateway Docker image..."
 docker build -t "gateway:latest" -f "${REPO_ROOT}/deploy/docker/gateway/Dockerfile" "${REPO_ROOT}"
 

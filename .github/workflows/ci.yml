@@ -24,9 +24,7 @@ jobs:
       node: ${{ steps.filter.outputs.node }}
       nix: ${{ steps.filter.outputs.nix }}
       go_shared: ${{ steps.filter.outputs.go_shared }}
-      caller: ${{ steps.filter.outputs.caller }}
       gateway: ${{ steps.filter.outputs.gateway }}
-      greeter: ${{ steps.filter.outputs.greeter }}
       item: ${{ steps.filter.outputs.item }}
       masterdata: ${{ steps.filter.outputs.masterdata }}
       projector: ${{ steps.filter.outputs.projector }}
@@ -49,21 +47,11 @@ jobs:
               - 'services/go.mod'
               - 'services/go.sum'
               - 'services/internal/platform/**'
-            caller:
-              - 'services/cmd/caller/**'
-              - 'services/internal/caller/**'
-              - 'proto/caller/**'
-              - 'services/gen/go/caller/**'
             gateway:
               - 'services/cmd/gateway/**'
               - 'services/internal/gateway/**'
               - 'proto/gateway/**'
               - 'services/gen/go/gateway/**'
-            greeter:
-              - 'services/cmd/greeter/**'
-              - 'services/internal/greeter/**'
-              - 'proto/greeter/**'
-              - 'services/gen/go/greeter/**'
             item:
               - 'services/cmd/item/**'
               - 'services/internal/item/**'
@@ -104,9 +92,7 @@ jobs:
           NODE_CHANGED: ${{ steps.filter.outputs.node }}
           FRONTEND_CHANGED: ${{ steps.filter.outputs.frontend }}
           GO_SHARED_CHANGED: ${{ steps.filter.outputs.go_shared }}
-          CALLER_CHANGED: ${{ steps.filter.outputs.caller }}
           GATEWAY_CHANGED: ${{ steps.filter.outputs.gateway }}
-          GREETER_CHANGED: ${{ steps.filter.outputs.greeter }}
           ITEM_CHANGED: ${{ steps.filter.outputs.item }}
           MASTERDATA_CHANGED: ${{ steps.filter.outputs.masterdata }}
           PROJECTOR_CHANGED: ${{ steps.filter.outputs.projector }}
@@ -115,14 +101,12 @@ jobs:
         run: |
           set -euo pipefail
 
-          go_services=(auth caller gateway greeter item masterdata projector raid-lobby capture)
+          go_services=(auth gateway item masterdata projector raid-lobby capture)
           release_images=(
             .#auth-image
             .#custom-lang-service-image
             .#frontend-image
-            .#caller-image
             .#gateway-image
-            .#greeter-image
             .#item-image
             .#masterdata-image
             .#projector-image
@@ -151,15 +135,8 @@ jobs:
           if [[ "$EVENT_NAME" == "workflow_dispatch" || "$REF" == "refs/heads/main" || "$NIX_CHANGED" == "true" || "$GO_SHARED_CHANGED" == "true" ]]; then
             add_all_go
           else
-            if [[ "$CALLER_CHANGED" == "true" ]]; then
-              add_go caller
-              add_go greeter
-            fi
             if [[ "$GATEWAY_CHANGED" == "true" ]]; then
               add_go gateway
-            fi
-            if [[ "$GREETER_CHANGED" == "true" ]]; then
-              add_go greeter
             fi
             if [[ "$ITEM_CHANGED" == "true" ]]; then
               add_go item
@@ -211,9 +188,7 @@ jobs:
             .#auth-image
             .#custom-lang-service-image
             .#frontend-image
-            .#caller-image
             .#gateway-image
-            .#greeter-image
             .#item-image
             .#masterdata-image
             .#projector-image
@@ -368,7 +343,7 @@ jobs:
         run: |
           services=(
             auth-service custom-lang-service
-            caller gateway greeter
+            gateway
             frontend
             item masterdata projector raid-lobby
             capture
