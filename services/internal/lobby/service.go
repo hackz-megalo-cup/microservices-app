@@ -128,11 +128,11 @@ func (s *Service) GetActivePokemon(ctx context.Context, req *connect.Request[pb.
 
 // overviewData holds the results of the concurrent data fetch for GetLobbyOverview.
 type overviewData struct {
-	items      []userItemRow
-	raids      []openRaidRow
-	pokemon    []*masterdatav1.Pokemon
-	caught     map[string]bool
-	itemNames  map[string]string
+	items     []userItemRow
+	raids     []openRaidRow
+	pokemon   []*masterdatav1.Pokemon
+	caught    map[string]bool
+	itemNames map[string]string
 }
 
 // fetchOverviewData runs all data sources concurrently and returns their results.

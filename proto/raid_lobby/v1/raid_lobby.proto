@@ -47,13 +47,19 @@ message StreamLobbyResponse {
   string payload = 3;
 }
 
-message ListOpenRaidsRequest {}
+message ListOpenRaidsRequest {
+  string status_filter = 1; // optional: "waiting", "in_battle", "" (全件)
+}
 
 message ListOpenRaidsResponse {
   repeated OpenRaidEntry raids = 1;
 }
 
 message OpenRaidEntry {
-  string id              = 1;
-  string boss_pokemon_id = 2;
+  string id                   = 1;
+  string boss_pokemon_id      = 2;
+  int32  current_participants = 3;
+  string status               = 4;
+  string created_at           = 5;
+  int32  max_participants     = 6;
 }

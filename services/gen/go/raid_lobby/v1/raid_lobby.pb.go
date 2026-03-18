@@ -399,6 +399,7 @@ func (x *StreamLobbyResponse) GetPayload() string {
 
 type ListOpenRaidsRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
+	StatusFilter  string                 `protobuf:"bytes,1,opt,name=status_filter,json=statusFilter,proto3" json:"status_filter,omitempty"` // optional: "waiting", "in_battle", "" (全件)
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -431,6 +432,13 @@ func (x *ListOpenRaidsRequest) ProtoReflect() protoreflect.Message {
 // Deprecated: Use ListOpenRaidsRequest.ProtoReflect.Descriptor instead.
 func (*ListOpenRaidsRequest) Descriptor() ([]byte, []int) {
 	return file_raid_lobby_v1_raid_lobby_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *ListOpenRaidsRequest) GetStatusFilter() string {
+	if x != nil {
+		return x.StatusFilter
+	}
+	return ""
 }
 
 type ListOpenRaidsResponse struct {
@@ -478,11 +486,15 @@ func (x *ListOpenRaidsResponse) GetRaids() []*OpenRaidEntry {
 }
 
 type OpenRaidEntry struct {
-	state         protoimpl.MessageState `protogen:"open.v1"`
-	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	BossPokemonId string                 `protobuf:"bytes,2,opt,name=boss_pokemon_id,json=bossPokemonId,proto3" json:"boss_pokemon_id,omitempty"`
-	unknownFields protoimpl.UnknownFields
-	sizeCache     protoimpl.SizeCache
+	state               protoimpl.MessageState `protogen:"open.v1"`
+	Id                  string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	BossPokemonId       string                 `protobuf:"bytes,2,opt,name=boss_pokemon_id,json=bossPokemonId,proto3" json:"boss_pokemon_id,omitempty"`
+	CurrentParticipants int32                  `protobuf:"varint,3,opt,name=current_participants,json=currentParticipants,proto3" json:"current_participants,omitempty"`
+	Status              string                 `protobuf:"bytes,4,opt,name=status,proto3" json:"status,omitempty"`
+	CreatedAt           string                 `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
+	MaxParticipants     int32                  `protobuf:"varint,6,opt,name=max_participants,json=maxParticipants,proto3" json:"max_participants,omitempty"`
+	unknownFields       protoimpl.UnknownFields
+	sizeCache           protoimpl.SizeCache
 }
 
 func (x *OpenRaidEntry) Reset() {
@@ -529,6 +541,34 @@ func (x *OpenRaidEntry) GetBossPokemonId() string {
 	return ""
 }
 
+func (x *OpenRaidEntry) GetCurrentParticipants() int32 {
+	if x != nil {
+		return x.CurrentParticipants
+	}
+	return 0
+}
+
+func (x *OpenRaidEntry) GetStatus() string {
+	if x != nil {
+		return x.Status
+	}
+	return ""
+}
+
+func (x *OpenRaidEntry) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
+func (x *OpenRaidEntry) GetMaxParticipants() int32 {
+	if x != nil {
+		return x.MaxParticipants
+	}
+	return 0
+}
+
 var File_raid_lobby_v1_raid_lobby_proto protoreflect.FileDescriptor
 
 const file_raid_lobby_v1_raid_lobby_proto_rawDesc = "" +
@@ -553,13 +593,19 @@ const file_raid_lobby_v1_raid_lobby_proto_rawDesc = "" +
 	"\n" +
 	"event_type\x18\x01 \x01(\tR\teventType\x12\x19\n" +
 	"\blobby_id\x18\x02 \x01(\tR\alobbyId\x12\x18\n" +
-	"\apayload\x18\x03 \x01(\tR\apayload\"\x16\n" +
-	"\x14ListOpenRaidsRequest\"K\n" +
+	"\apayload\x18\x03 \x01(\tR\apayload\";\n" +
+	"\x14ListOpenRaidsRequest\x12#\n" +
+	"\rstatus_filter\x18\x01 \x01(\tR\fstatusFilter\"K\n" +
 	"\x15ListOpenRaidsResponse\x122\n" +
-	"\x05raids\x18\x01 \x03(\v2\x1c.raid_lobby.v1.OpenRaidEntryR\x05raids\"G\n" +
+	"\x05raids\x18\x01 \x03(\v2\x1c.raid_lobby.v1.OpenRaidEntryR\x05raids\"\xdc\x01\n" +
 	"\rOpenRaidEntry\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12&\n" +
-	"\x0fboss_pokemon_id\x18\x02 \x01(\tR\rbossPokemonId2\xc6\x03\n" +
+	"\x0fboss_pokemon_id\x18\x02 \x01(\tR\rbossPokemonId\x121\n" +
+	"\x14current_participants\x18\x03 \x01(\x05R\x13currentParticipants\x12\x16\n" +
+	"\x06status\x18\x04 \x01(\tR\x06status\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x05 \x01(\tR\tcreatedAt\x12)\n" +
+	"\x10max_participants\x18\x06 \x01(\x05R\x0fmaxParticipants2\xc6\x03\n" +
 	"\x10RaidLobbyService\x12S\n" +
 	"\n" +
 	"CreateRaid\x12 .raid_lobby.v1.CreateRaidRequest\x1a!.raid_lobby.v1.CreateRaidResponse\"\x00\x12M\n" +

@@ -218,6 +218,51 @@ func (s *Service) HandleBattleFinished(ctx context.Context, lobbyID, sessionID, 
 	return nil
 }
 
+func (s *Service) ListOpenRaids(ctx context.Context, req *connect.Request[pb.ListOpenRaidsRequest]) (*connect.Response[pb.ListOpenRaidsResponse], error) {
+	statusFilter := req.Msg.GetStatusFilter()
+
+	if s.db == nil {
+		return connect.NewResponse(&pb.ListOpenRaidsResponse{}), nil
+	}
+
+	rows, err := s.db.Query(ctx, `
+		SELECT rl.id, rl.boss_pokemon_id, rl.status, rl.created_at, rl.max_participants,
+		       COUNT(rp.id)::int AS current_participants
+		FROM raid_lobby rl
+		LEFT JOIN raid_participant rp ON rl.id = rp.lobby_id
+		WHERE ($1 = '' OR rl.status = $1)
+		GROUP BY rl.id
+		ORDER BY rl.created_at DESC`,
+		statusFilter,
+	)
+	if err != nil {
+		slog.Error("ListOpenRaids: failed to query", "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to query raids"))
+	}
+	defer rows.Close()
+
+	var entries []*pb.OpenRaidEntry
+	for rows.Next() {
+		var id, bossPokemonID, status string
+		var createdAt time.Time
+		var maxParticipants, currentParticipants int32
+		if err := rows.Scan(&id, &bossPokemonID, &status, &createdAt, &maxParticipants, &currentParticipants); err != nil {
+			slog.Error("ListOpenRaids: failed to scan row", "error", err)
+			continue
+		}
+		entries = append(entries, &pb.OpenRaidEntry{
+			Id:                  id,
+			BossPokemonId:       bossPokemonID,
+			Status:              status,
+			CreatedAt:           createdAt.UTC().Format(time.RFC3339),
+			MaxParticipants:     maxParticipants,
+			CurrentParticipants: currentParticipants,
+		})
+	}
+
+	return connect.NewResponse(&pb.ListOpenRaidsResponse{Raids: entries}), nil
+}
+
 // StreamLobby streams lobby state changes to the client.
 // On connect: sends existing participants as snapshots.
 // Then: streams raid.user_joined, raid.battle_started, raid_lobby.finished events in real time.

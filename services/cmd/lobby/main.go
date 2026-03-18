@@ -31,6 +31,32 @@ const (
 	serviceVersion = "0.1.0"
 )
 
+func handleLobbyCompensation(ctx context.Context, event platform.Event, eventStore *platform.EventStore, outbox *platform.OutboxStore) error {
+	if eventStore == nil {
+		return nil
+	}
+	data, ok := event.Data.(map[string]any)
+	if !ok {
+		slog.Warn("compensation: unexpected data type", "event_id", event.ID)
+		return nil
+	}
+	streamID, _ := data["stream_id"].(string)
+	if streamID == "" {
+		slog.Warn("compensation: missing stream_id", "event_id", event.ID)
+		return nil
+	}
+	agg := lobby.NewAggregate(streamID)
+	if err := platform.LoadAggregate(ctx, eventStore, agg); err != nil {
+		return err
+	}
+	agg.Compensate("saga compensation")
+	if err := platform.SaveAggregate(ctx, eventStore, outbox, agg, lobby.LobbyTopicMapper); err != nil {
+		return err
+	}
+	slog.Info("compensation: aggregate compensated via ES", "stream_id", streamID)
+	return nil
+}
+
 func main() {
 	if err := run(); err != nil {
 		slog.Error("application error", "error", err)
@@ -118,29 +144,7 @@ func run() error {
 	// --- Compensation (saga rollback handler) ---
 	compensation := platform.NewCompensationRouter()
 	compensation.Handle(platform.TopicLobbyFailed, func(ctx context.Context, event platform.Event) error {
-		if eventStore == nil {
-			return nil
-		}
-		data, ok := event.Data.(map[string]any)
-		if !ok {
-			slog.Warn("compensation: unexpected data type", "event_id", event.ID)
-			return nil
-		}
-		streamID, _ := data["stream_id"].(string)
-		if streamID == "" {
-			slog.Warn("compensation: missing stream_id", "event_id", event.ID)
-			return nil
-		}
-		agg := lobby.NewAggregate(streamID)
-		if err := platform.LoadAggregate(ctx, eventStore, agg); err != nil {
-			return err
-		}
-		agg.Compensate("saga compensation")
-		if err := platform.SaveAggregate(ctx, eventStore, outbox, agg, lobby.LobbyTopicMapper); err != nil {
-			return err
-		}
-		slog.Info("compensation: aggregate compensated via ES", "stream_id", streamID)
-		return nil
+		return handleLobbyCompensation(ctx, event, eventStore, outbox)
 	})
 	go func() {
 		if err := compensation.Run(ctx, brokers, "lobby-compensation"); err != nil && !errors.Is(err, context.Canceled) {
