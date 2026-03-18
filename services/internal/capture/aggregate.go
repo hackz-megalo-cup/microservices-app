@@ -57,6 +57,9 @@ func (a *CaptureAggregate) ApplyEvent(eventType string, data json.RawMessage) {
 			slog.Warn("failed to unmarshal completed data", "error", err)
 		}
 		a.Result = d.Result
+		if d.Result == "escaped" {
+			a.CurrentRate = 0
+		}
 	case EventCaptureFailed:
 		a.Result = "failed"
 	case EventCaptureCompensated:
@@ -114,14 +117,14 @@ func (a *CaptureAggregate) Complete(result string) {
 
 // Escape sets capture rate to 0 and marks as escaped.
 func (a *CaptureAggregate) Escape() {
-	a.CurrentRate = 0
-	a.Result = "escaped"
 	a.Raise(EventCaptureCompleted, CompletedData{
 		SessionID: a.AggregateID(),
 		UserID:    a.UserID,
 		PokemonID: a.PokemonID,
 		Result:    "escaped",
 	})
+	a.CurrentRate = 0
+	a.Result = "escaped"
 }
 
 // Fail records a failed operation — main.go が参照、削除禁止。

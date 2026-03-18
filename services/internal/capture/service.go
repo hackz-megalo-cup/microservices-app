@@ -95,7 +95,7 @@ func (s *Service) HandleBattleFinished(ctx context.Context, battleSessionID, bos
 
 		if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, CaptureTopicMapper); err != nil {
 			slog.Error("failed to save capture aggregate", "session_id", sessionID, "user_id", userID, "error", err)
-			continue
+			return fmt.Errorf("failed to save capture session for user %s: %w", userID, err)
 		}
 
 		if s.db != nil {
@@ -190,15 +190,19 @@ func (s *Service) UseItem(ctx context.Context, req *connect.Request[pb.UseItemRe
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save: %w", err))
 	}
 
-	// Update read model
+	// Update read model (best-effort; event store is source of truth)
 	if s.db != nil {
-		_, _ = s.db.Exec(ctx,
+		if _, err := s.db.Exec(ctx,
 			`UPDATE capture_session SET current_rate = $1, result = $2 WHERE id = $3`,
-			agg.CurrentRate, agg.Result, sessionID)
-		_, _ = s.db.Exec(ctx,
+			agg.CurrentRate, agg.Result, sessionID); err != nil {
+			slog.Warn("failed to update capture_session read model", "session_id", sessionID, "error", err)
+		}
+		if _, err := s.db.Exec(ctx,
 			`INSERT INTO capture_action (id, session_id, action_type, item_id, rate_change, created_at)
 			 VALUES ($1, $2, 'use_item', $3, $4, $5)`,
-			uuid.NewString(), sessionID, itemID, agg.CurrentRate-rateBefore, time.Now().UTC())
+			uuid.NewString(), sessionID, itemID, agg.CurrentRate-rateBefore, time.Now().UTC()); err != nil {
+			slog.Warn("failed to insert capture_action read model", "session_id", sessionID, "error", err)
+		}
 	}
 
 	return connect.NewResponse(&pb.UseItemResponse{
@@ -238,14 +242,19 @@ func (s *Service) ThrowBall(ctx context.Context, req *connect.Request[pb.ThrowBa
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save: %w", err))
 	}
 
+	// Update read model (best-effort; event store is source of truth)
 	if s.db != nil {
-		_, _ = s.db.Exec(ctx,
+		if _, err := s.db.Exec(ctx,
 			`UPDATE capture_session SET result = $1 WHERE id = $2`,
-			agg.Result, sessionID)
-		_, _ = s.db.Exec(ctx,
+			agg.Result, sessionID); err != nil {
+			slog.Warn("failed to update capture_session read model", "session_id", sessionID, "error", err)
+		}
+		if _, err := s.db.Exec(ctx,
 			`INSERT INTO capture_action (id, session_id, action_type, rate_change, created_at)
 			 VALUES ($1, $2, 'throw_ball', 0, $3)`,
-			uuid.NewString(), sessionID, time.Now().UTC())
+			uuid.NewString(), sessionID, time.Now().UTC()); err != nil {
+			slog.Warn("failed to insert capture_action read model", "session_id", sessionID, "error", err)
+		}
 	}
 
 	return connect.NewResponse(&pb.ThrowBallResponse{
@@ -267,8 +276,8 @@ func (s *Service) EndSession(ctx context.Context, req *connect.Request[pb.EndSes
 		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("session is still pending"))
 	}
 
-	// Emit capture.completed if not already emitted (fail/escaped cases)
-	if agg.Result == "fail" || agg.Result == "escaped" {
+	// Emit capture.completed for fail case (escaped already emitted via UseItem→Escape)
+	if agg.Result == "fail" {
 		agg.Complete(agg.Result)
 		if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, CaptureTopicMapper); err != nil {
 			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save: %w", err))
