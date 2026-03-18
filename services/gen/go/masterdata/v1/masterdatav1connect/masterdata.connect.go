@@ -42,12 +42,24 @@ const (
 	// MasterdataServiceListPokemonProcedure is the fully-qualified name of the MasterdataService's
 	// ListPokemon RPC.
 	MasterdataServiceListPokemonProcedure = "/masterdata.v1.MasterdataService/ListPokemon"
+	// MasterdataServiceUpdatePokemonProcedure is the fully-qualified name of the MasterdataService's
+	// UpdatePokemon RPC.
+	MasterdataServiceUpdatePokemonProcedure = "/masterdata.v1.MasterdataService/UpdatePokemon"
+	// MasterdataServiceDeletePokemonProcedure is the fully-qualified name of the MasterdataService's
+	// DeletePokemon RPC.
+	MasterdataServiceDeletePokemonProcedure = "/masterdata.v1.MasterdataService/DeletePokemon"
 	// MasterdataServiceCreateTypeMatchupProcedure is the fully-qualified name of the
 	// MasterdataService's CreateTypeMatchup RPC.
 	MasterdataServiceCreateTypeMatchupProcedure = "/masterdata.v1.MasterdataService/CreateTypeMatchup"
 	// MasterdataServiceListTypeMatchupsProcedure is the fully-qualified name of the MasterdataService's
 	// ListTypeMatchups RPC.
 	MasterdataServiceListTypeMatchupsProcedure = "/masterdata.v1.MasterdataService/ListTypeMatchups"
+	// MasterdataServiceUpdateTypeMatchupProcedure is the fully-qualified name of the
+	// MasterdataService's UpdateTypeMatchup RPC.
+	MasterdataServiceUpdateTypeMatchupProcedure = "/masterdata.v1.MasterdataService/UpdateTypeMatchup"
+	// MasterdataServiceDeleteTypeMatchupProcedure is the fully-qualified name of the
+	// MasterdataService's DeleteTypeMatchup RPC.
+	MasterdataServiceDeleteTypeMatchupProcedure = "/masterdata.v1.MasterdataService/DeleteTypeMatchup"
 	// MasterdataServiceCreateItemProcedure is the fully-qualified name of the MasterdataService's
 	// CreateItem RPC.
 	MasterdataServiceCreateItemProcedure = "/masterdata.v1.MasterdataService/CreateItem"
@@ -57,6 +69,12 @@ const (
 	// MasterdataServiceListItemsProcedure is the fully-qualified name of the MasterdataService's
 	// ListItems RPC.
 	MasterdataServiceListItemsProcedure = "/masterdata.v1.MasterdataService/ListItems"
+	// MasterdataServiceUpdateItemProcedure is the fully-qualified name of the MasterdataService's
+	// UpdateItem RPC.
+	MasterdataServiceUpdateItemProcedure = "/masterdata.v1.MasterdataService/UpdateItem"
+	// MasterdataServiceDeleteItemProcedure is the fully-qualified name of the MasterdataService's
+	// DeleteItem RPC.
+	MasterdataServiceDeleteItemProcedure = "/masterdata.v1.MasterdataService/DeleteItem"
 )
 
 // MasterdataServiceClient is a client for the masterdata.v1.MasterdataService service.
@@ -64,11 +82,17 @@ type MasterdataServiceClient interface {
 	CreatePokemon(context.Context, *connect.Request[v1.CreatePokemonRequest]) (*connect.Response[v1.CreatePokemonResponse], error)
 	GetPokemon(context.Context, *connect.Request[v1.GetPokemonRequest]) (*connect.Response[v1.GetPokemonResponse], error)
 	ListPokemon(context.Context, *connect.Request[v1.ListPokemonRequest]) (*connect.Response[v1.ListPokemonResponse], error)
+	UpdatePokemon(context.Context, *connect.Request[v1.UpdatePokemonRequest]) (*connect.Response[v1.UpdatePokemonResponse], error)
+	DeletePokemon(context.Context, *connect.Request[v1.DeletePokemonRequest]) (*connect.Response[v1.DeletePokemonResponse], error)
 	CreateTypeMatchup(context.Context, *connect.Request[v1.CreateTypeMatchupRequest]) (*connect.Response[v1.CreateTypeMatchupResponse], error)
 	ListTypeMatchups(context.Context, *connect.Request[v1.ListTypeMatchupsRequest]) (*connect.Response[v1.ListTypeMatchupsResponse], error)
+	UpdateTypeMatchup(context.Context, *connect.Request[v1.UpdateTypeMatchupRequest]) (*connect.Response[v1.UpdateTypeMatchupResponse], error)
+	DeleteTypeMatchup(context.Context, *connect.Request[v1.DeleteTypeMatchupRequest]) (*connect.Response[v1.DeleteTypeMatchupResponse], error)
 	CreateItem(context.Context, *connect.Request[v1.CreateItemRequest]) (*connect.Response[v1.CreateItemResponse], error)
 	GetItem(context.Context, *connect.Request[v1.GetItemRequest]) (*connect.Response[v1.GetItemResponse], error)
 	ListItems(context.Context, *connect.Request[v1.ListItemsRequest]) (*connect.Response[v1.ListItemsResponse], error)
+	UpdateItem(context.Context, *connect.Request[v1.UpdateItemRequest]) (*connect.Response[v1.UpdateItemResponse], error)
+	DeleteItem(context.Context, *connect.Request[v1.DeleteItemRequest]) (*connect.Response[v1.DeleteItemResponse], error)
 }
 
 // NewMasterdataServiceClient constructs a client for the masterdata.v1.MasterdataService service.
@@ -100,6 +124,18 @@ func NewMasterdataServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(masterdataServiceMethods.ByName("ListPokemon")),
 			connect.WithClientOptions(opts...),
 		),
+		updatePokemon: connect.NewClient[v1.UpdatePokemonRequest, v1.UpdatePokemonResponse](
+			httpClient,
+			baseURL+MasterdataServiceUpdatePokemonProcedure,
+			connect.WithSchema(masterdataServiceMethods.ByName("UpdatePokemon")),
+			connect.WithClientOptions(opts...),
+		),
+		deletePokemon: connect.NewClient[v1.DeletePokemonRequest, v1.DeletePokemonResponse](
+			httpClient,
+			baseURL+MasterdataServiceDeletePokemonProcedure,
+			connect.WithSchema(masterdataServiceMethods.ByName("DeletePokemon")),
+			connect.WithClientOptions(opts...),
+		),
 		createTypeMatchup: connect.NewClient[v1.CreateTypeMatchupRequest, v1.CreateTypeMatchupResponse](
 			httpClient,
 			baseURL+MasterdataServiceCreateTypeMatchupProcedure,
@@ -110,6 +146,18 @@ func NewMasterdataServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			httpClient,
 			baseURL+MasterdataServiceListTypeMatchupsProcedure,
 			connect.WithSchema(masterdataServiceMethods.ByName("ListTypeMatchups")),
+			connect.WithClientOptions(opts...),
+		),
+		updateTypeMatchup: connect.NewClient[v1.UpdateTypeMatchupRequest, v1.UpdateTypeMatchupResponse](
+			httpClient,
+			baseURL+MasterdataServiceUpdateTypeMatchupProcedure,
+			connect.WithSchema(masterdataServiceMethods.ByName("UpdateTypeMatchup")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteTypeMatchup: connect.NewClient[v1.DeleteTypeMatchupRequest, v1.DeleteTypeMatchupResponse](
+			httpClient,
+			baseURL+MasterdataServiceDeleteTypeMatchupProcedure,
+			connect.WithSchema(masterdataServiceMethods.ByName("DeleteTypeMatchup")),
 			connect.WithClientOptions(opts...),
 		),
 		createItem: connect.NewClient[v1.CreateItemRequest, v1.CreateItemResponse](
@@ -130,6 +178,18 @@ func NewMasterdataServiceClient(httpClient connect.HTTPClient, baseURL string, o
 			connect.WithSchema(masterdataServiceMethods.ByName("ListItems")),
 			connect.WithClientOptions(opts...),
 		),
+		updateItem: connect.NewClient[v1.UpdateItemRequest, v1.UpdateItemResponse](
+			httpClient,
+			baseURL+MasterdataServiceUpdateItemProcedure,
+			connect.WithSchema(masterdataServiceMethods.ByName("UpdateItem")),
+			connect.WithClientOptions(opts...),
+		),
+		deleteItem: connect.NewClient[v1.DeleteItemRequest, v1.DeleteItemResponse](
+			httpClient,
+			baseURL+MasterdataServiceDeleteItemProcedure,
+			connect.WithSchema(masterdataServiceMethods.ByName("DeleteItem")),
+			connect.WithClientOptions(opts...),
+		),
 	}
 }
 
@@ -138,11 +198,17 @@ type masterdataServiceClient struct {
 	createPokemon     *connect.Client[v1.CreatePokemonRequest, v1.CreatePokemonResponse]
 	getPokemon        *connect.Client[v1.GetPokemonRequest, v1.GetPokemonResponse]
 	listPokemon       *connect.Client[v1.ListPokemonRequest, v1.ListPokemonResponse]
+	updatePokemon     *connect.Client[v1.UpdatePokemonRequest, v1.UpdatePokemonResponse]
+	deletePokemon     *connect.Client[v1.DeletePokemonRequest, v1.DeletePokemonResponse]
 	createTypeMatchup *connect.Client[v1.CreateTypeMatchupRequest, v1.CreateTypeMatchupResponse]
 	listTypeMatchups  *connect.Client[v1.ListTypeMatchupsRequest, v1.ListTypeMatchupsResponse]
+	updateTypeMatchup *connect.Client[v1.UpdateTypeMatchupRequest, v1.UpdateTypeMatchupResponse]
+	deleteTypeMatchup *connect.Client[v1.DeleteTypeMatchupRequest, v1.DeleteTypeMatchupResponse]
 	createItem        *connect.Client[v1.CreateItemRequest, v1.CreateItemResponse]
 	getItem           *connect.Client[v1.GetItemRequest, v1.GetItemResponse]
 	listItems         *connect.Client[v1.ListItemsRequest, v1.ListItemsResponse]
+	updateItem        *connect.Client[v1.UpdateItemRequest, v1.UpdateItemResponse]
+	deleteItem        *connect.Client[v1.DeleteItemRequest, v1.DeleteItemResponse]
 }
 
 // CreatePokemon calls masterdata.v1.MasterdataService.CreatePokemon.
@@ -160,6 +226,16 @@ func (c *masterdataServiceClient) ListPokemon(ctx context.Context, req *connect.
 	return c.listPokemon.CallUnary(ctx, req)
 }
 
+// UpdatePokemon calls masterdata.v1.MasterdataService.UpdatePokemon.
+func (c *masterdataServiceClient) UpdatePokemon(ctx context.Context, req *connect.Request[v1.UpdatePokemonRequest]) (*connect.Response[v1.UpdatePokemonResponse], error) {
+	return c.updatePokemon.CallUnary(ctx, req)
+}
+
+// DeletePokemon calls masterdata.v1.MasterdataService.DeletePokemon.
+func (c *masterdataServiceClient) DeletePokemon(ctx context.Context, req *connect.Request[v1.DeletePokemonRequest]) (*connect.Response[v1.DeletePokemonResponse], error) {
+	return c.deletePokemon.CallUnary(ctx, req)
+}
+
 // CreateTypeMatchup calls masterdata.v1.MasterdataService.CreateTypeMatchup.
 func (c *masterdataServiceClient) CreateTypeMatchup(ctx context.Context, req *connect.Request[v1.CreateTypeMatchupRequest]) (*connect.Response[v1.CreateTypeMatchupResponse], error) {
 	return c.createTypeMatchup.CallUnary(ctx, req)
@@ -168,6 +244,16 @@ func (c *masterdataServiceClient) CreateTypeMatchup(ctx context.Context, req *co
 // ListTypeMatchups calls masterdata.v1.MasterdataService.ListTypeMatchups.
 func (c *masterdataServiceClient) ListTypeMatchups(ctx context.Context, req *connect.Request[v1.ListTypeMatchupsRequest]) (*connect.Response[v1.ListTypeMatchupsResponse], error) {
 	return c.listTypeMatchups.CallUnary(ctx, req)
+}
+
+// UpdateTypeMatchup calls masterdata.v1.MasterdataService.UpdateTypeMatchup.
+func (c *masterdataServiceClient) UpdateTypeMatchup(ctx context.Context, req *connect.Request[v1.UpdateTypeMatchupRequest]) (*connect.Response[v1.UpdateTypeMatchupResponse], error) {
+	return c.updateTypeMatchup.CallUnary(ctx, req)
+}
+
+// DeleteTypeMatchup calls masterdata.v1.MasterdataService.DeleteTypeMatchup.
+func (c *masterdataServiceClient) DeleteTypeMatchup(ctx context.Context, req *connect.Request[v1.DeleteTypeMatchupRequest]) (*connect.Response[v1.DeleteTypeMatchupResponse], error) {
+	return c.deleteTypeMatchup.CallUnary(ctx, req)
 }
 
 // CreateItem calls masterdata.v1.MasterdataService.CreateItem.
@@ -185,16 +271,32 @@ func (c *masterdataServiceClient) ListItems(ctx context.Context, req *connect.Re
 	return c.listItems.CallUnary(ctx, req)
 }
 
+// UpdateItem calls masterdata.v1.MasterdataService.UpdateItem.
+func (c *masterdataServiceClient) UpdateItem(ctx context.Context, req *connect.Request[v1.UpdateItemRequest]) (*connect.Response[v1.UpdateItemResponse], error) {
+	return c.updateItem.CallUnary(ctx, req)
+}
+
+// DeleteItem calls masterdata.v1.MasterdataService.DeleteItem.
+func (c *masterdataServiceClient) DeleteItem(ctx context.Context, req *connect.Request[v1.DeleteItemRequest]) (*connect.Response[v1.DeleteItemResponse], error) {
+	return c.deleteItem.CallUnary(ctx, req)
+}
+
 // MasterdataServiceHandler is an implementation of the masterdata.v1.MasterdataService service.
 type MasterdataServiceHandler interface {
 	CreatePokemon(context.Context, *connect.Request[v1.CreatePokemonRequest]) (*connect.Response[v1.CreatePokemonResponse], error)
 	GetPokemon(context.Context, *connect.Request[v1.GetPokemonRequest]) (*connect.Response[v1.GetPokemonResponse], error)
 	ListPokemon(context.Context, *connect.Request[v1.ListPokemonRequest]) (*connect.Response[v1.ListPokemonResponse], error)
+	UpdatePokemon(context.Context, *connect.Request[v1.UpdatePokemonRequest]) (*connect.Response[v1.UpdatePokemonResponse], error)
+	DeletePokemon(context.Context, *connect.Request[v1.DeletePokemonRequest]) (*connect.Response[v1.DeletePokemonResponse], error)
 	CreateTypeMatchup(context.Context, *connect.Request[v1.CreateTypeMatchupRequest]) (*connect.Response[v1.CreateTypeMatchupResponse], error)
 	ListTypeMatchups(context.Context, *connect.Request[v1.ListTypeMatchupsRequest]) (*connect.Response[v1.ListTypeMatchupsResponse], error)
+	UpdateTypeMatchup(context.Context, *connect.Request[v1.UpdateTypeMatchupRequest]) (*connect.Response[v1.UpdateTypeMatchupResponse], error)
+	DeleteTypeMatchup(context.Context, *connect.Request[v1.DeleteTypeMatchupRequest]) (*connect.Response[v1.DeleteTypeMatchupResponse], error)
 	CreateItem(context.Context, *connect.Request[v1.CreateItemRequest]) (*connect.Response[v1.CreateItemResponse], error)
 	GetItem(context.Context, *connect.Request[v1.GetItemRequest]) (*connect.Response[v1.GetItemResponse], error)
 	ListItems(context.Context, *connect.Request[v1.ListItemsRequest]) (*connect.Response[v1.ListItemsResponse], error)
+	UpdateItem(context.Context, *connect.Request[v1.UpdateItemRequest]) (*connect.Response[v1.UpdateItemResponse], error)
+	DeleteItem(context.Context, *connect.Request[v1.DeleteItemRequest]) (*connect.Response[v1.DeleteItemResponse], error)
 }
 
 // NewMasterdataServiceHandler builds an HTTP handler from the service implementation. It returns
@@ -222,6 +324,18 @@ func NewMasterdataServiceHandler(svc MasterdataServiceHandler, opts ...connect.H
 		connect.WithSchema(masterdataServiceMethods.ByName("ListPokemon")),
 		connect.WithHandlerOptions(opts...),
 	)
+	masterdataServiceUpdatePokemonHandler := connect.NewUnaryHandler(
+		MasterdataServiceUpdatePokemonProcedure,
+		svc.UpdatePokemon,
+		connect.WithSchema(masterdataServiceMethods.ByName("UpdatePokemon")),
+		connect.WithHandlerOptions(opts...),
+	)
+	masterdataServiceDeletePokemonHandler := connect.NewUnaryHandler(
+		MasterdataServiceDeletePokemonProcedure,
+		svc.DeletePokemon,
+		connect.WithSchema(masterdataServiceMethods.ByName("DeletePokemon")),
+		connect.WithHandlerOptions(opts...),
+	)
 	masterdataServiceCreateTypeMatchupHandler := connect.NewUnaryHandler(
 		MasterdataServiceCreateTypeMatchupProcedure,
 		svc.CreateTypeMatchup,
@@ -232,6 +346,18 @@ func NewMasterdataServiceHandler(svc MasterdataServiceHandler, opts ...connect.H
 		MasterdataServiceListTypeMatchupsProcedure,
 		svc.ListTypeMatchups,
 		connect.WithSchema(masterdataServiceMethods.ByName("ListTypeMatchups")),
+		connect.WithHandlerOptions(opts...),
+	)
+	masterdataServiceUpdateTypeMatchupHandler := connect.NewUnaryHandler(
+		MasterdataServiceUpdateTypeMatchupProcedure,
+		svc.UpdateTypeMatchup,
+		connect.WithSchema(masterdataServiceMethods.ByName("UpdateTypeMatchup")),
+		connect.WithHandlerOptions(opts...),
+	)
+	masterdataServiceDeleteTypeMatchupHandler := connect.NewUnaryHandler(
+		MasterdataServiceDeleteTypeMatchupProcedure,
+		svc.DeleteTypeMatchup,
+		connect.WithSchema(masterdataServiceMethods.ByName("DeleteTypeMatchup")),
 		connect.WithHandlerOptions(opts...),
 	)
 	masterdataServiceCreateItemHandler := connect.NewUnaryHandler(
@@ -252,6 +378,18 @@ func NewMasterdataServiceHandler(svc MasterdataServiceHandler, opts ...connect.H
 		connect.WithSchema(masterdataServiceMethods.ByName("ListItems")),
 		connect.WithHandlerOptions(opts...),
 	)
+	masterdataServiceUpdateItemHandler := connect.NewUnaryHandler(
+		MasterdataServiceUpdateItemProcedure,
+		svc.UpdateItem,
+		connect.WithSchema(masterdataServiceMethods.ByName("UpdateItem")),
+		connect.WithHandlerOptions(opts...),
+	)
+	masterdataServiceDeleteItemHandler := connect.NewUnaryHandler(
+		MasterdataServiceDeleteItemProcedure,
+		svc.DeleteItem,
+		connect.WithSchema(masterdataServiceMethods.ByName("DeleteItem")),
+		connect.WithHandlerOptions(opts...),
+	)
 	return "/masterdata.v1.MasterdataService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
 		case MasterdataServiceCreatePokemonProcedure:
@@ -260,16 +398,28 @@ func NewMasterdataServiceHandler(svc MasterdataServiceHandler, opts ...connect.H
 			masterdataServiceGetPokemonHandler.ServeHTTP(w, r)
 		case MasterdataServiceListPokemonProcedure:
 			masterdataServiceListPokemonHandler.ServeHTTP(w, r)
+		case MasterdataServiceUpdatePokemonProcedure:
+			masterdataServiceUpdatePokemonHandler.ServeHTTP(w, r)
+		case MasterdataServiceDeletePokemonProcedure:
+			masterdataServiceDeletePokemonHandler.ServeHTTP(w, r)
 		case MasterdataServiceCreateTypeMatchupProcedure:
 			masterdataServiceCreateTypeMatchupHandler.ServeHTTP(w, r)
 		case MasterdataServiceListTypeMatchupsProcedure:
 			masterdataServiceListTypeMatchupsHandler.ServeHTTP(w, r)
+		case MasterdataServiceUpdateTypeMatchupProcedure:
+			masterdataServiceUpdateTypeMatchupHandler.ServeHTTP(w, r)
+		case MasterdataServiceDeleteTypeMatchupProcedure:
+			masterdataServiceDeleteTypeMatchupHandler.ServeHTTP(w, r)
 		case MasterdataServiceCreateItemProcedure:
 			masterdataServiceCreateItemHandler.ServeHTTP(w, r)
 		case MasterdataServiceGetItemProcedure:
 			masterdataServiceGetItemHandler.ServeHTTP(w, r)
 		case MasterdataServiceListItemsProcedure:
 			masterdataServiceListItemsHandler.ServeHTTP(w, r)
+		case MasterdataServiceUpdateItemProcedure:
+			masterdataServiceUpdateItemHandler.ServeHTTP(w, r)
+		case MasterdataServiceDeleteItemProcedure:
+			masterdataServiceDeleteItemHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -291,12 +441,28 @@ func (UnimplementedMasterdataServiceHandler) ListPokemon(context.Context, *conne
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("masterdata.v1.MasterdataService.ListPokemon is not implemented"))
 }
 
+func (UnimplementedMasterdataServiceHandler) UpdatePokemon(context.Context, *connect.Request[v1.UpdatePokemonRequest]) (*connect.Response[v1.UpdatePokemonResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("masterdata.v1.MasterdataService.UpdatePokemon is not implemented"))
+}
+
+func (UnimplementedMasterdataServiceHandler) DeletePokemon(context.Context, *connect.Request[v1.DeletePokemonRequest]) (*connect.Response[v1.DeletePokemonResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("masterdata.v1.MasterdataService.DeletePokemon is not implemented"))
+}
+
 func (UnimplementedMasterdataServiceHandler) CreateTypeMatchup(context.Context, *connect.Request[v1.CreateTypeMatchupRequest]) (*connect.Response[v1.CreateTypeMatchupResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("masterdata.v1.MasterdataService.CreateTypeMatchup is not implemented"))
 }
 
 func (UnimplementedMasterdataServiceHandler) ListTypeMatchups(context.Context, *connect.Request[v1.ListTypeMatchupsRequest]) (*connect.Response[v1.ListTypeMatchupsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("masterdata.v1.MasterdataService.ListTypeMatchups is not implemented"))
+}
+
+func (UnimplementedMasterdataServiceHandler) UpdateTypeMatchup(context.Context, *connect.Request[v1.UpdateTypeMatchupRequest]) (*connect.Response[v1.UpdateTypeMatchupResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("masterdata.v1.MasterdataService.UpdateTypeMatchup is not implemented"))
+}
+
+func (UnimplementedMasterdataServiceHandler) DeleteTypeMatchup(context.Context, *connect.Request[v1.DeleteTypeMatchupRequest]) (*connect.Response[v1.DeleteTypeMatchupResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("masterdata.v1.MasterdataService.DeleteTypeMatchup is not implemented"))
 }
 
 func (UnimplementedMasterdataServiceHandler) CreateItem(context.Context, *connect.Request[v1.CreateItemRequest]) (*connect.Response[v1.CreateItemResponse], error) {
@@ -309,4 +475,12 @@ func (UnimplementedMasterdataServiceHandler) GetItem(context.Context, *connect.R
 
 func (UnimplementedMasterdataServiceHandler) ListItems(context.Context, *connect.Request[v1.ListItemsRequest]) (*connect.Response[v1.ListItemsResponse], error) {
 	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("masterdata.v1.MasterdataService.ListItems is not implemented"))
+}
+
+func (UnimplementedMasterdataServiceHandler) UpdateItem(context.Context, *connect.Request[v1.UpdateItemRequest]) (*connect.Response[v1.UpdateItemResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("masterdata.v1.MasterdataService.UpdateItem is not implemented"))
+}
+
+func (UnimplementedMasterdataServiceHandler) DeleteItem(context.Context, *connect.Request[v1.DeleteItemRequest]) (*connect.Response[v1.DeleteItemResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("masterdata.v1.MasterdataService.DeleteItem is not implemented"))
 }
