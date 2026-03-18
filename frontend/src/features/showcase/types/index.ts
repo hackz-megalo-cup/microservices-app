@@ -7,10 +7,21 @@ export interface Raid {
   image: string;
 }
 
+import type { Participant } from "../../../lib/parse-lobby-payload";
+
 export interface Trainer {
   name: string;
   pokemon: string;
   online: boolean;
+}
+
+export interface LobbyState {
+  lobbyId: string;
+  participants: Participant[];
+  bossName?: string;
+  bossImage?: string;
+  bossType?: string;
+  maxParticipants: number;
 }
 
 export interface PokemonStat {
