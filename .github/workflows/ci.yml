@@ -324,12 +324,15 @@ jobs:
   nix-build:
     needs: [changes]
     if: >-
-      github.event_name == 'workflow_dispatch'
-      || github.ref == 'refs/heads/main'
-      || needs.changes.outputs.go == 'true'
-      || needs.changes.outputs.node == 'true'
-      || needs.changes.outputs.frontend == 'true'
-      || needs.changes.outputs.nix == 'true'
+      github.event_name != 'pull_request'
+      && (
+        github.event_name == 'workflow_dispatch'
+        || github.ref == 'refs/heads/main'
+        || needs.changes.outputs.go == 'true'
+        || needs.changes.outputs.node == 'true'
+        || needs.changes.outputs.frontend == 'true'
+        || needs.changes.outputs.nix == 'true'
+      )
     runs-on: ${{ github.event_name == 'workflow_dispatch' && 'blacksmith-2vcpu-ubuntu-2404' || 'ubuntu-latest' }}
     permissions:
       contents: read
