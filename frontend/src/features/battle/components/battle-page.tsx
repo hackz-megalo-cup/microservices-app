@@ -149,6 +149,14 @@ export function BattlePage() {
             0% { opacity: 0.6; }
             100% { opacity: 0; }
           }
+          @keyframes special-appear {
+            0% { opacity: 0; transform: scale(0.5) translateY(20px); }
+            60% { opacity: 1; transform: scale(1.1) translateY(-5px); }
+            100% { opacity: 1; transform: scale(1) translateY(0); }
+          }
+          .special-btn-appear {
+            animation: special-appear 0.3s ease-out;
+          }
         `}
       </style>
 
@@ -188,12 +196,17 @@ export function BattlePage() {
         </p>
       </section>
 
-      {/* Boss visual area */}
-      <div className={`flex-1 relative flex items-center justify-center ${shaking ? "shake" : ""}`}>
+      {/* Tap area — entire boss visual region */}
+      <button
+        type="button"
+        onClick={handleTap}
+        disabled={!isConnected || result !== null}
+        className={`flex-1 relative flex items-center justify-center cursor-pointer select-none active:scale-[0.98] transition-transform disabled:cursor-not-allowed ${shaking ? "shake" : ""}`}
+      >
         <img
           src="/images/battle-python.png"
           alt="Raid Boss"
-          className="w-[280px] h-[280px] object-cover rounded-2xl"
+          className="w-[280px] h-[280px] object-cover rounded-2xl pointer-events-none"
         />
 
         {/* Hit flash overlay */}
@@ -228,10 +241,10 @@ export function BattlePage() {
             </span>
           </div>
         )}
-      </div>
+      </button>
 
-      {/* Attack controls */}
-      <section className="flex flex-col items-center gap-4 px-6 pb-6">
+      {/* Bottom controls */}
+      <section className="flex flex-col items-center gap-3 px-6 pb-6">
         {/* Participant indicators */}
         <div className="flex gap-3">
           <div className="w-8 h-8 rounded-full bg-bg-card border-2 border-accent" />
@@ -253,29 +266,23 @@ export function BattlePage() {
           />
         </div>
         <p className="text-xs text-text-secondary">
-          Special: {tapCount}/{requiredForSpecial}
+          {tapCount}/{requiredForSpecial}
         </p>
 
-        {/* Buttons */}
-        <div className="w-full flex gap-3">
-          <button
-            type="button"
-            onClick={handleTap}
-            disabled={!isConnected || result !== null}
-            className="flex-1 h-14 bg-accent rounded-3xl text-base font-bold text-bg-primary cursor-pointer hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition active:scale-95"
-          >
-            ATTACK
-          </button>
+        {/* Special button — appears only when charged */}
+        {canSpecial && result === null && (
           <button
             type="button"
             onClick={handleSpecial}
-            disabled={!canSpecial || result !== null}
-            className="w-24 h-14 bg-green rounded-3xl text-sm font-bold text-bg-primary cursor-pointer hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed transition active:scale-95"
+            className="w-full h-14 bg-green rounded-3xl text-base font-bold text-bg-primary cursor-pointer hover:opacity-90 transition active:scale-95 special-btn-appear"
           >
-            SPECIAL
+            SPECIAL ATTACK
           </button>
-        </div>
-        <span className="text-xs text-text-secondary text-center">tap to attack</span>
+        )}
+
+        {!canSpecial && (
+          <span className="text-xs text-text-secondary text-center">tap anywhere to attack</span>
+        )}
       </section>
     </div>
   );
