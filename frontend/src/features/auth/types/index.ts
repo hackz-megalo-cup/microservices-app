@@ -6,6 +6,7 @@ export interface AuthCredentials {
 export interface AuthUser {
   id: string;
   email: string;
+  name: string;
   role: string;
 }
 
@@ -17,10 +18,14 @@ export interface LoginResponse {
 export interface RegisterResponse {
   id: string;
   email: string;
+  name: string;
   role: string;
 }
 
-export interface AuthState {
-  status: string;
-  response: Record<string, unknown> | null;
+export interface AuthContextValue {
+  user: AuthUser | null;
+  isAuthenticated: boolean;
+  isLoading: boolean;
+  loginAsGuest: (name: string) => Promise<void>;
+  logout: () => void;
 }

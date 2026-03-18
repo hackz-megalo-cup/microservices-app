@@ -55,6 +55,7 @@ func NewService(
 func (s *Service) RegisterUser(ctx context.Context, req *connect.Request[authv1.RegisterUserRequest]) (*connect.Response[authv1.RegisterUserResponse], error) {
 	email := req.Msg.GetEmail()
 	password := req.Msg.GetPassword()
+	name := req.Msg.GetName()
 
 	if email == "" || password == "" {
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("email and password are required"))
@@ -74,7 +75,7 @@ func (s *Service) RegisterUser(ctx context.Context, req *connect.Request[authv1.
 
 	// Create aggregate
 	agg := NewUserAggregate(uuid.NewString())
-	agg.RegisterUser(email, string(passwordHash), now)
+	agg.RegisterUser(email, name, string(passwordHash), now)
 
 	tx, err := s.eventStore.BeginTx(ctx)
 	if err != nil {
@@ -86,9 +87,9 @@ func (s *Service) RegisterUser(ctx context.Context, req *connect.Request[authv1.
 	}()
 
 	_, err = tx.Exec(ctx,
-		`INSERT INTO users (id, email, password_hash, role, created_at, updated_at)
-		 VALUES ($1, $2, $3, $4, $5, $5)`,
-		agg.AggregateID(), email, passwordHash, agg.Role, now,
+		`INSERT INTO users (id, email, name, password_hash, role, created_at, updated_at)
+		 VALUES ($1, $2, $3, $4, $5, $6, $6)`,
+		agg.AggregateID(), email, name, passwordHash, agg.Role, now,
 	)
 	if err != nil {
 		if isUniqueViolation(err) {
@@ -121,6 +122,7 @@ func (s *Service) RegisterUser(ctx context.Context, req *connect.Request[authv1.
 		User: &authv1.User{
 			Id:        agg.AggregateID(),
 			Email:     agg.Email,
+			Name:      agg.Name,
 			Role:      agg.Role,
 			CreatedAt: timestampFromTime(agg.CreatedAt),
 		},
@@ -140,11 +142,11 @@ func (s *Service) LoginUser(ctx context.Context, req *connect.Request[authv1.Log
 	}
 
 	// Lookup user by email from projection table
-	var userID, passwordHash, role string
+	var userID, passwordHash, role, name string
 	err := s.pool.QueryRow(ctx,
-		"SELECT id, password_hash, role FROM users WHERE email = $1",
+		"SELECT id, password_hash, role, name FROM users WHERE email = $1",
 		email,
-	).Scan(&userID, &passwordHash, &role)
+	).Scan(&userID, &passwordHash, &role, &name)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("invalid email or password"))
@@ -218,6 +220,7 @@ func (s *Service) LoginUser(ctx context.Context, req *connect.Request[authv1.Log
 		User: &authv1.User{
 			Id:          userID,
 			Email:       email,
+			Name:        name,
 			Role:        role,
 			CreatedAt:   timestampFromTime(agg.CreatedAt),
 			LastLoginAt: timestampFromTime(*agg.LastLoginAt),
@@ -246,6 +249,7 @@ func (s *Service) GetUserProfile(ctx context.Context, req *connect.Request[authv
 	user := &authv1.User{
 		Id:        agg.AggregateID(),
 		Email:     agg.Email,
+		Name:      agg.Name,
 		Role:      agg.Role,
 		CreatedAt: timestampFromTime(agg.CreatedAt),
 	}

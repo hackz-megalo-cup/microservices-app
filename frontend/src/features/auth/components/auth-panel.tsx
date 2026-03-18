@@ -1,8 +1,19 @@
 import { useAuth } from "../hooks/use-auth";
 
 export function AuthPanel() {
-  const { email, setEmail, password, setPassword, status, response, register, login, clear } =
-    useAuth();
+  const {
+    email,
+    setEmail,
+    password,
+    setPassword,
+    name,
+    setName,
+    status,
+    response,
+    register,
+    login,
+    clear,
+  } = useAuth();
 
   return (
     <section style={{ border: "1px solid #ddd", padding: 16, borderRadius: 8, marginBottom: 16 }}>
@@ -11,6 +22,7 @@ export function AuthPanel() {
       </h2>
       <p>Register: DB に bcrypt ハッシュで保存 / Login: DB 検索 → bcrypt 検証 → JWT 発行</p>
       <div style={{ display: "flex", gap: 8, alignItems: "center", flexWrap: "wrap" }}>
+        <input value={name} onChange={(e) => setName(e.target.value)} placeholder="name" />
         <input value={email} onChange={(e) => setEmail(e.target.value)} placeholder="email" />
         <input
           value={password}
