@@ -661,20 +661,86 @@ func (x *ListTypeMatchupsResponse) GetMatchups() []*TypeMatchup {
 	return nil
 }
 
-type Item struct {
+type ItemEffect struct {
 	state            protoimpl.MessageState `protogen:"open.v1"`
-	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
-	Name             string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
-	EffectType       string                 `protobuf:"bytes,3,opt,name=effect_type,json=effectType,proto3" json:"effect_type,omitempty"`
-	TargetType       string                 `protobuf:"bytes,4,opt,name=target_type,json=targetType,proto3" json:"target_type,omitempty"`
-	CaptureRateBonus float64                `protobuf:"fixed64,5,opt,name=capture_rate_bonus,json=captureRateBonus,proto3" json:"capture_rate_bonus,omitempty"`
+	EffectType       string                 `protobuf:"bytes,1,opt,name=effect_type,json=effectType,proto3" json:"effect_type,omitempty"` // "capture_rate_up" | "escape"
+	TargetType       string                 `protobuf:"bytes,2,opt,name=target_type,json=targetType,proto3" json:"target_type,omitempty"` // 対象タイプ。空 = 全タイプに適用
+	CaptureRateBonus float64                `protobuf:"fixed64,3,opt,name=capture_rate_bonus,json=captureRateBonus,proto3" json:"capture_rate_bonus,omitempty"`
+	FlavorText       string                 `protobuf:"bytes,4,opt,name=flavor_text,json=flavorText,proto3" json:"flavor_text,omitempty"` // 例: "ざつくんはPythonが嫌いすぎて群馬に帰った。"
 	unknownFields    protoimpl.UnknownFields
 	sizeCache        protoimpl.SizeCache
 }
 
+func (x *ItemEffect) Reset() {
+	*x = ItemEffect{}
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[12]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ItemEffect) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ItemEffect) ProtoMessage() {}
+
+func (x *ItemEffect) ProtoReflect() protoreflect.Message {
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[12]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ItemEffect.ProtoReflect.Descriptor instead.
+func (*ItemEffect) Descriptor() ([]byte, []int) {
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{12}
+}
+
+func (x *ItemEffect) GetEffectType() string {
+	if x != nil {
+		return x.EffectType
+	}
+	return ""
+}
+
+func (x *ItemEffect) GetTargetType() string {
+	if x != nil {
+		return x.TargetType
+	}
+	return ""
+}
+
+func (x *ItemEffect) GetCaptureRateBonus() float64 {
+	if x != nil {
+		return x.CaptureRateBonus
+	}
+	return 0
+}
+
+func (x *ItemEffect) GetFlavorText() string {
+	if x != nil {
+		return x.FlavorText
+	}
+	return ""
+}
+
+type Item struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name          string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Effects       []*ItemEffect          `protobuf:"bytes,3,rep,name=effects,proto3" json:"effects,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
 func (x *Item) Reset() {
 	*x = Item{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[12]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -686,7 +752,7 @@ func (x *Item) String() string {
 func (*Item) ProtoMessage() {}
 
 func (x *Item) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[12]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -699,7 +765,7 @@ func (x *Item) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Item.ProtoReflect.Descriptor instead.
 func (*Item) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{12}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{13}
 }
 
 func (x *Item) GetId() string {
@@ -716,40 +782,92 @@ func (x *Item) GetName() string {
 	return ""
 }
 
-func (x *Item) GetEffectType() string {
+func (x *Item) GetEffects() []*ItemEffect {
+	if x != nil {
+		return x.Effects
+	}
+	return nil
+}
+
+type CreateItemEffectRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	EffectType       string                 `protobuf:"bytes,1,opt,name=effect_type,json=effectType,proto3" json:"effect_type,omitempty"`
+	TargetType       string                 `protobuf:"bytes,2,opt,name=target_type,json=targetType,proto3" json:"target_type,omitempty"`
+	CaptureRateBonus float64                `protobuf:"fixed64,3,opt,name=capture_rate_bonus,json=captureRateBonus,proto3" json:"capture_rate_bonus,omitempty"`
+	FlavorText       string                 `protobuf:"bytes,4,opt,name=flavor_text,json=flavorText,proto3" json:"flavor_text,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *CreateItemEffectRequest) Reset() {
+	*x = CreateItemEffectRequest{}
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[14]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *CreateItemEffectRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*CreateItemEffectRequest) ProtoMessage() {}
+
+func (x *CreateItemEffectRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[14]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use CreateItemEffectRequest.ProtoReflect.Descriptor instead.
+func (*CreateItemEffectRequest) Descriptor() ([]byte, []int) {
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{14}
+}
+
+func (x *CreateItemEffectRequest) GetEffectType() string {
 	if x != nil {
 		return x.EffectType
 	}
 	return ""
 }
 
-func (x *Item) GetTargetType() string {
+func (x *CreateItemEffectRequest) GetTargetType() string {
 	if x != nil {
 		return x.TargetType
 	}
 	return ""
 }
 
-func (x *Item) GetCaptureRateBonus() float64 {
+func (x *CreateItemEffectRequest) GetCaptureRateBonus() float64 {
 	if x != nil {
 		return x.CaptureRateBonus
 	}
 	return 0
 }
 
+func (x *CreateItemEffectRequest) GetFlavorText() string {
+	if x != nil {
+		return x.FlavorText
+	}
+	return ""
+}
+
 type CreateItemRequest struct {
-	state            protoimpl.MessageState `protogen:"open.v1"`
-	Name             string                 `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
-	EffectType       string                 `protobuf:"bytes,2,opt,name=effect_type,json=effectType,proto3" json:"effect_type,omitempty"`
-	TargetType       string                 `protobuf:"bytes,3,opt,name=target_type,json=targetType,proto3" json:"target_type,omitempty"`
-	CaptureRateBonus float64                `protobuf:"fixed64,4,opt,name=capture_rate_bonus,json=captureRateBonus,proto3" json:"capture_rate_bonus,omitempty"`
-	unknownFields    protoimpl.UnknownFields
-	sizeCache        protoimpl.SizeCache
+	state         protoimpl.MessageState     `protogen:"open.v1"`
+	Name          string                     `protobuf:"bytes,1,opt,name=name,proto3" json:"name,omitempty"`
+	Effects       []*CreateItemEffectRequest `protobuf:"bytes,2,rep,name=effects,proto3" json:"effects,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
 }
 
 func (x *CreateItemRequest) Reset() {
 	*x = CreateItemRequest{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[13]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -761,7 +879,7 @@ func (x *CreateItemRequest) String() string {
 func (*CreateItemRequest) ProtoMessage() {}
 
 func (x *CreateItemRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[13]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -774,7 +892,7 @@ func (x *CreateItemRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateItemRequest.ProtoReflect.Descriptor instead.
 func (*CreateItemRequest) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{13}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *CreateItemRequest) GetName() string {
@@ -784,25 +902,11 @@ func (x *CreateItemRequest) GetName() string {
 	return ""
 }
 
-func (x *CreateItemRequest) GetEffectType() string {
+func (x *CreateItemRequest) GetEffects() []*CreateItemEffectRequest {
 	if x != nil {
-		return x.EffectType
+		return x.Effects
 	}
-	return ""
-}
-
-func (x *CreateItemRequest) GetTargetType() string {
-	if x != nil {
-		return x.TargetType
-	}
-	return ""
-}
-
-func (x *CreateItemRequest) GetCaptureRateBonus() float64 {
-	if x != nil {
-		return x.CaptureRateBonus
-	}
-	return 0
+	return nil
 }
 
 type CreateItemResponse struct {
@@ -814,7 +918,7 @@ type CreateItemResponse struct {
 
 func (x *CreateItemResponse) Reset() {
 	*x = CreateItemResponse{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[14]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[16]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -826,7 +930,7 @@ func (x *CreateItemResponse) String() string {
 func (*CreateItemResponse) ProtoMessage() {}
 
 func (x *CreateItemResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[14]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[16]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -839,7 +943,7 @@ func (x *CreateItemResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateItemResponse.ProtoReflect.Descriptor instead.
 func (*CreateItemResponse) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{14}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{16}
 }
 
 func (x *CreateItemResponse) GetId() string {
@@ -858,7 +962,7 @@ type GetItemRequest struct {
 
 func (x *GetItemRequest) Reset() {
 	*x = GetItemRequest{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[15]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[17]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -870,7 +974,7 @@ func (x *GetItemRequest) String() string {
 func (*GetItemRequest) ProtoMessage() {}
 
 func (x *GetItemRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[15]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[17]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -883,7 +987,7 @@ func (x *GetItemRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetItemRequest.ProtoReflect.Descriptor instead.
 func (*GetItemRequest) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{15}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{17}
 }
 
 func (x *GetItemRequest) GetId() string {
@@ -902,7 +1006,7 @@ type GetItemResponse struct {
 
 func (x *GetItemResponse) Reset() {
 	*x = GetItemResponse{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[16]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[18]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -914,7 +1018,7 @@ func (x *GetItemResponse) String() string {
 func (*GetItemResponse) ProtoMessage() {}
 
 func (x *GetItemResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[16]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[18]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -927,7 +1031,7 @@ func (x *GetItemResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetItemResponse.ProtoReflect.Descriptor instead.
 func (*GetItemResponse) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{16}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{18}
 }
 
 func (x *GetItemResponse) GetItem() *Item {
@@ -945,7 +1049,7 @@ type ListItemsRequest struct {
 
 func (x *ListItemsRequest) Reset() {
 	*x = ListItemsRequest{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[17]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[19]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -957,7 +1061,7 @@ func (x *ListItemsRequest) String() string {
 func (*ListItemsRequest) ProtoMessage() {}
 
 func (x *ListItemsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[17]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[19]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -970,7 +1074,7 @@ func (x *ListItemsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListItemsRequest.ProtoReflect.Descriptor instead.
 func (*ListItemsRequest) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{17}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{19}
 }
 
 type ListItemsResponse struct {
@@ -982,7 +1086,7 @@ type ListItemsResponse struct {
 
 func (x *ListItemsResponse) Reset() {
 	*x = ListItemsResponse{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[18]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -994,7 +1098,7 @@ func (x *ListItemsResponse) String() string {
 func (*ListItemsResponse) ProtoMessage() {}
 
 func (x *ListItemsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[18]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1007,7 +1111,7 @@ func (x *ListItemsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListItemsResponse.ProtoReflect.Descriptor instead.
 func (*ListItemsResponse) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{18}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *ListItemsResponse) GetItems() []*Item {
@@ -1059,22 +1163,31 @@ const file_masterdata_v1_masterdata_proto_rawDesc = "" +
 	"\x19CreateTypeMatchupResponse\"\x19\n" +
 	"\x17ListTypeMatchupsRequest\"R\n" +
 	"\x18ListTypeMatchupsResponse\x126\n" +
-	"\bmatchups\x18\x01 \x03(\v2\x1a.masterdata.v1.TypeMatchupR\bmatchups\"\x9a\x01\n" +
+	"\bmatchups\x18\x01 \x03(\v2\x1a.masterdata.v1.TypeMatchupR\bmatchups\"\x9d\x01\n" +
+	"\n" +
+	"ItemEffect\x12\x1f\n" +
+	"\veffect_type\x18\x01 \x01(\tR\n" +
+	"effectType\x12\x1f\n" +
+	"\vtarget_type\x18\x02 \x01(\tR\n" +
+	"targetType\x12,\n" +
+	"\x12capture_rate_bonus\x18\x03 \x01(\x01R\x10captureRateBonus\x12\x1f\n" +
+	"\vflavor_text\x18\x04 \x01(\tR\n" +
+	"flavorText\"_\n" +
 	"\x04Item\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
-	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n" +
-	"\veffect_type\x18\x03 \x01(\tR\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x123\n" +
+	"\aeffects\x18\x03 \x03(\v2\x19.masterdata.v1.ItemEffectR\aeffects\"\xaa\x01\n" +
+	"\x17CreateItemEffectRequest\x12\x1f\n" +
+	"\veffect_type\x18\x01 \x01(\tR\n" +
 	"effectType\x12\x1f\n" +
-	"\vtarget_type\x18\x04 \x01(\tR\n" +
+	"\vtarget_type\x18\x02 \x01(\tR\n" +
 	"targetType\x12,\n" +
-	"\x12capture_rate_bonus\x18\x05 \x01(\x01R\x10captureRateBonus\"\x97\x01\n" +
+	"\x12capture_rate_bonus\x18\x03 \x01(\x01R\x10captureRateBonus\x12\x1f\n" +
+	"\vflavor_text\x18\x04 \x01(\tR\n" +
+	"flavorText\"i\n" +
 	"\x11CreateItemRequest\x12\x12\n" +
-	"\x04name\x18\x01 \x01(\tR\x04name\x12\x1f\n" +
-	"\veffect_type\x18\x02 \x01(\tR\n" +
-	"effectType\x12\x1f\n" +
-	"\vtarget_type\x18\x03 \x01(\tR\n" +
-	"targetType\x12,\n" +
-	"\x12capture_rate_bonus\x18\x04 \x01(\x01R\x10captureRateBonus\"$\n" +
+	"\x04name\x18\x01 \x01(\tR\x04name\x12@\n" +
+	"\aeffects\x18\x02 \x03(\v2&.masterdata.v1.CreateItemEffectRequestR\aeffects\"$\n" +
 	"\x12CreateItemResponse\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\" \n" +
 	"\x0eGetItemRequest\x12\x0e\n" +
@@ -1108,7 +1221,7 @@ func file_masterdata_v1_masterdata_proto_rawDescGZIP() []byte {
 	return file_masterdata_v1_masterdata_proto_rawDescData
 }
 
-var file_masterdata_v1_masterdata_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_masterdata_v1_masterdata_proto_msgTypes = make([]protoimpl.MessageInfo, 21)
 var file_masterdata_v1_masterdata_proto_goTypes = []any{
 	(*Pokemon)(nil),                   // 0: masterdata.v1.Pokemon
 	(*CreatePokemonRequest)(nil),      // 1: masterdata.v1.CreatePokemonRequest
@@ -1122,41 +1235,45 @@ var file_masterdata_v1_masterdata_proto_goTypes = []any{
 	(*CreateTypeMatchupResponse)(nil), // 9: masterdata.v1.CreateTypeMatchupResponse
 	(*ListTypeMatchupsRequest)(nil),   // 10: masterdata.v1.ListTypeMatchupsRequest
 	(*ListTypeMatchupsResponse)(nil),  // 11: masterdata.v1.ListTypeMatchupsResponse
-	(*Item)(nil),                      // 12: masterdata.v1.Item
-	(*CreateItemRequest)(nil),         // 13: masterdata.v1.CreateItemRequest
-	(*CreateItemResponse)(nil),        // 14: masterdata.v1.CreateItemResponse
-	(*GetItemRequest)(nil),            // 15: masterdata.v1.GetItemRequest
-	(*GetItemResponse)(nil),           // 16: masterdata.v1.GetItemResponse
-	(*ListItemsRequest)(nil),          // 17: masterdata.v1.ListItemsRequest
-	(*ListItemsResponse)(nil),         // 18: masterdata.v1.ListItemsResponse
+	(*ItemEffect)(nil),                // 12: masterdata.v1.ItemEffect
+	(*Item)(nil),                      // 13: masterdata.v1.Item
+	(*CreateItemEffectRequest)(nil),   // 14: masterdata.v1.CreateItemEffectRequest
+	(*CreateItemRequest)(nil),         // 15: masterdata.v1.CreateItemRequest
+	(*CreateItemResponse)(nil),        // 16: masterdata.v1.CreateItemResponse
+	(*GetItemRequest)(nil),            // 17: masterdata.v1.GetItemRequest
+	(*GetItemResponse)(nil),           // 18: masterdata.v1.GetItemResponse
+	(*ListItemsRequest)(nil),          // 19: masterdata.v1.ListItemsRequest
+	(*ListItemsResponse)(nil),         // 20: masterdata.v1.ListItemsResponse
 }
 var file_masterdata_v1_masterdata_proto_depIdxs = []int32{
 	0,  // 0: masterdata.v1.GetPokemonResponse.pokemon:type_name -> masterdata.v1.Pokemon
 	0,  // 1: masterdata.v1.ListPokemonResponse.pokemon:type_name -> masterdata.v1.Pokemon
 	7,  // 2: masterdata.v1.ListTypeMatchupsResponse.matchups:type_name -> masterdata.v1.TypeMatchup
-	12, // 3: masterdata.v1.GetItemResponse.item:type_name -> masterdata.v1.Item
-	12, // 4: masterdata.v1.ListItemsResponse.items:type_name -> masterdata.v1.Item
-	1,  // 5: masterdata.v1.MasterdataService.CreatePokemon:input_type -> masterdata.v1.CreatePokemonRequest
-	3,  // 6: masterdata.v1.MasterdataService.GetPokemon:input_type -> masterdata.v1.GetPokemonRequest
-	5,  // 7: masterdata.v1.MasterdataService.ListPokemon:input_type -> masterdata.v1.ListPokemonRequest
-	8,  // 8: masterdata.v1.MasterdataService.CreateTypeMatchup:input_type -> masterdata.v1.CreateTypeMatchupRequest
-	10, // 9: masterdata.v1.MasterdataService.ListTypeMatchups:input_type -> masterdata.v1.ListTypeMatchupsRequest
-	13, // 10: masterdata.v1.MasterdataService.CreateItem:input_type -> masterdata.v1.CreateItemRequest
-	15, // 11: masterdata.v1.MasterdataService.GetItem:input_type -> masterdata.v1.GetItemRequest
-	17, // 12: masterdata.v1.MasterdataService.ListItems:input_type -> masterdata.v1.ListItemsRequest
-	2,  // 13: masterdata.v1.MasterdataService.CreatePokemon:output_type -> masterdata.v1.CreatePokemonResponse
-	4,  // 14: masterdata.v1.MasterdataService.GetPokemon:output_type -> masterdata.v1.GetPokemonResponse
-	6,  // 15: masterdata.v1.MasterdataService.ListPokemon:output_type -> masterdata.v1.ListPokemonResponse
-	9,  // 16: masterdata.v1.MasterdataService.CreateTypeMatchup:output_type -> masterdata.v1.CreateTypeMatchupResponse
-	11, // 17: masterdata.v1.MasterdataService.ListTypeMatchups:output_type -> masterdata.v1.ListTypeMatchupsResponse
-	14, // 18: masterdata.v1.MasterdataService.CreateItem:output_type -> masterdata.v1.CreateItemResponse
-	16, // 19: masterdata.v1.MasterdataService.GetItem:output_type -> masterdata.v1.GetItemResponse
-	18, // 20: masterdata.v1.MasterdataService.ListItems:output_type -> masterdata.v1.ListItemsResponse
-	13, // [13:21] is the sub-list for method output_type
-	5,  // [5:13] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	12, // 3: masterdata.v1.Item.effects:type_name -> masterdata.v1.ItemEffect
+	14, // 4: masterdata.v1.CreateItemRequest.effects:type_name -> masterdata.v1.CreateItemEffectRequest
+	13, // 5: masterdata.v1.GetItemResponse.item:type_name -> masterdata.v1.Item
+	13, // 6: masterdata.v1.ListItemsResponse.items:type_name -> masterdata.v1.Item
+	1,  // 7: masterdata.v1.MasterdataService.CreatePokemon:input_type -> masterdata.v1.CreatePokemonRequest
+	3,  // 8: masterdata.v1.MasterdataService.GetPokemon:input_type -> masterdata.v1.GetPokemonRequest
+	5,  // 9: masterdata.v1.MasterdataService.ListPokemon:input_type -> masterdata.v1.ListPokemonRequest
+	8,  // 10: masterdata.v1.MasterdataService.CreateTypeMatchup:input_type -> masterdata.v1.CreateTypeMatchupRequest
+	10, // 11: masterdata.v1.MasterdataService.ListTypeMatchups:input_type -> masterdata.v1.ListTypeMatchupsRequest
+	15, // 12: masterdata.v1.MasterdataService.CreateItem:input_type -> masterdata.v1.CreateItemRequest
+	17, // 13: masterdata.v1.MasterdataService.GetItem:input_type -> masterdata.v1.GetItemRequest
+	19, // 14: masterdata.v1.MasterdataService.ListItems:input_type -> masterdata.v1.ListItemsRequest
+	2,  // 15: masterdata.v1.MasterdataService.CreatePokemon:output_type -> masterdata.v1.CreatePokemonResponse
+	4,  // 16: masterdata.v1.MasterdataService.GetPokemon:output_type -> masterdata.v1.GetPokemonResponse
+	6,  // 17: masterdata.v1.MasterdataService.ListPokemon:output_type -> masterdata.v1.ListPokemonResponse
+	9,  // 18: masterdata.v1.MasterdataService.CreateTypeMatchup:output_type -> masterdata.v1.CreateTypeMatchupResponse
+	11, // 19: masterdata.v1.MasterdataService.ListTypeMatchups:output_type -> masterdata.v1.ListTypeMatchupsResponse
+	16, // 20: masterdata.v1.MasterdataService.CreateItem:output_type -> masterdata.v1.CreateItemResponse
+	18, // 21: masterdata.v1.MasterdataService.GetItem:output_type -> masterdata.v1.GetItemResponse
+	20, // 22: masterdata.v1.MasterdataService.ListItems:output_type -> masterdata.v1.ListItemsResponse
+	15, // [15:23] is the sub-list for method output_type
+	7,  // [7:15] is the sub-list for method input_type
+	7,  // [7:7] is the sub-list for extension type_name
+	7,  // [7:7] is the sub-list for extension extendee
+	0,  // [0:7] is the sub-list for field type_name
 }
 
 func init() { file_masterdata_v1_masterdata_proto_init() }
@@ -1170,7 +1287,7 @@ func file_masterdata_v1_masterdata_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_masterdata_v1_masterdata_proto_rawDesc), len(file_masterdata_v1_masterdata_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   19,
+			NumMessages:   21,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
