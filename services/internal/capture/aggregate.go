@@ -15,6 +15,7 @@ type CaptureAggregate struct {
 	BaseRate        float64
 	CurrentRate     float64
 	Result          string // pending, success, fail, escaped
+	Completed       bool   // true after capture.completed event has been emitted
 }
 
 func NewCaptureAggregate(id string) *CaptureAggregate {
@@ -57,6 +58,7 @@ func (a *CaptureAggregate) ApplyEvent(eventType string, data json.RawMessage) {
 			slog.Warn("failed to unmarshal completed data", "error", err)
 		}
 		a.Result = d.Result
+		a.Completed = true
 		if d.Result == "escaped" {
 			a.CurrentRate = 0
 		}
@@ -113,6 +115,7 @@ func (a *CaptureAggregate) Complete(result string) {
 		Result:    result,
 	})
 	a.Result = result
+	a.Completed = true
 }
 
 // Escape sets capture rate to 0 and marks as escaped.
@@ -125,6 +128,7 @@ func (a *CaptureAggregate) Escape() {
 	})
 	a.CurrentRate = 0
 	a.Result = "escaped"
+	a.Completed = true
 }
 
 // Fail records a failed operation — main.go が参照、削除禁止。

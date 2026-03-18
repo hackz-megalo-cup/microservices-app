@@ -327,7 +327,7 @@ services:
       KAFKA_BROKERS: "redpanda:9092"
       JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
       MASTERDATA_URL: "http://masterdata:8084"
-      ITEM_URL: "http://item:8085"
+      ITEM_URL: "http://item:8080"
     labels:
       - "traefik.enable=true"
       - "traefik.http.routers.capture.rule=PathPrefix(`/capture.v1.CaptureService`)"

@@ -276,8 +276,8 @@ func (s *Service) EndSession(ctx context.Context, req *connect.Request[pb.EndSes
 		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("session is still pending"))
 	}
 
-	// Emit capture.completed for fail case (escaped already emitted via UseItem→Escape)
-	if agg.Result == "fail" {
+	// Emit capture.completed for fail case if not already emitted
+	if agg.Result == "fail" && !agg.Completed {
 		agg.Complete(agg.Result)
 		if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, CaptureTopicMapper); err != nil {
 			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save: %w", err))

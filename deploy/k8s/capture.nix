@@ -1,5 +1,6 @@
 _:
 let
+  images = import ./images.nix;
   labels = {
     "app.kubernetes.io/name" = "capture";
     "app.kubernetes.io/version" = "0.1.0";
@@ -17,8 +18,8 @@ in
         template = {
           metadata.labels = labels;
           spec.containers.capture-service = {
-            image = "capture:latest";
-            imagePullPolicy = "Never";
+            image = images.ghcrImage "capture";
+            imagePullPolicy = "Always";
             ports.http.containerPort = 8088;
 
             env = {
