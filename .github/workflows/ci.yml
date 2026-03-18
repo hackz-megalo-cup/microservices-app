@@ -149,17 +149,20 @@ jobs:
               add_go item
               add_go projector
               add_go capture
+              add_go lobby
             fi
             if [[ "$MASTERDATA_CHANGED" == "true" ]]; then
               add_go masterdata
               add_go raid-lobby
               add_go capture
+              add_go lobby
             fi
             if [[ "$PROJECTOR_CHANGED" == "true" ]]; then
               add_go projector
             fi
             if [[ "$RAID_LOBBY_CHANGED" == "true" ]]; then
               add_go raid-lobby
+              add_go lobby
             fi
             if [[ "$LOBBY_CHANGED" == "true" ]]; then
               add_go lobby

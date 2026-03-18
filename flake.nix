@@ -114,7 +114,13 @@
             };
             lobby = {
               internals = [ "lobby" ];
-              gen = [ "lobby" ];
+              gen = [
+                "auth"
+                "item"
+                "lobby"
+                "masterdata"
+                "raid_lobby"
+              ];
             };
             capture = {
               internals = [ "capture" ];
