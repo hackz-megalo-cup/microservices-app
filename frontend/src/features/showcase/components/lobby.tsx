@@ -1,11 +1,10 @@
 import { useMutation } from "@connectrpc/connect-query";
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import {
   joinRaid,
   startBattle,
 } from "../../../gen/raid_lobby/v1/raid_lobby-RaidLobbyService_connectquery";
-import { getCurrentUserId } from "../../../lib/auth";
 import { transport } from "../../../lib/transport";
 import { useLobbyStream } from "../hooks/use-lobby-stream";
 import "../styles/global.css";
@@ -15,7 +14,6 @@ export function Lobby() {
   const { id: lobbyId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [hasJoined, setHasJoined] = useState(false);
-  const userId = useMemo(() => getCurrentUserId(), []);
 
   // --- 1. JoinRaid (Unary) ---
   const joinMutation = useMutation(joinRaid, { transport });
@@ -26,7 +24,7 @@ export function Lobby() {
     }
 
     joinMutation
-      .mutateAsync({ lobbyId, userId })
+      .mutateAsync({ lobbyId })
       .then(() => {
         setHasJoined(true);
         console.log("[JoinRaid] 成功");
@@ -34,7 +32,7 @@ export function Lobby() {
       .catch((err) => {
         console.error("[JoinRaid] 失敗:", err);
       });
-  }, [lobbyId, hasJoined, userId]);
+  }, [lobbyId, hasJoined]);
 
   // --- 2. StreamLobby (Server Streaming) ---
   const {
