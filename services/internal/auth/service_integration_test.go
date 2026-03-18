@@ -317,6 +317,29 @@ func TestGetUserProfile_Integration(t *testing.T) {
 	}
 }
 
+func TestGetUserProfile_NotFound_Integration(t *testing.T) {
+	pool := setupPostgres(t)
+	privateKey, publicKey := setupRSAKeys(t)
+	ctx := context.Background()
+
+	eventStore := platform.NewEventStore(pool)
+	outbox := platform.NewOutboxStore(pool, nil)
+	svc := NewService(eventStore, outbox, pool, privateKey, publicKey, "test-kid")
+
+	profileReq := connect.NewRequest(&authv1.GetUserProfileRequest{
+		UserId: "00000000-0000-0000-0000-000000000000",
+	})
+	_, err := svc.GetUserProfile(ctx, profileReq)
+	if err == nil {
+		t.Fatal("expected error, got nil")
+	}
+
+	var connectErr *connect.Error
+	if !errors.As(err, &connectErr) || connectErr.Code() != connect.CodeNotFound {
+		t.Errorf("expected NotFound error, got %v", err)
+	}
+}
+
 func TestRegisterPokemon_Integration(t *testing.T) {
 	pool := setupPostgres(t)
 	privateKey, publicKey := setupRSAKeys(t)

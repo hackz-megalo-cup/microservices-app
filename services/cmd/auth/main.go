@@ -218,12 +218,16 @@ func registerJWKSHandler(mux *http.ServeMux, publicKey *rsa.PublicKey, kid strin
 }
 
 func startCaptureConsumer(ctx context.Context, brokers []string, svc *auth.Service) {
-	kafkaConsumer, _ := platform.NewKafkaConsumer(
+	kafkaConsumer, err := platform.NewKafkaConsumer(
 		ctx,
 		brokers,
 		"auth-service-consumer",
 		[]string{platform.TopicCaptureCaught},
 	)
+	if err != nil {
+		slog.Error("failed to create kafka consumer", "error", err)
+		return
+	}
 	if kafkaConsumer == nil {
 		return
 	}

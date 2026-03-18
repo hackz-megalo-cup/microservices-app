@@ -146,8 +146,11 @@ func (s *Service) LoginUser(ctx context.Context, req *connect.Request[authv1.Log
 		email,
 	).Scan(&userID, &passwordHash, &role)
 	if err != nil {
+		if errors.Is(err, pgx.ErrNoRows) {
+			return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("invalid email or password"))
+		}
 		slog.Error("failed to lookup user by email", "email", email, "error", err)
-		return nil, connect.NewError(connect.CodeUnauthenticated, fmt.Errorf("invalid email or password"))
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to login"))
 	}
 
 	// Verify password
@@ -234,6 +237,9 @@ func (s *Service) GetUserProfile(ctx context.Context, req *connect.Request[authv
 	agg := NewUserAggregate(userID)
 	if err := platform.LoadAggregate(ctx, s.eventStore, agg); err != nil {
 		slog.Error("failed to load user", "user_id", userID, "error", err)
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to load user profile"))
+	}
+	if agg.Version() == 0 {
 		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("user not found"))
 	}
 

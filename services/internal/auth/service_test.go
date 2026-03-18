@@ -6,6 +6,7 @@ import (
 	"crypto/rsa"
 	"errors"
 	"testing"
+	"time"
 
 	"connectrpc.com/connect"
 
@@ -109,7 +110,7 @@ func TestIssueJWT(t *testing.T) {
 	publicKey := &privateKey.PublicKey
 	svc := NewService(nil, nil, nil, privateKey, publicKey, "test-kid")
 
-	token, err := svc.issueJWT("user-123", "test@example.com", "user", 3600)
+	token, err := svc.issueJWT("user-123", "test@example.com", "user", time.Hour)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
