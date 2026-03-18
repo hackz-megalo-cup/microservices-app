@@ -17,8 +17,10 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/item/v1/itemv1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/lobby/v1/lobbyv1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1/masterdatav1connect"
+	raid_lobbyv1connect "github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1/raid_lobbyv1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/lobby"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
@@ -70,23 +72,26 @@ func run() error {
 	// --- Event Store ---
 	eventStore := platform.NewEventStore(dbPool)
 
-	// --- Secondary DB pools (read-only: item and raid-lobby read models) ---
-	itemDB, err := platform.NewDBPool(ctx, os.Getenv("ITEM_DATABASE_URL"))
-	if err != nil {
-		slog.WarnContext(ctx, "item DB unavailable, item data will be empty", "error", err)
-		itemDB = nil
-	}
-	if itemDB != nil {
-		defer itemDB.Close()
+	// --- Item service client ---
+	var itemClient itemv1connect.ItemServiceClient
+	if itemURL := os.Getenv("ITEM_URL"); itemURL != "" {
+		itemClient = itemv1connect.NewItemServiceClient(
+			platform.NewInstrumentedHTTPClient(3*time.Second),
+			itemURL,
+		)
+	} else {
+		slog.WarnContext(ctx, "ITEM_URL not set, item data will be empty")
 	}
 
-	raidLobbyDB, err := platform.NewDBPool(ctx, os.Getenv("RAID_LOBBY_DATABASE_URL"))
-	if err != nil {
-		slog.WarnContext(ctx, "raid-lobby DB unavailable, raid data will be empty", "error", err)
-		raidLobbyDB = nil
-	}
-	if raidLobbyDB != nil {
-		defer raidLobbyDB.Close()
+	// --- Raid-lobby service client ---
+	var raidLobbyClient raid_lobbyv1connect.RaidLobbyServiceClient
+	if raidLobbyURL := os.Getenv("RAID_LOBBY_URL"); raidLobbyURL != "" {
+		raidLobbyClient = raid_lobbyv1connect.NewRaidLobbyServiceClient(
+			platform.NewInstrumentedHTTPClient(3*time.Second),
+			raidLobbyURL,
+		)
+	} else {
+		slog.WarnContext(ctx, "RAID_LOBBY_URL not set, raid data will be empty")
 	}
 
 	authDB, err := platform.NewDBPool(ctx, os.Getenv("AUTH_DATABASE_URL"))
@@ -146,7 +151,7 @@ func run() error {
 	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
 
 	// --- Service ---
-	svc := lobby.NewService(eventStore, outbox, dbPool, authDB, itemDB, raidLobbyDB, masterdataClient)
+	svc := lobby.NewService(eventStore, outbox, dbPool, authDB, itemClient, raidLobbyClient, masterdataClient)
 
 	// --- Connect-RPC Handler with interceptors ---
 	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())

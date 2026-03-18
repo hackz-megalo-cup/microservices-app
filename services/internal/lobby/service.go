@@ -10,9 +10,13 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	itemv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/item/v1"
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/item/v1/itemv1connect"
 	pb "github.com/hackz-megalo-cup/microservices-app/services/gen/go/lobby/v1"
 	masterdatav1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1"
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1/masterdatav1connect"
+	raid_lobbyv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1"
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1/raid_lobbyv1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
@@ -21,8 +25,8 @@ type Service struct {
 	outbox           *platform.OutboxStore
 	lobbyDB          *pgxpool.Pool
 	authDB           *pgxpool.Pool
-	itemDB           *pgxpool.Pool
-	raidLobbyDB      *pgxpool.Pool
+	itemClient       itemv1connect.ItemServiceClient
+	raidLobbyClient  raid_lobbyv1connect.RaidLobbyServiceClient
 	masterdataClient masterdatav1connect.MasterdataServiceClient
 }
 
@@ -31,8 +35,8 @@ func NewService(
 	outbox *platform.OutboxStore,
 	lobbyDB *pgxpool.Pool,
 	authDB *pgxpool.Pool,
-	itemDB *pgxpool.Pool,
-	raidLobbyDB *pgxpool.Pool,
+	itemClient itemv1connect.ItemServiceClient,
+	raidLobbyClient raid_lobbyv1connect.RaidLobbyServiceClient,
 	masterdataClient masterdatav1connect.MasterdataServiceClient,
 ) *Service {
 	return &Service{
@@ -40,8 +44,8 @@ func NewService(
 		outbox:           outbox,
 		lobbyDB:          lobbyDB,
 		authDB:           authDB,
-		itemDB:           itemDB,
-		raidLobbyDB:      raidLobbyDB,
+		itemClient:       itemClient,
+		raidLobbyClient:  raidLobbyClient,
 		masterdataClient: masterdataClient,
 	}
 }
@@ -53,7 +57,9 @@ func (s *Service) SetActivePokemon(ctx context.Context, req *connect.Request[pb.
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id and pokemon_id are required"))
 	}
 
-	// 所有チェック: auth_db.user_pokemon を参照
+	// NOTE: If authDB is nil (AUTH_DATABASE_URL not set or connection failed at startup),
+	// ownership check is skipped — any user can assign any pokemon_id.
+	// Ensure AUTH_DATABASE_URL is always configured in production.
 	if s.authDB != nil {
 		var exists bool
 		if err := s.authDB.QueryRow(ctx,
@@ -67,7 +73,15 @@ func (s *Service) SetActivePokemon(ctx context.Context, req *connect.Request[pb.
 		}
 	}
 
-	// UPSERT: user_active_pokemon
+	// Persist via event sourcing.
+	agg := NewAggregate(userID)
+	_ = platform.LoadAggregate(ctx, s.eventStore, agg) // ignore "not found" for new users
+	agg.SetActivePokemon(userID, pokemonID)
+	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, LobbyTopicMapper); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save aggregate: %w", err))
+	}
+
+	// UPSERT read model for fast lookups by GetActivePokemon.
 	if s.lobbyDB != nil {
 		if _, err := s.lobbyDB.Exec(ctx, `
 			INSERT INTO user_active_pokemon (user_id, pokemon_id, updated_at)
@@ -122,10 +136,16 @@ func (s *Service) GetLobbyOverview(ctx context.Context, req *connect.Request[pb.
 		list []*masterdatav1.Pokemon
 		err  error
 	}
+	type caughtResult struct {
+		ids map[string]bool
+		err error
+	}
 
 	itemsCh := make(chan itemsResult, 1)
 	raidsCh := make(chan raidsResult, 1)
 	pokemonCh := make(chan pokemonResult, 1)
+	caughtCh := make(chan caughtResult, 1)
+	itemNamesCh := make(chan map[string]string, 1)
 
 	go func() {
 		rows, err := s.fetchUserItems(ctx, userID)
@@ -139,10 +159,19 @@ func (s *Service) GetLobbyOverview(ctx context.Context, req *connect.Request[pb.
 		list, err := s.fetchAllPokemon(ctx)
 		pokemonCh <- pokemonResult{list, err}
 	}()
+	go func() {
+		ids, err := s.fetchCaughtPokemon(ctx, userID)
+		caughtCh <- caughtResult{ids, err}
+	}()
+	go func() {
+		itemNamesCh <- s.fetchItemNames(ctx)
+	}()
 
 	ir := <-itemsCh
 	rr := <-raidsCh
 	pr := <-pokemonCh
+	cr := <-caughtCh
+	itemNamesMap := <-itemNamesCh
 
 	if ir.err != nil {
 		slog.WarnContext(ctx, "failed to fetch user items", "error", ir.err)
@@ -153,11 +182,14 @@ func (s *Service) GetLobbyOverview(ctx context.Context, req *connect.Request[pb.
 	if pr.err != nil {
 		slog.WarnContext(ctx, "failed to fetch pokemon", "error", pr.err)
 	}
+	if cr.err != nil {
+		slog.WarnContext(ctx, "failed to fetch caught pokemon", "error", cr.err)
+	}
 
 	pokemonMap := buildPokemonMap(pr.list)
-	ownedItems := s.buildOwnedItems(ctx, ir.rows)
+	ownedItems := buildOwnedItems(ir.rows, itemNamesMap)
 	raids := buildRaids(rr.rows, pokemonMap)
-	pokedex := buildPokedex(pr.list)
+	pokedex := buildPokedex(pr.list, cr.ids)
 
 	return connect.NewResponse(&pb.GetLobbyOverviewResponse{
 		Items:   ownedItems,
@@ -166,7 +198,7 @@ func (s *Service) GetLobbyOverview(ctx context.Context, req *connect.Request[pb.
 	}), nil
 }
 
-// userItemRow holds a user's item and its computed quantity from the event store.
+// userItemRow holds a user's item and its computed quantity.
 type userItemRow struct {
 	itemID   string
 	quantity int32
@@ -178,71 +210,36 @@ type openRaidRow struct {
 	bossPokemonID string
 }
 
-// fetchUserItems queries item_db's event_store to compute per-item quantities for the user.
+// fetchUserItems calls item-service GetUserItems RPC.
 func (s *Service) fetchUserItems(ctx context.Context, userID string) ([]userItemRow, error) {
-	if s.itemDB == nil {
+	if s.itemClient == nil {
 		return nil, nil
 	}
-	rows, err := s.itemDB.Query(ctx, `
-		SELECT
-			SPLIT_PART(stream_id, ':', 2) AS item_id,
-			SUM(
-				CASE
-					WHEN event_type = 'item.granted' THEN (data->>'quantity')::int
-					WHEN event_type = 'item.used'    THEN -(data->>'quantity')::int
-					ELSE 0
-				END
-			) AS quantity
-		FROM event_store
-		WHERE stream_type = 'item'
-		  AND stream_id LIKE $1
-		GROUP BY SPLIT_PART(stream_id, ':', 2)
-		HAVING SUM(
-			CASE
-				WHEN event_type = 'item.granted' THEN (data->>'quantity')::int
-				WHEN event_type = 'item.used'    THEN -(data->>'quantity')::int
-				ELSE 0
-			END
-		) > 0
-	`, userID+":%")
+	resp, err := s.itemClient.GetUserItems(ctx, connect.NewRequest(&itemv1.GetUserItemsRequest{UserId: userID}))
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
-	var items []userItemRow
-	for rows.Next() {
-		var r userItemRow
-		if err := rows.Scan(&r.itemID, &r.quantity); err != nil {
-			return nil, err
-		}
-		items = append(items, r)
+	rows := make([]userItemRow, 0, len(resp.Msg.GetItems()))
+	for _, it := range resp.Msg.GetItems() {
+		rows = append(rows, userItemRow{itemID: it.GetItemId(), quantity: it.GetQuantity()})
 	}
-	return items, rows.Err()
+	return rows, nil
 }
 
-// fetchOpenRaids queries raid_lobby_db for raids with status 'waiting'.
+// fetchOpenRaids calls raid-lobby-service ListOpenRaids RPC.
 func (s *Service) fetchOpenRaids(ctx context.Context) ([]openRaidRow, error) {
-	if s.raidLobbyDB == nil {
+	if s.raidLobbyClient == nil {
 		return nil, nil
 	}
-	rows, err := s.raidLobbyDB.Query(ctx,
-		`SELECT id, boss_pokemon_id FROM raid_lobby WHERE status = 'waiting'`,
-	)
+	resp, err := s.raidLobbyClient.ListOpenRaids(ctx, connect.NewRequest(&raid_lobbyv1.ListOpenRaidsRequest{}))
 	if err != nil {
 		return nil, err
 	}
-	defer rows.Close()
-
-	var raids []openRaidRow
-	for rows.Next() {
-		var r openRaidRow
-		if err := rows.Scan(&r.id, &r.bossPokemonID); err != nil {
-			return nil, err
-		}
-		raids = append(raids, r)
+	rows := make([]openRaidRow, 0, len(resp.Msg.GetRaids()))
+	for _, r := range resp.Msg.GetRaids() {
+		rows = append(rows, openRaidRow{id: r.GetId(), bossPokemonID: r.GetBossPokemonId()})
 	}
-	return raids, rows.Err()
+	return rows, nil
 }
 
 // fetchAllPokemon calls masterdata ListPokemon for the full pokedex.
@@ -257,23 +254,26 @@ func (s *Service) fetchAllPokemon(ctx context.Context) ([]*masterdatav1.Pokemon,
 	return resp.Msg.GetPokemon(), nil
 }
 
-// buildOwnedItems enriches userItemRows with names from masterdata.
-func (s *Service) buildOwnedItems(ctx context.Context, userItems []userItemRow) []*pb.OwnedItem {
-	if len(userItems) == 0 {
-		return nil
+// fetchCaughtPokemon queries auth DB for all pokemon the user has caught.
+func (s *Service) fetchCaughtPokemon(ctx context.Context, userID string) (map[string]bool, error) {
+	if s.authDB == nil {
+		return nil, nil
 	}
-
-	itemNameMap := s.fetchItemNames(ctx)
-
-	owned := make([]*pb.OwnedItem, 0, len(userItems))
-	for _, ui := range userItems {
-		owned = append(owned, &pb.OwnedItem{
-			ItemId:   ui.itemID,
-			Name:     itemNameMap[ui.itemID],
-			Quantity: ui.quantity,
-		})
+	rows, err := s.authDB.Query(ctx, `SELECT pokemon_id FROM user_pokemon WHERE user_id = $1`, userID)
+	if err != nil {
+		return nil, err
 	}
-	return owned
+	defer rows.Close()
+
+	ids := make(map[string]bool)
+	for rows.Next() {
+		var pid string
+		if err := rows.Scan(&pid); err != nil {
+			return nil, err
+		}
+		ids[pid] = true
+	}
+	return ids, rows.Err()
 }
 
 // fetchItemNames calls masterdata ListItems and returns a map of id→name.
@@ -301,6 +301,21 @@ func buildPokemonMap(pokemon []*masterdatav1.Pokemon) map[string]string {
 	return m
 }
 
+func buildOwnedItems(userItems []userItemRow, itemNameMap map[string]string) []*pb.OwnedItem {
+	if len(userItems) == 0 {
+		return nil
+	}
+	owned := make([]*pb.OwnedItem, 0, len(userItems))
+	for _, ui := range userItems {
+		owned = append(owned, &pb.OwnedItem{
+			ItemId:   ui.itemID,
+			Name:     itemNameMap[ui.itemID],
+			Quantity: ui.quantity,
+		})
+	}
+	return owned
+}
+
 func buildRaids(rows []openRaidRow, pokemonMap map[string]string) []*pb.Raid {
 	if len(rows) == 0 {
 		return nil
@@ -317,7 +332,7 @@ func buildRaids(rows []openRaidRow, pokemonMap map[string]string) []*pb.Raid {
 	return raids
 }
 
-func buildPokedex(pokemon []*masterdatav1.Pokemon) []*pb.PokedexEntry {
+func buildPokedex(pokemon []*masterdatav1.Pokemon, caught map[string]bool) []*pb.PokedexEntry {
 	if len(pokemon) == 0 {
 		return nil
 	}
@@ -326,7 +341,7 @@ func buildPokedex(pokemon []*masterdatav1.Pokemon) []*pb.PokedexEntry {
 		entries = append(entries, &pb.PokedexEntry{
 			PokemonId:   p.GetId(),
 			PokemonName: p.GetName(),
-			Caught:      false,
+			Caught:      caught[p.GetId()],
 		})
 	}
 	return entries

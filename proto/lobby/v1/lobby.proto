@@ -2,8 +2,6 @@ syntax = "proto3";
 
 package lobby.v1;
 
-import "google/protobuf/timestamp.proto";
-
 option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/lobby/v1;lobbyv1";
 
 service LobbyService {
@@ -56,11 +54,10 @@ enum RaidStatus {
 }
 
 message Raid {
-  string id = 1;
-  string pokemon_id = 2;
+  string id           = 1;
+  string pokemon_id   = 2;
   string pokemon_name = 3;
-  RaidStatus status = 4;
-  google.protobuf.Timestamp expires_at = 5;
+  RaidStatus status   = 4;
 }
 
 message PokedexEntry {
