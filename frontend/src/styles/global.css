@@ -20,11 +20,13 @@ body {
   margin: 0;
 }
 
-.showcase-screen {
-  background: var(--color-bg-primary);
-  color: var(--color-text-primary);
-  font-family: var(--font-sans);
-  min-height: 100dvh;
-  display: flex;
-  flex-direction: column;
+@layer base {
+  .showcase-screen {
+    background: var(--color-bg-primary);
+    color: var(--color-text-primary);
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+    display: flex;
+    flex-direction: column;
+  }
 }
