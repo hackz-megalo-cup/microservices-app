@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router";
 import type { Pokemon } from "../types";
-import "../styles/global.css";
+import "../../../styles/global.css";
 import { useCollectionPokemon } from "../hooks/use-collection-pokemon";
 import { NavBar } from "./ui/nav-bar";
 import { TabBar } from "./ui/tab-bar";
