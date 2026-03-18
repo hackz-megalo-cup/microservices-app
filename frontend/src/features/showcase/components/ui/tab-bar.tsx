@@ -10,14 +10,14 @@ const defaultTabs: Tab[] = [
   { label: "HOME", icon: "🏠", path: "/" },
   { label: "BATTLE", icon: "⚔️", path: "/battle/demo" },
   { label: "TEAM", icon: "📋", path: "/collection" },
-  { label: "PROFILE", icon: "👤", path: "/api-test" },
+  { label: "PROFILE", icon: "👤", path: "/profile" },
 ];
 
 const collectionTabs: Tab[] = [
   { label: "HOME", icon: "🏠", path: "/" },
   { label: "COLLECTION", icon: "📋", path: "/collection" },
   { label: "TEAM", icon: "📋", path: "/collection" },
-  { label: "PROFILE", icon: "👤", path: "/api-test" },
+  { label: "PROFILE", icon: "👤", path: "/profile" },
 ];
 
 interface TabBarProps {

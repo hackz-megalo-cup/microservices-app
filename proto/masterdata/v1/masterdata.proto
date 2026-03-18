@@ -8,13 +8,19 @@ service MasterdataService {
   rpc CreatePokemon(CreatePokemonRequest) returns (CreatePokemonResponse) {}
   rpc GetPokemon(GetPokemonRequest) returns (GetPokemonResponse) {}
   rpc ListPokemon(ListPokemonRequest) returns (ListPokemonResponse) {}
+  rpc UpdatePokemon(UpdatePokemonRequest) returns (UpdatePokemonResponse) {}
+  rpc DeletePokemon(DeletePokemonRequest) returns (DeletePokemonResponse) {}
 
   rpc CreateTypeMatchup(CreateTypeMatchupRequest) returns (CreateTypeMatchupResponse) {}
   rpc ListTypeMatchups(ListTypeMatchupsRequest) returns (ListTypeMatchupsResponse) {}
+  rpc UpdateTypeMatchup(UpdateTypeMatchupRequest) returns (UpdateTypeMatchupResponse) {}
+  rpc DeleteTypeMatchup(DeleteTypeMatchupRequest) returns (DeleteTypeMatchupResponse) {}
 
   rpc CreateItem(CreateItemRequest) returns (CreateItemResponse) {}
   rpc GetItem(GetItemRequest) returns (GetItemResponse) {}
   rpc ListItems(ListItemsRequest) returns (ListItemsResponse) {}
+  rpc UpdateItem(UpdateItemRequest) returns (UpdateItemResponse) {}
+  rpc DeleteItem(DeleteItemRequest) returns (DeleteItemResponse) {}
 }
 
 // ─── Pokemon ─────────────────────────────────────────────────
@@ -55,6 +61,25 @@ message ListPokemonResponse {
   repeated Pokemon pokemon = 1;
 }
 
+message UpdatePokemonRequest {
+  string id = 1;
+  string name = 2;
+  string type = 3;
+  int32 hp = 4;
+  int32 attack = 5;
+  int32 speed = 6;
+  string special_move_name = 7;
+  int32 special_move_damage = 8;
+}
+message UpdatePokemonResponse {
+  Pokemon pokemon = 1;
+}
+
+message DeletePokemonRequest {
+  string id = 1;
+}
+message DeletePokemonResponse {}
+
 // ─── TypeMatchup ─────────────────────────────────────────────
 
 message TypeMatchup {
@@ -74,6 +99,21 @@ message ListTypeMatchupsRequest {}
 message ListTypeMatchupsResponse {
   repeated TypeMatchup matchups = 1;
 }
+
+message UpdateTypeMatchupRequest {
+  string attacking_type = 1;
+  string defending_type = 2;
+  double effectiveness = 3;
+}
+message UpdateTypeMatchupResponse {
+  TypeMatchup matchup = 1;
+}
+
+message DeleteTypeMatchupRequest {
+  string attacking_type = 1;
+  string defending_type = 2;
+}
+message DeleteTypeMatchupResponse {}
 
 // ─── Item ────────────────────────────────────────────────────
 
@@ -116,3 +156,17 @@ message ListItemsRequest {}
 message ListItemsResponse {
   repeated Item items = 1;
 }
+
+message UpdateItemRequest {
+  string id = 1;
+  string name = 2;
+  repeated CreateItemEffectRequest effects = 3;
+}
+message UpdateItemResponse {
+  Item item = 1;
+}
+
+message DeleteItemRequest {
+  string id = 1;
+}
+message DeleteItemResponse {}
