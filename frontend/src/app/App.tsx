@@ -1,5 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router";
-import { AdminLayout, AdminPage } from "../features/admin";
+import { AdminDashboard, AdminLayout } from "../features/admin";
 import { ApiTestPage } from "../features/api-test/components/api-test-page";
 import { LoginPage } from "../features/auth/components/login-page";
 import { RequireAuth } from "../features/auth/components/require-auth";
@@ -90,7 +90,7 @@ export function App() {
             </RequireAuth>
           }
         >
-          <Route index element={<AdminPage />} />
+          <Route index element={<AdminDashboard />} />
         </Route>
         <Route path="/api-test" element={<ApiTestPage />} />
         <Route path="/raid-test" element={<RaidTestPage />} />
