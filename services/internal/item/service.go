@@ -119,12 +119,16 @@ func (s *Service) GetInventory(ctx context.Context, req *connect.Request[pb.GetI
 		var itemID string
 		var qty int32
 		if err := rows.Scan(&itemID, &qty); err != nil {
-			continue
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to scan inventory row"))
 		}
 		items = append(items, &pb.InventoryItem{
 			ItemId:   itemID,
 			Quantity: qty,
 		})
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to iterate inventory rows"))
 	}
 
 	return connect.NewResponse(&pb.GetInventoryResponse{Items: items}), nil
