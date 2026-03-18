@@ -1,0 +1,68 @@
+syntax = "proto3";
+
+package capture.v1;
+
+option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/capture/v1;capturev1";
+
+service CaptureService {
+  rpc GetCaptureSession(GetCaptureSessionRequest) returns (GetCaptureSessionResponse) {}
+  rpc UseItem(UseItemRequest) returns (UseItemResponse) {}
+  rpc ThrowBall(ThrowBallRequest) returns (ThrowBallResponse) {}
+  rpc EndSession(EndSessionRequest) returns (EndSessionResponse) {}
+}
+
+message GetCaptureSessionRequest {
+  string session_id = 1;
+}
+
+message GetCaptureSessionResponse {
+  CaptureSession session = 1;
+}
+
+message UseItemRequest {
+  string session_id = 1;
+  string item_id = 2;
+}
+
+message UseItemResponse {
+  double capture_rate_before = 1;
+  double capture_rate_after = 2;
+}
+
+message ThrowBallRequest {
+  string session_id = 1;
+}
+
+message ThrowBallResponse {
+  bool success = 1;
+}
+
+message EndSessionRequest {
+  string session_id = 1;
+}
+
+message EndSessionResponse {
+  CaptureResult result = 1;
+}
+
+message CaptureSession {
+  string session_id = 1;
+  string pokemon_id = 2;
+  string user_id = 3;
+  double capture_rate = 4;
+  SessionStatus status = 5;
+}
+
+message CaptureResult {
+  string session_id = 1;
+  bool captured = 2;
+  string pokemon_id = 3;
+}
+
+enum SessionStatus {
+  SESSION_STATUS_UNSPECIFIED = 0;
+  SESSION_STATUS_ACTIVE = 1;
+  SESSION_STATUS_CAPTURED = 2;
+  SESSION_STATUS_FLED = 3;
+  SESSION_STATUS_ENDED = 4;
+}
