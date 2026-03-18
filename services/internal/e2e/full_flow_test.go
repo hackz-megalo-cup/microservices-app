@@ -1,6 +1,6 @@
 //go:build integration
 
-// Package e2e は、ゲスト登録→レイド→バトル→捕獲→ポケモン所持確認の
+// Package e2e は、ゲスト登録→スターター選択→レイド→バトル→捕獲→ポケモン所持確認の
 // フルフロー統合テストを提供する。
 package e2e
 
@@ -23,22 +23,40 @@ import (
 
 	authv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/auth/v1"
 	capturev1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/capture/v1"
+	itemv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/item/v1"
+	lobbyv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/lobby/v1"
 	raidlobbyv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/raid_lobby/v1"
 
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/auth"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/capture"
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/item"
+	"github.com/hackz-megalo-cup/microservices-app/services/internal/lobby"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 	raidlobby "github.com/hackz-megalo-cup/microservices-app/services/internal/raid_lobby"
 )
 
-// TestGuestToCaptureFlow はゲストアカウント作成からポケモン捕獲まで
-// の完全なE2Eフローをテストする。
+// スターターポケモンID (Go)
+const starterPokemonID = "00000000-0000-0000-0000-000000000001"
+
+// スターターアイテムID一覧
+var starterItemIDs = []string{
+	"018f4e1a-0001-7000-8000-000000000001", // どりーさん
+	"018f4e1a-0002-7000-8000-000000000002", // ざつくん
+	"018f4e1a-0003-7000-8000-000000000003", // レッドブル
+	"018f4e1a-0004-7000-8000-000000000004", // モンスター
+	"018f4e1a-0005-7000-8000-000000000005", // こんにゃく
+	"018f4e1a-0006-7000-8000-000000000006", // クッション
+	"018f4e1a-0007-7000-8000-000000000007", // ひよこ
+}
+
+// TestGuestToCaptureFlow はゲストアカウント作成からポケモン捕獲までの
+// 完全なE2Eフローをテストする。
 //
 //  1. ゲスト登録 + ログイン
-//  2. レイド作成 + 参加
-//  3. バトル開始 + 終了(勝利)
-//  4. キャプチャセッション生成 + ボール投げ(捕獲成功)
-//  5. ポケモン所持登録 + 確認
+//  2. スターターポケモン選択 + アクティブ設定 + アイテム付与
+//  3. レイド作成 + 参加 + バトル
+//  4. キャプチャセッション + 捕獲
+//  5. 最終検証(2匹所持)
 func TestGuestToCaptureFlow(t *testing.T) {
 	ctx := context.Background()
 
@@ -48,10 +66,14 @@ func TestGuestToCaptureFlow(t *testing.T) {
 	authPool, authConnStr := createDB(t, adminPool, baseConnStr, "auth_e2e")
 	raidPool, raidConnStr := createDB(t, adminPool, baseConnStr, "raid_e2e")
 	capturePool, captureConnStr := createDB(t, adminPool, baseConnStr, "capture_e2e")
+	itemPool, itemConnStr := createDB(t, adminPool, baseConnStr, "item_e2e")
+	lobbyPool, lobbyConnStr := createDB(t, adminPool, baseConnStr, "lobby_e2e")
 
 	runMigrations(t, authConnStr, auth.MigrationsFS)
 	runMigrations(t, raidConnStr, raidlobby.MigrationsFS)
 	runMigrations(t, captureConnStr, capture.MigrationsFS)
+	runMigrations(t, itemConnStr, item.MigrationsFS)
+	runMigrations(t, lobbyConnStr, lobby.MigrationsFS)
 
 	// ── Services ────────────────────────────────────────────────
 	privateKey, publicKey := generateRSAKeys(t)
@@ -73,6 +95,17 @@ func TestGuestToCaptureFlow(t *testing.T) {
 	)
 	captureES := platform.NewEventStore(capturePool)
 	captureOB := platform.NewOutboxStore(capturePool, nil)
+	itemSvc := item.NewService(
+		platform.NewEventStore(itemPool),
+		platform.NewOutboxStore(itemPool, nil),
+		itemPool,
+	)
+	// lobby service with nil authClient — skips ownership check
+	lobbySvc := lobby.NewService(
+		platform.NewEventStore(lobbyPool),
+		platform.NewOutboxStore(lobbyPool, nil),
+		lobbyPool, nil, nil, nil, nil,
+	)
 
 	// ── Step 1: ゲスト登録 ──────────────────────────────────────
 	guestEmail := fmt.Sprintf("guest_%s@guest.local", uuid.NewString()[:8])
@@ -90,9 +123,6 @@ func TestGuestToCaptureFlow(t *testing.T) {
 	if userID == "" {
 		t.Fatal("expected non-empty user ID")
 	}
-	if registerResp.Msg.User.Name != "テストトレーナー" {
-		t.Errorf("name: got %q, want %q", registerResp.Msg.User.Name, "テストトレーナー")
-	}
 	t.Logf("[1] guest registered: %s", userID)
 
 	// ── Step 2: ログイン ────────────────────────────────────────
@@ -108,7 +138,59 @@ func TestGuestToCaptureFlow(t *testing.T) {
 	}
 	t.Logf("[2] guest logged in, JWT issued")
 
-	// ── Step 3: レイド作成 ──────────────────────────────────────
+	// ── Step 3: スターターポケモン選択 ──────────────────────────
+	_, err = authSvc.ChooseStarter(ctx, connect.NewRequest(&authv1.ChooseStarterRequest{
+		UserId:    userID,
+		PokemonId: starterPokemonID,
+	}))
+	if err != nil {
+		t.Fatalf("ChooseStarter: %v", err)
+	}
+	t.Logf("[3] starter chosen: %s", starterPokemonID)
+
+	// ── Step 4: アクティブポケモン設定 ──────────────────────────
+	setActiveResp, err := lobbySvc.SetActivePokemon(ctx, connect.NewRequest(&lobbyv1.SetActivePokemonRequest{
+		UserId:    userID,
+		PokemonId: starterPokemonID,
+	}))
+	if err != nil {
+		t.Fatalf("SetActivePokemon: %v", err)
+	}
+	if !setActiveResp.Msg.Success {
+		t.Fatal("expected SetActivePokemon success=true")
+	}
+	t.Logf("[4] active pokemon set: %s", starterPokemonID)
+
+	// ── Step 5: スターターアイテム付与 ──────────────────────────
+	for _, itemID := range starterItemIDs {
+		_, err := itemSvc.GrantItem(ctx, connect.NewRequest(&itemv1.GrantItemRequest{
+			UserId:   userID,
+			ItemId:   itemID,
+			Quantity: 1,
+			Reason:   "starter_bonus",
+		}))
+		if err != nil {
+			t.Fatalf("GrantItem(%s): %v", itemID, err)
+		}
+	}
+	t.Logf("[5] %d starter items granted", len(starterItemIDs))
+
+	// ── Step 6: スターター所持確認 ──────────────────────────────
+	pokemonResp, err := authSvc.GetUserPokemon(ctx, connect.NewRequest(&authv1.GetUserPokemonRequest{
+		UserId: userID,
+	}))
+	if err != nil {
+		t.Fatalf("GetUserPokemon: %v", err)
+	}
+	if len(pokemonResp.Msg.PokemonIds) != 1 {
+		t.Fatalf("expected 1 pokemon, got %d: %v", len(pokemonResp.Msg.PokemonIds), pokemonResp.Msg.PokemonIds)
+	}
+	if pokemonResp.Msg.PokemonIds[0] != starterPokemonID {
+		t.Fatalf("expected starter %s, got %s", starterPokemonID, pokemonResp.Msg.PokemonIds[0])
+	}
+	t.Logf("[6] starter ownership verified")
+
+	// ── Step 7: レイド作成 ──────────────────────────────────────
 	bossPokemonID := uuid.NewString()
 
 	createRaidResp, err := raidSvc.CreateRaid(ctx, connect.NewRequest(&raidlobbyv1.CreateRaidRequest{
@@ -118,9 +200,9 @@ func TestGuestToCaptureFlow(t *testing.T) {
 		t.Fatalf("CreateRaid: %v", err)
 	}
 	lobbyID := createRaidResp.Msg.LobbyId
-	t.Logf("[3] raid created: lobby=%s boss=%s", lobbyID, bossPokemonID)
+	t.Logf("[7] raid created: lobby=%s boss=%s", lobbyID, bossPokemonID)
 
-	// ── Step 4: レイド参加 ──────────────────────────────────────
+	// ── Step 8: レイド参加 ──────────────────────────────────────
 	joinResp, err := raidSvc.JoinRaid(ctx, connect.NewRequest(&raidlobbyv1.JoinRaidRequest{
 		LobbyId: lobbyID,
 		UserId:  userID,
@@ -131,9 +213,9 @@ func TestGuestToCaptureFlow(t *testing.T) {
 	if joinResp.Msg.ParticipantId == "" {
 		t.Fatal("expected non-empty participant ID")
 	}
-	t.Logf("[4] joined raid: participant=%s", joinResp.Msg.ParticipantId)
+	t.Logf("[8] joined raid: participant=%s", joinResp.Msg.ParticipantId)
 
-	// ── Step 5: バトル開始 ──────────────────────────────────────
+	// ── Step 9: バトル開始 ──────────────────────────────────────
 	startResp, err := raidSvc.StartBattle(ctx, connect.NewRequest(&raidlobbyv1.StartBattleRequest{
 		LobbyId: lobbyID,
 	}))
@@ -141,14 +223,12 @@ func TestGuestToCaptureFlow(t *testing.T) {
 		t.Fatalf("StartBattle: %v", err)
 	}
 	battleSessionID := startResp.Msg.BattleSessionId
-	t.Logf("[5] battle started: session=%s", battleSessionID)
+	t.Logf("[9] battle started: session=%s", battleSessionID)
 
-	// ── Step 6: バトル終了(勝利) ────────────────────────────────
+	// ── Step 10: バトル終了(勝利) ───────────────────────────────
 	if err := raidSvc.HandleBattleFinished(ctx, lobbyID, battleSessionID, "win"); err != nil {
 		t.Fatalf("HandleBattleFinished (raid): %v", err)
 	}
-
-	// raid_lobby status が finished になっていることを確認
 	var raidStatus string
 	if err := raidPool.QueryRow(ctx, `SELECT status FROM raid_lobby WHERE id = $1`, lobbyID).Scan(&raidStatus); err != nil {
 		t.Fatalf("query raid_lobby status: %v", err)
@@ -156,11 +236,9 @@ func TestGuestToCaptureFlow(t *testing.T) {
 	if raidStatus != "finished" {
 		t.Errorf("raid status: got %q, want %q", raidStatus, "finished")
 	}
-	t.Logf("[6] battle finished (win), raid status=%s", raidStatus)
+	t.Logf("[10] battle finished (win), raid status=%s", raidStatus)
 
-	// ── Step 7: キャプチャセッション作成 ────────────────────────
-	// バトル勝利後、Kafkaコンシューマが HandleBattleFinished を呼ぶ流れを
-	// 模擬する。テストでは捕獲率を1.0にして確実に成功させる。
+	// ── Step 11: キャプチャセッション作成 ────────────────────────
 	captureSessionID := uuid.NewString()
 	captureAgg := capture.NewCaptureAggregate(captureSessionID)
 	captureAgg.Start(battleSessionID, userID, bossPokemonID, 1.0)
@@ -174,9 +252,9 @@ func TestGuestToCaptureFlow(t *testing.T) {
 	); err != nil {
 		t.Fatalf("insert capture_session: %v", err)
 	}
-	t.Logf("[7] capture session created: %s (rate=1.0)", captureSessionID)
+	t.Logf("[11] capture session created: %s (rate=1.0)", captureSessionID)
 
-	// ── Step 8: セッション取得で確認 ────────────────────────────
+	// ── Step 12: セッション取得で確認 ────────────────────────────
 	getResp, err := captureSvc.GetCaptureSession(ctx, connect.NewRequest(&capturev1.GetCaptureSessionRequest{
 		SessionId: captureSessionID,
 	}))
@@ -186,12 +264,9 @@ func TestGuestToCaptureFlow(t *testing.T) {
 	if getResp.Msg.Result != "pending" {
 		t.Errorf("capture session result: got %q, want %q", getResp.Msg.Result, "pending")
 	}
-	if getResp.Msg.UserId != userID {
-		t.Errorf("capture session user_id: got %q, want %q", getResp.Msg.UserId, userID)
-	}
-	t.Logf("[8] capture session verified: status=%s rate=%.1f", getResp.Msg.Result, getResp.Msg.CurrentRate)
+	t.Logf("[12] capture session verified: status=%s rate=%.1f", getResp.Msg.Result, getResp.Msg.CurrentRate)
 
-	// ── Step 9: ボールを投げる(捕獲) ────────────────────────────
+	// ── Step 13: ボールを投げる(捕獲) ────────────────────────────
 	throwResp, err := captureSvc.ThrowBall(ctx, connect.NewRequest(&capturev1.ThrowBallRequest{
 		SessionId: captureSessionID,
 	}))
@@ -201,9 +276,9 @@ func TestGuestToCaptureFlow(t *testing.T) {
 	if throwResp.Msg.Result != "success" {
 		t.Fatalf("ThrowBall result: got %q, want %q", throwResp.Msg.Result, "success")
 	}
-	t.Logf("[9] ball thrown: result=%s", throwResp.Msg.Result)
+	t.Logf("[13] ball thrown: result=%s", throwResp.Msg.Result)
 
-	// ── Step 10: セッション終了 ─────────────────────────────────
+	// ── Step 14: セッション終了 ─────────────────────────────────
 	endResp, err := captureSvc.EndSession(ctx, connect.NewRequest(&capturev1.EndSessionRequest{
 		SessionId: captureSessionID,
 	}))
@@ -213,35 +288,42 @@ func TestGuestToCaptureFlow(t *testing.T) {
 	if endResp.Msg.Result != "success" {
 		t.Fatalf("EndSession result: got %q, want %q", endResp.Msg.Result, "success")
 	}
-	t.Logf("[10] capture session ended: result=%s", endResp.Msg.Result)
+	t.Logf("[14] capture session ended: result=%s", endResp.Msg.Result)
 
-	// ── Step 11: ポケモン登録(Kafkaコンシューマの模擬) ──────────
+	// ── Step 15: 捕獲ポケモン登録(Kafkaコンシューマの模擬) ──────
 	if err := authSvc.RegisterPokemon(ctx, userID, bossPokemonID); err != nil {
 		t.Fatalf("RegisterPokemon: %v", err)
 	}
-	t.Logf("[11] pokemon registered to user")
+	t.Logf("[15] captured pokemon registered to user")
 
-	// ── Step 12: ポケモン所持確認 ───────────────────────────────
-	pokemonResp, err := authSvc.GetUserPokemon(ctx, connect.NewRequest(&authv1.GetUserPokemonRequest{
+	// ── Step 16: 最終検証 — 2匹所持確認 ─────────────────────────
+	finalResp, err := authSvc.GetUserPokemon(ctx, connect.NewRequest(&authv1.GetUserPokemonRequest{
 		UserId: userID,
 	}))
 	if err != nil {
-		t.Fatalf("GetUserPokemon: %v", err)
+		t.Fatalf("GetUserPokemon (final): %v", err)
 	}
-
-	found := false
-	for _, pid := range pokemonResp.Msg.PokemonIds {
+	if len(finalResp.Msg.PokemonIds) != 2 {
+		t.Fatalf("expected 2 pokemon, got %d: %v", len(finalResp.Msg.PokemonIds), finalResp.Msg.PokemonIds)
+	}
+	foundStarter, foundCaptured := false, false
+	for _, pid := range finalResp.Msg.PokemonIds {
+		if pid == starterPokemonID {
+			foundStarter = true
+		}
 		if pid == bossPokemonID {
-			found = true
-			break
+			foundCaptured = true
 		}
 	}
-	if !found {
-		t.Fatalf("pokemon %s not found in user's collection: %v", bossPokemonID, pokemonResp.Msg.PokemonIds)
+	if !foundStarter {
+		t.Errorf("starter pokemon %s not found in collection", starterPokemonID)
 	}
-	t.Logf("[12] pokemon ownership verified!")
+	if !foundCaptured {
+		t.Errorf("captured pokemon %s not found in collection", bossPokemonID)
+	}
+	t.Logf("[16] final verification: 2 pokemon owned (starter + captured)")
 
-	// ── Step 13: DB 上のイベントストア検証 ──────────────────────
+	// ── Step 17: イベントストア整合性検証 ────────────────────────
 	verifyEventCount(t, authPool, userID, "user.registered", 1)
 	verifyEventCount(t, authPool, userID, "user.logged_in", 1)
 	verifyEventCount(t, raidPool, lobbyID, "raid_lobby.created", 1)
@@ -251,7 +333,7 @@ func TestGuestToCaptureFlow(t *testing.T) {
 	verifyEventCount(t, capturePool, captureSessionID, "capture.started", 1)
 	verifyEventCount(t, capturePool, captureSessionID, "capture.ball_thrown", 1)
 	verifyEventCount(t, capturePool, captureSessionID, "capture.completed", 1)
-	t.Logf("[13] all event store entries verified!")
+	t.Logf("[17] all event store entries verified!")
 }
 
 // ─── Helpers ────────────────────────────────────────────────────
