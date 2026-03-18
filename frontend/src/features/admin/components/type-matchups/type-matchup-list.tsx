@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { type KeyboardEvent, useState } from "react";
 import { useAdminTypeMatchups } from "../../hooks/use-admin-type-matchups";
 import { TypeMatchupForm } from "./type-matchup-form";
 
@@ -35,7 +35,7 @@ export function TypeMatchupList() {
     }
   }
 
-  function handleEffectivenessKeyDown(e: React.KeyboardEvent<HTMLInputElement>) {
+  function handleEffectivenessKeyDown(e: KeyboardEvent<HTMLInputElement>) {
     if (e.key === "Enter") {
       handleEffectivenessCommit();
     } else if (e.key === "Escape") {

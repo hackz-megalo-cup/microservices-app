@@ -71,7 +71,7 @@ export function ItemForm({ mode }: ItemFormProps) {
   if (mode === "edit" && itemQuery.error) {
     return (
       <div className="p-8">
-        <p className="text-text-secondary">エラーが発生しました</p>
+        <p className="text-red-400">エラー: {itemQuery.error.message}</p>
       </div>
     );
   }

@@ -7,7 +7,6 @@ import { useAdminPokemon } from "../../hooks/use-admin-pokemon";
 
 interface PokemonFormProps {
   mode: "create" | "edit";
-  initialData?: Pokemon;
 }
 
 interface FormValues {
@@ -42,16 +41,18 @@ function pokemonToFormValues(p: Pokemon): FormValues {
   };
 }
 
-export function PokemonForm({ mode, initialData }: PokemonFormProps) {
+export function PokemonForm({ mode }: PokemonFormProps) {
   const navigate = useNavigate();
   const { id } = useParams<{ id: string }>();
   const { createMutation, updateMutation } = useAdminPokemon();
 
-  const editQuery = useQuery(getPokemon, { id: id ?? "" }, { enabled: mode === "edit" && !!id });
-
-  const [values, setValues] = useState<FormValues>(() =>
-    initialData ? pokemonToFormValues(initialData) : EMPTY_FORM,
+  const editQuery = useQuery(
+    getPokemon,
+    { id: id ?? "" },
+    { enabled: mode === "edit" && Boolean(id) },
   );
+
+  const [values, setValues] = useState<FormValues>(EMPTY_FORM);
 
   useEffect(() => {
     if (mode === "edit" && editQuery.data?.pokemon) {

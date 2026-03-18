@@ -23,7 +23,10 @@ export function useAdminRaids() {
   const raidsQuery = useQuery(listOpenRaids, { statusFilter });
   const pokemonQuery = useQuery(listPokemon, {});
 
-  const pokemonMap = new Map(pokemonQuery.data?.pokemon.map((p) => [p.id, p]));
+  const pokemonMap = useMemo(
+    () => new Map(pokemonQuery.data?.pokemon.map((p) => [p.id, p])),
+    [pokemonQuery.data],
+  );
 
   const raids: AdminRaid[] =
     raidsQuery.data?.raids.map((entry) => {
@@ -65,6 +68,8 @@ export function useAdminRaids() {
 
   return {
     raids,
+    pokemon: pokemonQuery.data?.pokemon ?? [],
+    isPokemonLoading: pokemonQuery.isPending,
     isLoading: raidsQuery.isPending || pokemonQuery.isPending,
     error,
     statusFilter,

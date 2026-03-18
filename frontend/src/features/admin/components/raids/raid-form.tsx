@@ -1,15 +1,11 @@
-import { useQuery } from "@connectrpc/connect-query";
 import type { FormEvent } from "react";
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { listPokemon } from "../../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 import { useAdminRaids } from "../../hooks/use-admin-raids";
 
 export function RaidForm() {
   const navigate = useNavigate();
-  const { createMutation } = useAdminRaids();
-  const pokemonQuery = useQuery(listPokemon, {});
-  const pokemon = pokemonQuery.data?.pokemon ?? [];
+  const { createMutation, pokemon, isPokemonLoading } = useAdminRaids();
 
   const [bossPokemonId, setBossPokemonId] = useState("");
 
@@ -38,7 +34,7 @@ export function RaidForm() {
             >
               ボスポケモン
             </label>
-            {pokemonQuery.isPending ? (
+            {isPokemonLoading ? (
               <p className="text-text-secondary text-sm">読み込み中...</p>
             ) : (
               <select
@@ -76,7 +72,7 @@ export function RaidForm() {
           </div>
 
           {createMutation.error && (
-            <p className="mt-4 text-sm text-red-400">エラーが発生しました</p>
+            <p className="mt-4 text-sm text-red-400">{createMutation.error.message}</p>
           )}
         </form>
       </div>
