@@ -9,6 +9,7 @@ import (
 	"log/slog"
 	"net/http"
 	"strings"
+	"sync"
 	"time"
 
 	allocationv1 "agones.dev/agones/pkg/apis/allocation/v1"
@@ -17,10 +18,59 @@ import (
 	"k8s.io/client-go/rest"
 )
 
+// AllocationStore holds lobbyId → server info mappings so that late-joiners
+// can look up an already-allocated game server.
+type AllocationStore struct {
+	mu      sync.RWMutex
+	entries map[string]AllocateResponse
+}
+
+func NewAllocationStore() *AllocationStore {
+	return &AllocationStore{entries: make(map[string]AllocateResponse)}
+}
+
+func (s *AllocationStore) Put(lobbyID string, resp AllocateResponse) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.entries[lobbyID] = resp
+}
+
+func (s *AllocationStore) Get(lobbyID string) (AllocateResponse, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	resp, ok := s.entries[lobbyID]
+	return resp, ok
+}
+
+// ActiveEntry is a lobby-to-server mapping returned by First / List.
+type ActiveEntry struct {
+	LobbyID  string `json:"lobbyId"`
+	Host     string `json:"host"`
+	Port     int32  `json:"port"`
+	CertHash string `json:"certHash"`
+}
+
+// First returns an arbitrary active allocation, or false if none exist.
+func (s *AllocationStore) First() (ActiveEntry, bool) {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	for lobbyID, resp := range s.entries {
+		return ActiveEntry{LobbyID: lobbyID, Host: resp.Host, Port: resp.Port, CertHash: resp.CertHash}, true
+	}
+	return ActiveEntry{}, false
+}
+
+func (s *AllocationStore) Delete(lobbyID string) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	delete(s.entries, lobbyID)
+}
+
 type AllocateHandler struct {
 	agonesClient agonesclient.Interface
 	namespace    string
 	httpClient   *http.Client
+	store        *AllocationStore
 }
 
 type AllocateRequest struct {
@@ -34,7 +84,7 @@ type AllocateResponse struct {
 	CertHash string `json:"certHash"`
 }
 
-func NewAllocateHandler(namespace string) (*AllocateHandler, error) {
+func NewAllocateHandler(namespace string, store *AllocationStore) (*AllocateHandler, error) {
 	config, err := rest.InClusterConfig()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get in-cluster config: %w", err)
@@ -48,6 +98,7 @@ func NewAllocateHandler(namespace string) (*AllocateHandler, error) {
 	return &AllocateHandler{
 		agonesClient: agonesClient,
 		namespace:    namespace,
+		store:        store,
 		httpClient: &http.Client{
 			Timeout: 5 * time.Second,
 			Transport: &http.Transport{
@@ -121,12 +172,19 @@ func (h *AllocateHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.Header().Set("Content-Type", "application/json")
-	if err := json.NewEncoder(w).Encode(AllocateResponse{
+	resp := AllocateResponse{
 		Host:     address,
 		Port:     port,
 		CertHash: certHash,
-	}); err != nil {
+	}
+
+	if req.LobbyID != "" {
+		h.store.Put(req.LobbyID, resp)
+		slog.Info("stored allocation for lobby", "lobbyId", req.LobbyID, "host", address, "port", port)
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
 		slog.Error("failed to encode response", "error", err)
 	}
 }
@@ -195,4 +253,74 @@ func (h *AllocateHandler) fetchCertHash(ctx context.Context, address string, por
 	}
 
 	return string(body), nil
+}
+
+// ActiveHandler returns the first active allocation so new visitors can
+// automatically join an in-progress raid.
+type ActiveHandler struct {
+	store *AllocationStore
+}
+
+func NewActiveHandler(store *AllocationStore) *ActiveHandler {
+	return &ActiveHandler{store: store}
+}
+
+func (h *ActiveHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	entry, ok := h.store.First()
+	if !ok {
+		http.Error(w, "no active raids", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(entry); err != nil {
+		slog.Error("failed to encode active response", "error", err)
+	}
+}
+
+// JoinHandler looks up an existing allocation by lobbyId so late-joiners
+// can connect to an in-progress game server.
+type JoinHandler struct {
+	store *AllocationStore
+}
+
+func NewJoinHandler(store *AllocationStore) *JoinHandler {
+	return &JoinHandler{store: store}
+}
+
+func (h *JoinHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
+	if r.Method == http.MethodOptions {
+		w.WriteHeader(http.StatusNoContent)
+		return
+	}
+	if r.Method != http.MethodGet {
+		http.Error(w, "method not allowed", http.StatusMethodNotAllowed)
+		return
+	}
+
+	lobbyID := r.URL.Query().Get("lobbyId")
+	if lobbyID == "" {
+		http.Error(w, "lobbyId query parameter is required", http.StatusBadRequest)
+		return
+	}
+
+	resp, ok := h.store.Get(lobbyID)
+	if !ok {
+		http.Error(w, "no allocation found for this lobby", http.StatusNotFound)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	if err := json.NewEncoder(w).Encode(resp); err != nil {
+		slog.Error("failed to encode join response", "error", err)
+	}
 }
