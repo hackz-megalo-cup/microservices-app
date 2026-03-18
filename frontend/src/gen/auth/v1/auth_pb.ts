@@ -12,7 +12,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file auth/v1/auth.proto.
  */
 export const file_auth_v1_auth: GenFile = /*@__PURE__*/
-  fileDesc("ChJhdXRoL3YxL2F1dGgucHJvdG8SB2F1dGgudjEiNgoTUmVnaXN0ZXJVc2VyUmVxdWVzdBINCgVlbWFpbBgBIAEoCRIQCghwYXNzd29yZBgCIAEoCSIzChBMb2dpblVzZXJSZXF1ZXN0Eg0KBWVtYWlsGAEgASgJEhAKCHBhc3N3b3JkGAIgASgJIigKFUdldFVzZXJQcm9maWxlUmVxdWVzdBIPCgd1c2VyX2lkGAEgASgJIpIBCgRVc2VyEgoKAmlkGAEgASgJEg0KBWVtYWlsGAIgASgJEgwKBHJvbGUYAyABKAkSLgoKY3JlYXRlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASMQoNbGFzdF9sb2dpbl9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiMwoUUmVnaXN0ZXJVc2VyUmVzcG9uc2USGwoEdXNlchgBIAEoCzINLmF1dGgudjEuVXNlciI/ChFMb2dpblVzZXJSZXNwb25zZRINCgV0b2tlbhgBIAEoCRIbCgR1c2VyGAIgASgLMg0uYXV0aC52MS5Vc2VyIjUKFkdldFVzZXJQcm9maWxlUmVzcG9uc2USGwoEdXNlchgBIAEoCzINLmF1dGgudjEuVXNlcjL3AQoLQXV0aFNlcnZpY2USTQoMUmVnaXN0ZXJVc2VyEhwuYXV0aC52MS5SZWdpc3RlclVzZXJSZXF1ZXN0Gh0uYXV0aC52MS5SZWdpc3RlclVzZXJSZXNwb25zZSIAEkQKCUxvZ2luVXNlchIZLmF1dGgudjEuTG9naW5Vc2VyUmVxdWVzdBoaLmF1dGgudjEuTG9naW5Vc2VyUmVzcG9uc2UiABJTCg5HZXRVc2VyUHJvZmlsZRIeLmF1dGgudjEuR2V0VXNlclByb2ZpbGVSZXF1ZXN0Gh8uYXV0aC52MS5HZXRVc2VyUHJvZmlsZVJlc3BvbnNlIgBCTlpMZ2l0aHViLmNvbS9oYWNrei1tZWdhbG8tY3VwL21pY3Jvc2VydmljZXMtYXBwL3NlcnZpY2VzL2dlbi9nby9hdXRoL3YxO2F1dGh2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
+  fileDesc("ChJhdXRoL3YxL2F1dGgucHJvdG8SB2F1dGgudjEiNgoTUmVnaXN0ZXJVc2VyUmVxdWVzdBINCgVlbWFpbBgBIAEoCRIQCghwYXNzd29yZBgCIAEoCSIzChBMb2dpblVzZXJSZXF1ZXN0Eg0KBWVtYWlsGAEgASgJEhAKCHBhc3N3b3JkGAIgASgJIigKFUdldFVzZXJQcm9maWxlUmVxdWVzdBIPCgd1c2VyX2lkGAEgASgJIpIBCgRVc2VyEgoKAmlkGAEgASgJEg0KBWVtYWlsGAIgASgJEgwKBHJvbGUYAyABKAkSLgoKY3JlYXRlZF9hdBgEIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXASMQoNbGFzdF9sb2dpbl9hdBgFIAEoCzIaLmdvb2dsZS5wcm90b2J1Zi5UaW1lc3RhbXAiMwoUUmVnaXN0ZXJVc2VyUmVzcG9uc2USGwoEdXNlchgBIAEoCzINLmF1dGgudjEuVXNlciI/ChFMb2dpblVzZXJSZXNwb25zZRINCgV0b2tlbhgBIAEoCRIbCgR1c2VyGAIgASgLMg0uYXV0aC52MS5Vc2VyIjUKFkdldFVzZXJQcm9maWxlUmVzcG9uc2USGwoEdXNlchgBIAEoCzINLmF1dGgudjEuVXNlciIoChVHZXRVc2VyUG9rZW1vblJlcXVlc3QSDwoHdXNlcl9pZBgBIAEoCSItChZHZXRVc2VyUG9rZW1vblJlc3BvbnNlEhMKC3Bva2Vtb25faWRzGAEgAygJMswCCgtBdXRoU2VydmljZRJNCgxSZWdpc3RlclVzZXISHC5hdXRoLnYxLlJlZ2lzdGVyVXNlclJlcXVlc3QaHS5hdXRoLnYxLlJlZ2lzdGVyVXNlclJlc3BvbnNlIgASRAoJTG9naW5Vc2VyEhkuYXV0aC52MS5Mb2dpblVzZXJSZXF1ZXN0GhouYXV0aC52MS5Mb2dpblVzZXJSZXNwb25zZSIAElMKDkdldFVzZXJQcm9maWxlEh4uYXV0aC52MS5HZXRVc2VyUHJvZmlsZVJlcXVlc3QaHy5hdXRoLnYxLkdldFVzZXJQcm9maWxlUmVzcG9uc2UiABJTCg5HZXRVc2VyUG9rZW1vbhIeLmF1dGgudjEuR2V0VXNlclBva2Vtb25SZXF1ZXN0Gh8uYXV0aC52MS5HZXRVc2VyUG9rZW1vblJlc3BvbnNlIgBCTlpMZ2l0aHViLmNvbS9oYWNrei1tZWdhbG8tY3VwL21pY3Jvc2VydmljZXMtYXBwL3NlcnZpY2VzL2dlbi9nby9hdXRoL3YxO2F1dGh2MWIGcHJvdG8z", [file_google_protobuf_timestamp]);
 
 /**
  * ユーザー登録リクエスト
@@ -183,6 +183,44 @@ export const GetUserProfileResponseSchema: GenMessage<GetUserProfileResponse> = 
   messageDesc(file_auth_v1_auth, 6);
 
 /**
+ * ユーザーポケモン取得リクエスト
+ *
+ * @generated from message auth.v1.GetUserPokemonRequest
+ */
+export type GetUserPokemonRequest = Message<"auth.v1.GetUserPokemonRequest"> & {
+  /**
+   * @generated from field: string user_id = 1;
+   */
+  userId: string;
+};
+
+/**
+ * Describes the message auth.v1.GetUserPokemonRequest.
+ * Use `create(GetUserPokemonRequestSchema)` to create a new message.
+ */
+export const GetUserPokemonRequestSchema: GenMessage<GetUserPokemonRequest> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 7);
+
+/**
+ * ユーザーポケモン取得レスポンス
+ *
+ * @generated from message auth.v1.GetUserPokemonResponse
+ */
+export type GetUserPokemonResponse = Message<"auth.v1.GetUserPokemonResponse"> & {
+  /**
+   * @generated from field: repeated string pokemon_ids = 1;
+   */
+  pokemonIds: string[];
+};
+
+/**
+ * Describes the message auth.v1.GetUserPokemonResponse.
+ * Use `create(GetUserPokemonResponseSchema)` to create a new message.
+ */
+export const GetUserPokemonResponseSchema: GenMessage<GetUserPokemonResponse> = /*@__PURE__*/
+  messageDesc(file_auth_v1_auth, 8);
+
+/**
  * AuthService は認証とユーザー管理を提供します
  *
  * @generated from service auth.v1.AuthService
@@ -217,6 +255,16 @@ export const AuthService: GenService<{
     methodKind: "unary";
     input: typeof GetUserProfileRequestSchema;
     output: typeof GetUserProfileResponseSchema;
+  },
+  /**
+   * ユーザーが所持するポケモンID一覧取得
+   *
+   * @generated from rpc auth.v1.AuthService.GetUserPokemon
+   */
+  getUserPokemon: {
+    methodKind: "unary";
+    input: typeof GetUserPokemonRequestSchema;
+    output: typeof GetUserPokemonResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_auth_v1_auth, 0);

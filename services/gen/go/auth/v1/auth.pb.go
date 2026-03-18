@@ -513,7 +513,8 @@ const file_auth_v1_auth_proto_rawDesc = "" +
 	"\x15GetUserPokemonRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\"9\n" +
 	"\x16GetUserPokemonResponse\x12\x1f\n" +
-	"\vpokemon_ids\x18\x01 \x03(\tR\npokemonIds2\xcc\x02\n" +
+	"\vpokemon_ids\x18\x01 \x03(\tR\n" +
+	"pokemonIds2\xcc\x02\n" +
 	"\vAuthService\x12M\n" +
 	"\fRegisterUser\x12\x1c.auth.v1.RegisterUserRequest\x1a\x1d.auth.v1.RegisterUserResponse\"\x00\x12D\n" +
 	"\tLoginUser\x12\x19.auth.v1.LoginUserRequest\x1a\x1a.auth.v1.LoginUserResponse\"\x00\x12S\n" +
@@ -546,24 +547,24 @@ var file_auth_v1_auth_proto_goTypes = []any{
 	(*timestamppb.Timestamp)(nil),  // 9: google.protobuf.Timestamp
 }
 var file_auth_v1_auth_proto_depIdxs = []int32{
-	9,  // 0: auth.v1.User.created_at:type_name -> google.protobuf.Timestamp
-	9,  // 1: auth.v1.User.last_login_at:type_name -> google.protobuf.Timestamp
-	3,  // 2: auth.v1.RegisterUserResponse.user:type_name -> auth.v1.User
-	3,  // 3: auth.v1.LoginUserResponse.user:type_name -> auth.v1.User
-	3,  // 4: auth.v1.GetUserProfileResponse.user:type_name -> auth.v1.User
-	0,  // 5: auth.v1.AuthService.RegisterUser:input_type -> auth.v1.RegisterUserRequest
-	1,  // 6: auth.v1.AuthService.LoginUser:input_type -> auth.v1.LoginUserRequest
-	2,  // 7: auth.v1.AuthService.GetUserProfile:input_type -> auth.v1.GetUserProfileRequest
-	7,  // 8: auth.v1.AuthService.GetUserPokemon:input_type -> auth.v1.GetUserPokemonRequest
-	4,  // 9: auth.v1.AuthService.RegisterUser:output_type -> auth.v1.RegisterUserResponse
-	5,  // 10: auth.v1.AuthService.LoginUser:output_type -> auth.v1.LoginUserResponse
-	6,  // 11: auth.v1.AuthService.GetUserProfile:output_type -> auth.v1.GetUserProfileResponse
-	8,  // 12: auth.v1.AuthService.GetUserPokemon:output_type -> auth.v1.GetUserPokemonResponse
-	9,  // [9:13] is the sub-list for method output_type
-	5,  // [5:9] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	9, // 0: auth.v1.User.created_at:type_name -> google.protobuf.Timestamp
+	9, // 1: auth.v1.User.last_login_at:type_name -> google.protobuf.Timestamp
+	3, // 2: auth.v1.RegisterUserResponse.user:type_name -> auth.v1.User
+	3, // 3: auth.v1.LoginUserResponse.user:type_name -> auth.v1.User
+	3, // 4: auth.v1.GetUserProfileResponse.user:type_name -> auth.v1.User
+	0, // 5: auth.v1.AuthService.RegisterUser:input_type -> auth.v1.RegisterUserRequest
+	1, // 6: auth.v1.AuthService.LoginUser:input_type -> auth.v1.LoginUserRequest
+	2, // 7: auth.v1.AuthService.GetUserProfile:input_type -> auth.v1.GetUserProfileRequest
+	7, // 8: auth.v1.AuthService.GetUserPokemon:input_type -> auth.v1.GetUserPokemonRequest
+	4, // 9: auth.v1.AuthService.RegisterUser:output_type -> auth.v1.RegisterUserResponse
+	5, // 10: auth.v1.AuthService.LoginUser:output_type -> auth.v1.LoginUserResponse
+	6, // 11: auth.v1.AuthService.GetUserProfile:output_type -> auth.v1.GetUserProfileResponse
+	8, // 12: auth.v1.AuthService.GetUserPokemon:output_type -> auth.v1.GetUserPokemonResponse
+	9, // [9:13] is the sub-list for method output_type
+	5, // [5:9] is the sub-list for method input_type
+	5, // [5:5] is the sub-list for extension type_name
+	5, // [5:5] is the sub-list for extension extendee
+	0, // [0:5] is the sub-list for field type_name
 }
 
 func init() { file_auth_v1_auth_proto_init() }

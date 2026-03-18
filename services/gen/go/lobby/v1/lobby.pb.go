@@ -9,7 +9,6 @@ package lobbyv1
 import (
 	protoreflect "google.golang.org/protobuf/reflect/protoreflect"
 	protoimpl "google.golang.org/protobuf/runtime/protoimpl"
-	timestamppb "google.golang.org/protobuf/types/known/timestamppb"
 	reflect "reflect"
 	sync "sync"
 	unsafe "unsafe"
@@ -428,7 +427,6 @@ type Raid struct {
 	PokemonId     string                 `protobuf:"bytes,2,opt,name=pokemon_id,json=pokemonId,proto3" json:"pokemon_id,omitempty"`
 	PokemonName   string                 `protobuf:"bytes,3,opt,name=pokemon_name,json=pokemonName,proto3" json:"pokemon_name,omitempty"`
 	Status        RaidStatus             `protobuf:"varint,4,opt,name=status,proto3,enum=lobby.v1.RaidStatus" json:"status,omitempty"`
-	ExpiresAt     *timestamppb.Timestamp `protobuf:"bytes,5,opt,name=expires_at,json=expiresAt,proto3" json:"expires_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
@@ -489,13 +487,6 @@ func (x *Raid) GetStatus() RaidStatus {
 		return x.Status
 	}
 	return RaidStatus_RAID_STATUS_UNSPECIFIED
-}
-
-func (x *Raid) GetExpiresAt() *timestamppb.Timestamp {
-	if x != nil {
-		return x.ExpiresAt
-	}
-	return nil
 }
 
 type PokedexEntry struct {
@@ -562,7 +553,7 @@ var File_lobby_v1_lobby_proto protoreflect.FileDescriptor
 
 const file_lobby_v1_lobby_proto_rawDesc = "" +
 	"\n" +
-	"\x14lobby/v1/lobby.proto\x12\blobby.v1\x1a\x1fgoogle/protobuf/timestamp.proto\"Q\n" +
+	"\x14lobby/v1/lobby.proto\x12\blobby.v1\"Q\n" +
 	"\x17SetActivePokemonRequest\x12\x17\n" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x1d\n" +
 	"\n" +
@@ -583,15 +574,13 @@ const file_lobby_v1_lobby_proto_rawDesc = "" +
 	"\tOwnedItem\x12\x17\n" +
 	"\aitem_id\x18\x01 \x01(\tR\x06itemId\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1a\n" +
-	"\bquantity\x18\x03 \x01(\x05R\bquantity\"\xc1\x01\n" +
+	"\bquantity\x18\x03 \x01(\x05R\bquantity\"\x86\x01\n" +
 	"\x04Raid\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1d\n" +
 	"\n" +
 	"pokemon_id\x18\x02 \x01(\tR\tpokemonId\x12!\n" +
 	"\fpokemon_name\x18\x03 \x01(\tR\vpokemonName\x12,\n" +
-	"\x06status\x18\x04 \x01(\x0e2\x14.lobby.v1.RaidStatusR\x06status\x129\n" +
-	"\n" +
-	"expires_at\x18\x05 \x01(\v2\x1a.google.protobuf.TimestampR\texpiresAt\"h\n" +
+	"\x06status\x18\x04 \x01(\x0e2\x14.lobby.v1.RaidStatusR\x06status\"h\n" +
 	"\fPokedexEntry\x12\x1d\n" +
 	"\n" +
 	"pokemon_id\x18\x01 \x01(\tR\tpokemonId\x12!\n" +
@@ -633,25 +622,23 @@ var file_lobby_v1_lobby_proto_goTypes = []any{
 	(*OwnedItem)(nil),                // 7: lobby.v1.OwnedItem
 	(*Raid)(nil),                     // 8: lobby.v1.Raid
 	(*PokedexEntry)(nil),             // 9: lobby.v1.PokedexEntry
-	(*timestamppb.Timestamp)(nil),    // 10: google.protobuf.Timestamp
 }
 var file_lobby_v1_lobby_proto_depIdxs = []int32{
-	7,  // 0: lobby.v1.GetLobbyOverviewResponse.items:type_name -> lobby.v1.OwnedItem
-	8,  // 1: lobby.v1.GetLobbyOverviewResponse.raids:type_name -> lobby.v1.Raid
-	9,  // 2: lobby.v1.GetLobbyOverviewResponse.pokedex:type_name -> lobby.v1.PokedexEntry
-	0,  // 3: lobby.v1.Raid.status:type_name -> lobby.v1.RaidStatus
-	10, // 4: lobby.v1.Raid.expires_at:type_name -> google.protobuf.Timestamp
-	1,  // 5: lobby.v1.LobbyService.SetActivePokemon:input_type -> lobby.v1.SetActivePokemonRequest
-	3,  // 6: lobby.v1.LobbyService.GetActivePokemon:input_type -> lobby.v1.GetActivePokemonRequest
-	5,  // 7: lobby.v1.LobbyService.GetLobbyOverview:input_type -> lobby.v1.GetLobbyOverviewRequest
-	2,  // 8: lobby.v1.LobbyService.SetActivePokemon:output_type -> lobby.v1.SetActivePokemonResponse
-	4,  // 9: lobby.v1.LobbyService.GetActivePokemon:output_type -> lobby.v1.GetActivePokemonResponse
-	6,  // 10: lobby.v1.LobbyService.GetLobbyOverview:output_type -> lobby.v1.GetLobbyOverviewResponse
-	8,  // [8:11] is the sub-list for method output_type
-	5,  // [5:8] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	7, // 0: lobby.v1.GetLobbyOverviewResponse.items:type_name -> lobby.v1.OwnedItem
+	8, // 1: lobby.v1.GetLobbyOverviewResponse.raids:type_name -> lobby.v1.Raid
+	9, // 2: lobby.v1.GetLobbyOverviewResponse.pokedex:type_name -> lobby.v1.PokedexEntry
+	0, // 3: lobby.v1.Raid.status:type_name -> lobby.v1.RaidStatus
+	1, // 4: lobby.v1.LobbyService.SetActivePokemon:input_type -> lobby.v1.SetActivePokemonRequest
+	3, // 5: lobby.v1.LobbyService.GetActivePokemon:input_type -> lobby.v1.GetActivePokemonRequest
+	5, // 6: lobby.v1.LobbyService.GetLobbyOverview:input_type -> lobby.v1.GetLobbyOverviewRequest
+	2, // 7: lobby.v1.LobbyService.SetActivePokemon:output_type -> lobby.v1.SetActivePokemonResponse
+	4, // 8: lobby.v1.LobbyService.GetActivePokemon:output_type -> lobby.v1.GetActivePokemonResponse
+	6, // 9: lobby.v1.LobbyService.GetLobbyOverview:output_type -> lobby.v1.GetLobbyOverviewResponse
+	7, // [7:10] is the sub-list for method output_type
+	4, // [4:7] is the sub-list for method input_type
+	4, // [4:4] is the sub-list for extension type_name
+	4, // [4:4] is the sub-list for extension extendee
+	0, // [0:4] is the sub-list for field type_name
 }
 
 func init() { file_lobby_v1_lobby_proto_init() }
