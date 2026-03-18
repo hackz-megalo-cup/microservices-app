@@ -1,5 +1,5 @@
 import type { Trainer } from "../types";
-import "../styles/global.css";
+import "../../../styles/global.css";
 import { NavBar } from "./ui/nav-bar";
 
 const mockTrainers: Trainer[] = [

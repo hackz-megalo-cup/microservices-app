@@ -1,5 +1,5 @@
 import type { Raid } from "../types";
-import "../styles/global.css";
+import "../../../styles/global.css";
 import { RaidCard } from "./ui/raid-card";
 
 import { TabBar } from "./ui/tab-bar";

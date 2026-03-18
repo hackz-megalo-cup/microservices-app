@@ -33,7 +33,7 @@ spec:
               value: item-service
             - name: PORT
               value: "8080"
-          image: ghcr.io/hackz-megalo-cup/item:0a09cbdfbaaa7bc44b70d3d09c3928f7f7600e48
+          image: ghcr.io/hackz-megalo-cup/item:0cdc3fd60527e8715103e8c07c96fe23dfcbb60d
           imagePullPolicy: Always
           livenessProbe:
             httpGet:

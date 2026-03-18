@@ -1,5 +1,7 @@
 import { BrowserRouter, Route, Routes } from "react-router";
 import { ApiTestPage } from "../features/api-test/components/api-test-page";
+import { LoginPage } from "../features/auth/components/login-page";
+import { RequireAuth } from "../features/auth/components/require-auth";
 import { RaidTestPage } from "../features/raid-test/components/raid-test-page";
 import { Battle } from "../features/showcase/components/battle";
 import { Capture } from "../features/showcase/components/capture";
@@ -13,13 +15,63 @@ export function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/" element={<Home />} />
-        <Route path="/battle/:id" element={<Battle />} />
-        <Route path="/lobby/:id" element={<Lobby />} />
-        <Route path="/victory/:id" element={<Victory />} />
-        <Route path="/capture/:id" element={<Capture />} />
-        <Route path="/collection" element={<Collection />} />
-        <Route path="/collection/:id" element={<Detail />} />
+        <Route path="/login" element={<LoginPage />} />
+        <Route
+          path="/"
+          element={
+            <RequireAuth>
+              <Home />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/battle/:id"
+          element={
+            <RequireAuth>
+              <Battle />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/lobby/:id"
+          element={
+            <RequireAuth>
+              <Lobby />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/victory/:id"
+          element={
+            <RequireAuth>
+              <Victory />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/capture/:id"
+          element={
+            <RequireAuth>
+              <Capture />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/collection"
+          element={
+            <RequireAuth>
+              <Collection />
+            </RequireAuth>
+          }
+        />
+        <Route
+          path="/collection/:id"
+          element={
+            <RequireAuth>
+              <Detail />
+            </RequireAuth>
+          }
+        />
         <Route path="/api-test" element={<ApiTestPage />} />
         <Route path="/raid-test" element={<RaidTestPage />} />
       </Routes>
