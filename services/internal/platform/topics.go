@@ -12,7 +12,6 @@ const (
 	TopicInvocationCreated = "invocation.created"
 	TopicUserRegistered    = "user.registered"
 	TopicUserLoggedIn      = "user.logged_in"
-	TopicCaptureCompleted  = "capture.completed"
 
 	// Saga compensation topics.
 	TopicGreetingFailed        = "greeting.failed"
@@ -58,7 +57,6 @@ const (
 	TopicUserLoggedInDLQ          = "user.logged_in.dlq"
 	TopicUserFailedDLQ            = "user.failed.dlq"
 	TopicUserCompensatedDLQ       = "user.compensated.dlq"
-	TopicCaptureCompletedDLQ      = "capture.completed.dlq"
 	TopicInvocationCompensatedDLQ = "invocation.compensated.dlq"
 	TopicItemCreatedDLQ           = "item.created.dlq"
 	TopicMasterdataCreatedDLQ     = "masterdata.created.dlq"
@@ -88,7 +86,6 @@ func DLQTopic(source string) string {
 		TopicRaidUserJoined:        TopicRaidUserJoinedDLQ,
 		TopicRaidBattleStarted:     TopicRaidBattleStartedDLQ,
 		TopicCaptureStarted:        TopicCaptureStartedDLQ,
-		TopicCaptureCompleted:      TopicCaptureCompletedDLQ,
 	}
 	return m[source]
 }
@@ -142,11 +139,9 @@ func DefaultTopics() map[string]int32 {
 		TopicCaptureStarted:           3,
 		TopicCaptureItemUsed:          3,
 		TopicCaptureBallThrown:        3,
-		TopicCaptureCompleted:         3,
 		TopicCaptureFailed:            1,
 		TopicCaptureCompensated:       1,
 		TopicCaptureStartedDLQ:        1,
-		TopicCaptureCompletedDLQ:      1,
 	}
 }
 
