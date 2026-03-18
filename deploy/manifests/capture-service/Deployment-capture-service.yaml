@@ -1,18 +1,18 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: item-service
+  name: capture-service
   namespace: microservices
 spec:
   replicas: 1
   selector:
     matchLabels:
-      app.kubernetes.io/name: item
+      app.kubernetes.io/name: capture
       app.kubernetes.io/version: 0.1.0
   template:
     metadata:
       labels:
-        app.kubernetes.io/name: item
+        app.kubernetes.io/name: capture
         app.kubernetes.io/version: 0.1.0
     spec:
       containers:
@@ -21,34 +21,34 @@ spec:
               valueFrom:
                 secretKeyRef:
                   key: DATABASE_URL
-                  name: item-secrets
+                  name: capture-secrets
             - name: KAFKA_BROKERS
               valueFrom:
                 secretKeyRef:
                   key: KAFKA_BROKERS
-                  name: item-secrets
+                  name: capture-secrets
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: http://otel-collector.observability:4317
             - name: OTEL_SERVICE_NAME
-              value: item-service
+              value: capture-service
             - name: PORT
-              value: "8080"
-          image: ghcr.io/hackz-megalo-cup/item:8a5f86f145b50ada0645e8304f42c746dfb834d5
+              value: "8088"
+          image: ghcr.io/hackz-megalo-cup/capture:8a5f86f145b50ada0645e8304f42c746dfb834d5
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
               path: /healthz
-              port: 8080
+              port: 8088
             initialDelaySeconds: 5
             periodSeconds: 10
-          name: item-service
+          name: capture-service
           ports:
-            - containerPort: 8080
+            - containerPort: 8088
               name: http
           readinessProbe:
             httpGet:
               path: /healthz
-              port: 8080
+              port: 8088
             initialDelaySeconds: 3
             periodSeconds: 5
           resources:

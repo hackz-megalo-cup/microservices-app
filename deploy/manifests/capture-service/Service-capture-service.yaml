@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: capture-service
+  namespace: microservices
+spec:
+  ports:
+    - name: http
+      port: 8088
+      protocol: TCP
+      targetPort: 8088
+  selector:
+    app.kubernetes.io/name: capture
+    app.kubernetes.io/version: 0.1.0
