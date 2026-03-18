@@ -35,7 +35,7 @@ export function useCaptureItems(userId: string): CaptureItemsState {
   const availableItems = useMemo(
     () =>
       masterItems
-        .filter((item) => userInventory.some((inv) => inv.itemId === item.id))
+        .filter((item) => userInventory.some((inv) => inv.itemId === item.id && inv.quantity > 0))
         .map((item) => {
           const invEntry = userInventory.find((inv) => inv.itemId === item.id);
           return {

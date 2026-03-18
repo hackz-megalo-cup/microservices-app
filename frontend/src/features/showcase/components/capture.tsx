@@ -145,6 +145,7 @@ export function Capture() {
 
   const animFrameRef = useRef<number>(0);
   const circleStartRef = useRef<number>(Date.now());
+  const timeoutIdsRef = useRef<number[]>([]);
 
   // Keep phaseRef in sync
   useEffect(() => {
@@ -174,6 +175,15 @@ export function Capture() {
     return () => cancelAnimationFrame(animFrameRef.current);
   }, [phase]);
 
+  // ── Cleanup timers on unmount ──
+  useEffect(() => {
+    return () => {
+      cancelAnimationFrame(animFrameRef.current);
+      timeoutIdsRef.current.forEach(clearTimeout);
+      timeoutIdsRef.current = [];
+    };
+  }, []);
+
   // ── Throw logic ──
   const doThrow = useCallback(
     (bonus: number, itemId?: string) => {
@@ -196,14 +206,14 @@ export function Capture() {
       setPhase("throwing");
 
       // After throw animation finishes → wobble phase
-      setTimeout(() => {
+      const t1 = window.setTimeout(() => {
         const wobbles = Math.floor(Math.random() * 3) + 1;
         setWobbleCount(wobbles);
         setPhase("wobbling");
 
         // After wobbling → result
         const wobbleDuration = WOBBLE_DURATIONS[wobbles];
-        setTimeout(() => {
+        const t2 = window.setTimeout(() => {
           const effectiveBonus = itemId
             ? getCatchBonus(throwBonus) * (1 + bonus)
             : getCatchBonus(throwBonus);
@@ -216,29 +226,32 @@ export function Capture() {
           } else {
             // Ball bursts open
             setPhase("burst");
-            setTimeout(() => {
+            const t3 = window.setTimeout(() => {
               const fled = Math.random() < 0.35;
               setPokemonClass(fled ? "capture-pokemon-escape" : "capture-pokemon-breakfree");
               setPhase(fled ? "escaped" : "failed");
             }, BURST_DURATION_MS);
+            timeoutIdsRef.current.push(t3);
           }
         }, wobbleDuration + WOBBLE_DELAY_MS);
+        timeoutIdsRef.current.push(t2);
       }, THROW_DURATION_MS);
+      timeoutIdsRef.current.push(t1);
     },
     [circleScale, handleUseItemApi],
   );
 
   // ── Pointer handlers ──
-  const handlePointerDown = (e: React.PointerEvent) => {
+  const handlePointerDown = (e: React.PointerEvent<Element>) => {
     if (phase !== "idle") {
       return;
     }
     dragStart.current = { x: e.clientX, y: e.clientY, time: Date.now() };
     setIsDragging(true);
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
+    e.currentTarget.setPointerCapture(e.pointerId);
   };
 
-  const handlePointerMove = (e: React.PointerEvent) => {
+  const handlePointerMove = (e: React.PointerEvent<Element>) => {
     if (!isDragging) {
       return;
     }
@@ -248,7 +261,7 @@ export function Capture() {
     });
   };
 
-  const handlePointerUp = (e: React.PointerEvent) => {
+  const handlePointerUp = (e: React.PointerEvent<Element>) => {
     if (!isDragging) {
       return;
     }
@@ -281,6 +294,8 @@ export function Capture() {
   // ── Retry ──
   const retry = () => {
     cancelAnimationFrame(animFrameRef.current);
+    timeoutIdsRef.current.forEach(clearTimeout);
+    timeoutIdsRef.current = [];
     setPhase("idle");
     setThrowBonus("normal");
     setWobbleCount(0);
