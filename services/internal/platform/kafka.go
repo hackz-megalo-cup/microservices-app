@@ -58,6 +58,7 @@ func NewKafkaConsumer(ctx context.Context, brokers []string, group string, topic
 		kgo.ConsumerGroup(group),
 		kgo.ConsumeTopics(topics...),
 		kgo.FetchMaxWait(5 * time.Second),
+		kgo.DisableAutoCommit(),
 	}
 	baseOpts = append(baseOpts, opts...)
 	client, err := kgo.NewClient(baseOpts...)

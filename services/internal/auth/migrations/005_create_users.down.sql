@@ -1,0 +1,2 @@
+DROP TABLE IF EXISTS user_pokemon;
+DROP TABLE IF EXISTS users;
