@@ -1,13 +1,12 @@
 import { useMutation } from "@connectrpc/connect-query";
 import type { ReactNode } from "react";
-import { createContext, useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { loginUser, registerUser } from "../../../gen/auth/v1/auth-AuthService_connectquery";
 import type { AuthContextValue, AuthUser } from "../types";
+import { AuthContext } from "./auth-context-internal";
 
 const TOKEN_KEY = "demo_jwt";
 const USER_KEY = "auth_user";
-
-const AuthContext = createContext<AuthContextValue | null>(null);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
@@ -63,19 +62,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   }, []);
 
-  return (
-    <AuthContext.Provider
-      value={{ user, isAuthenticated: !!user, isLoading, loginAsGuest, logout }}
-    >
-      {children}
-    </AuthContext.Provider>
-  );
-}
+  const value: AuthContextValue = {
+    user,
+    isAuthenticated: !!user,
+    isLoading,
+    loginAsGuest,
+    logout,
+  };
 
-export function useAuthContext() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) {
-    throw new Error("useAuthContext must be used within AuthProvider");
-  }
-  return ctx;
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
 }

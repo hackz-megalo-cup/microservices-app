@@ -1,6 +1,6 @@
 import { useParams } from "react-router";
 import type { Pokemon } from "../types";
-import "../styles/global.css";
+import "../../../styles/global.css";
 import { NavBar } from "./ui/nav-bar";
 
 const mockPokemonMap: Record<string, Pokemon> = {

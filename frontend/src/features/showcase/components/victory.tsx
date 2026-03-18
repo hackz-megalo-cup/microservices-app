@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router";
-import "../styles/global.css";
+import "../../../styles/global.css";
 
 const rewards = [
   { value: "+350", label: "EXP" },

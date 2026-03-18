@@ -1,4 +1,4 @@
-import "../styles/global.css";
+import "../../../styles/global.css";
 export function Battle() {
   return (
     <div className="showcase-screen">

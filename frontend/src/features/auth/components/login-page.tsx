@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { useAuthContext } from "../context/auth-context";
-import "../../showcase/styles/global.css";
+import { useAuthContext } from "../hooks/use-auth-context";
+import "../../../styles/global.css";
 
 export function LoginPage() {
   const { loginAsGuest } = useAuthContext();
