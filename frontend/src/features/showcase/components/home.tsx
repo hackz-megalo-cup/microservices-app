@@ -24,7 +24,7 @@ export function Home() {
         style={{ background: "radial-gradient(circle, var(--color-accent-glow), transparent)" }}
       >
         <img
-          src="/images/hero-python.png"
+          src="/images/capture-python.png"
           alt="Python"
           className="w-[200px] h-[200px] rounded-full object-cover"
         />

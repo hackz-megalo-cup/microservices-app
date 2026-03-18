@@ -99,7 +99,7 @@ export function Lobby() {
       <div className="flex flex-col gap-3 px-4 pb-4 flex-1">
         <section className="flex flex-col items-center gap-3 py-2">
           <img
-            src="/images/lobby-python.png"
+            src="/images/collection-python.png"
             alt="Python"
             className="w-[160px] h-[160px] rounded-full object-cover"
           />
