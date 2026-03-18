@@ -1,7 +1,6 @@
 {
   "private": true,
   "workspaces": [
-    "shared",
-    "custom-lang-service"
+    "shared"
   ]
 }

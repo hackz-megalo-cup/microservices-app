@@ -5,7 +5,7 @@ INSERT INTO item_master (id, name, created_at) VALUES
 INSERT INTO item_effect (id, item_id, effect_type, target_type, capture_rate_bonus, flavor_text, priority) VALUES
     ('018f4e1b-0001-7000-8000-000000000001',
      '018f4e1a-0001-7000-8000-000000000001',
-     'capture_rate_up', 'swift', 0.3,
+     'capture_rate_up', 'static', 0.3,
      'どりーさんのSwift愛が炸裂した！捕獲率がアップ！', 0);
 
 -- ざつくん
@@ -15,11 +15,11 @@ INSERT INTO item_master (id, name, created_at) VALUES
 INSERT INTO item_effect (id, item_id, effect_type, target_type, capture_rate_bonus, flavor_text, priority) VALUES
     ('018f4e1b-0002-7000-8000-000000000001',
      '018f4e1a-0002-7000-8000-000000000002',
-     'capture_rate_up', 'ts', 0.3,
+     'capture_rate_up', 'static', 0.3,
      'ざつくんのTypeScript愛が爆発した！捕獲率がアップ！', 0),
     ('018f4e1b-0002-7000-8000-000000000002',
      '018f4e1a-0002-7000-8000-000000000002',
-     'escape', 'python', 0.0,
+     'escape', 'dynamic', 0.0,
      'ざつくんはPythonが嫌いすぎて群馬に帰った。', 0);
 
 -- レッドブル
@@ -49,7 +49,7 @@ INSERT INTO item_master (id, name, created_at) VALUES
 INSERT INTO item_effect (id, item_id, effect_type, target_type, capture_rate_bonus, flavor_text, priority) VALUES
     ('018f4e1b-0005-7000-8000-000000000001',
      '018f4e1a-0005-7000-8000-000000000005',
-     'capture_rate_up', 'python', 0.3,
+     'capture_rate_up', 'dynamic', 0.3,
      '群馬産こんにゃくのパワーでPythonを手懐けた！捕獲率がアップ！', 0);
 
 -- クッション（開発中に使える。座り心地が良くて集中力UP → 全タイプに少し効く）

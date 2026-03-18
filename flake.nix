@@ -66,23 +66,7 @@
               && !(lib.hasSuffix ".DS_Store" pathStr)
               && !(lib.hasInfix "/.agents/" pathStr || lib.hasSuffix "/.agents" pathStr);
           };
-          nodeServicesRoot = repoSrc + "/node-services";
           frontendRoot = repoSrc + "/frontend";
-          nodeServicesPackageLock = builtins.fromJSON (
-            builtins.readFile (nodeServicesRoot + "/package-lock.json")
-          );
-          nodeServiceNodeModules =
-            name:
-            pkgs.importNpmLock.buildNodeModules {
-              npmRoot = nodeServicesRoot;
-              package = builtins.fromJSON (builtins.readFile (nodeServicesRoot + "/${name}/package.json"));
-              packageLock = nodeServicesPackageLock;
-              inherit nodejs;
-              derivationArgs = {
-                pname = "${name}-node-modules";
-                version = "0.1.0";
-              };
-            };
           frontendNodeModules = pkgs.importNpmLock.buildNodeModules {
             npmRoot = frontendRoot;
             inherit nodejs;
@@ -248,63 +232,6 @@
           capture-image = buildGoServiceImage "capture" capture;
           capture-release-image = buildGoServiceImage "capture" go-services;
 
-          buildNodeService =
-            name: nodeModules:
-            pkgs.stdenv.mkDerivation {
-              pname = name;
-              version = "0.1.0";
-              src = repoSrc;
-              dontBuild = true;
-              installPhase = ''
-                runHook preInstall
-                mkdir -p $out/app
-                cp -r node-services/${name} $out/app/${name}
-                cp -r node-services/shared $out/app/shared
-                cp -r ${nodeModules}/node_modules $out/app/node_modules
-                runHook postInstall
-              '';
-            };
-
-          buildNodeServiceRunner =
-            name: package:
-            pkgs.writeShellApplication {
-              name = "${name}-run";
-              runtimeInputs = [ nodejs ];
-              text = ''
-                cd ${package}/app/${name}
-                if [ -n "''${DATABASE_URL:-}" ]; then
-                  ../node_modules/.bin/node-pg-migrate up --database-url "''${DATABASE_URL}" --migrations-dir ./migrations
-                fi
-                exec ${nodejs}/bin/node --import ./tracing.js server.js
-              '';
-            };
-
-          buildNodeServiceImage =
-            name: package:
-            let
-              runner = buildNodeServiceRunner name package;
-            in
-            nix2containerPkgs.nix2container.buildImage {
-              inherit name;
-              tag = "latest";
-              config = {
-                entrypoint = [ "${runner}/bin/${name}-run" ];
-              };
-              layers = [
-                (nix2containerPkgs.nix2container.buildLayer {
-                  deps = [
-                    package
-                    runner
-                  ];
-                })
-              ];
-            };
-
-          custom-lang-service = buildNodeService "custom-lang-service" (
-            nodeServiceNodeModules "custom-lang-service"
-          );
-          custom-lang-service-image = buildNodeServiceImage "custom-lang-service" custom-lang-service;
-
           frontend-assets = pkgs.stdenv.mkDerivation {
             pname = "frontend-assets";
             version = "0.1.0";
@@ -425,8 +352,6 @@
           packages.auth-service-image = auth-image;
           packages.auth-image = auth-image;
           packages.auth-release-image = auth-release-image;
-          packages.custom-lang-service = custom-lang-service;
-          packages.custom-lang-service-image = custom-lang-service-image;
           packages.frontend = frontend-assets;
           packages.frontend-image = frontend-image;
           packages.go-services = go-services;
