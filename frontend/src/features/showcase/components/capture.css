@@ -1,0 +1,478 @@
+/* ============================================
+   CAPTURE SCREEN - Pokémon GO Style
+   ============================================ */
+
+/* === GAME AREA === */
+.capture-game-area {
+  flex: 1;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  overflow: hidden;
+}
+
+.capture-bg-glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(ellipse at 50% 35%, #06b6d418 0%, transparent 65%);
+  pointer-events: none;
+}
+
+/* === POKEMON SECTION === */
+.capture-pokemon-section {
+  position: absolute;
+  top: 8%;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.capture-rings-wrapper {
+  position: relative;
+  width: 200px;
+  height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Outer white ring (fixed) */
+.capture-ring-outer {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  border: 3px solid rgba(255, 255, 255, 0.45);
+}
+
+/* Inner colored ring (shrinks) */
+.capture-ring-inner {
+  position: absolute;
+  width: 190px;
+  height: 190px;
+  border-radius: 50%;
+  border: 3px solid #22c55e;
+  transition: transform 0.04s linear;
+  transform-origin: center;
+}
+
+/* === POKEMON IMAGE === */
+.capture-pokemon-img {
+  width: 150px;
+  height: 150px;
+  object-fit: contain;
+  border-radius: 50%;
+  position: absolute;
+  z-index: 2;
+  filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.35));
+}
+
+@keyframes pokemon-idle-bob {
+  0%, 100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-7px) scale(1.02); }
+}
+
+.capture-pokemon-idle {
+  animation: pokemon-idle-bob 2.2s ease-in-out infinite;
+}
+
+@keyframes pokemon-absorb {
+  0% { transform: scale(1); opacity: 1; filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.35)); }
+  25% { transform: scale(1.15); opacity: 1; filter: brightness(2) drop-shadow(0 0 30px #fff); }
+  60% { transform: scale(0.25); opacity: 0.6; }
+  100% { transform: scale(0); opacity: 0; }
+}
+
+.capture-pokemon-absorb {
+  animation: pokemon-absorb 0.7s ease-in forwards;
+  animation-delay: 0.15s;
+}
+
+@keyframes pokemon-escape-anim {
+  0% { transform: scale(1) rotate(0deg); opacity: 1; }
+  40% { transform: scale(1.2) rotate(160deg); opacity: 0.8; }
+  100% { transform: scale(0) rotate(360deg); opacity: 0; }
+}
+
+.capture-pokemon-escape {
+  animation: pokemon-escape-anim 0.9s ease-in forwards;
+}
+
+/* Wobble re-appear after break-free */
+@keyframes pokemon-breakfree {
+  0% { transform: scale(0.1); opacity: 0; }
+  60% { transform: scale(1.15); opacity: 1; }
+  80% { transform: scale(0.95); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.capture-pokemon-breakfree {
+  animation: pokemon-breakfree 0.6s ease-out forwards;
+}
+
+/* === PARTICLES (success sparkles) === */
+.capture-particles-layer {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+
+.capture-particle {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  animation: particle-burst 0.9s ease-out forwards;
+}
+
+@keyframes particle-burst {
+  0% {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translate(
+      calc(-50% + var(--px)),
+      calc(-50% + var(--py))
+    ) scale(0);
+    opacity: 0;
+  }
+}
+
+/* === STATS BAR === */
+.capture-stats-bar {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+.capture-pokemon-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.capture-catch-rate {
+  font-size: 1.4rem;
+  font-weight: 900;
+}
+
+/* === THROW BONUS LABEL === */
+@keyframes bonus-pop {
+  0% { transform: scale(0.4) translateY(8px); opacity: 0; }
+  55% { transform: scale(1.25) translateY(-4px); opacity: 1; }
+  100% { transform: scale(1) translateY(0); opacity: 1; }
+}
+
+.capture-bonus-label {
+  font-size: 1.3rem;
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow: 0 0 14px rgba(251, 191, 36, 0.8);
+  animation: bonus-pop 0.4s ease-out forwards;
+  letter-spacing: 0.04em;
+}
+
+/* === BALL CONTAINER === */
+.capture-ball-container {
+  position: absolute;
+  bottom: 80px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  z-index: 3;
+}
+
+.capture-hint {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+/* === POKÉBALL WRAPPER (drag + animation) === */
+.capture-ball-wrapper {
+  width: 68px;
+  height: 68px;
+  touch-action: none;
+  user-select: none;
+}
+
+/* Throw arc animation */
+@keyframes ball-throw-arc {
+  0% {
+    transform: translateY(0) translateX(0) scale(1) rotate(0deg);
+  }
+  35% {
+    transform: translateY(-150px) translateX(var(--ball-dx, 0px)) scale(0.85) rotate(180deg);
+  }
+  70% {
+    transform: translateY(-270px) translateX(calc(var(--ball-dx, 0px) * 0.5)) scale(0.6) rotate(420deg);
+  }
+  100% {
+    transform: translateY(-230px) translateX(0) scale(0.45) rotate(540deg);
+  }
+}
+
+.capture-ball-throwing {
+  animation: ball-throw-arc 0.85s cubic-bezier(0.17, 0.67, 0.58, 1) forwards;
+  pointer-events: none;
+}
+
+/* Wobble animations (1, 2, 3 times) */
+@keyframes ball-wobble-1 {
+  0%   { transform: translateY(-225px) scale(0.45) rotate(0deg); }
+  15%  { transform: translateY(-225px) scale(0.45) rotate(22deg); }
+  30%  { transform: translateY(-225px) scale(0.45) rotate(-16deg); }
+  45%  { transform: translateY(-225px) scale(0.45) rotate(10deg); }
+  60%  { transform: translateY(-225px) scale(0.45) rotate(-6deg); }
+  75%  { transform: translateY(-225px) scale(0.45) rotate(3deg); }
+  100% { transform: translateY(-225px) scale(0.45) rotate(0deg); }
+}
+
+@keyframes ball-wobble-2 {
+  0%   { transform: translateY(-225px) scale(0.45) rotate(0deg); }
+  10%  { transform: translateY(-225px) scale(0.45) rotate(24deg); }
+  20%  { transform: translateY(-225px) scale(0.45) rotate(-20deg); }
+  30%  { transform: translateY(-225px) scale(0.45) rotate(18deg); }
+  40%  { transform: translateY(-225px) scale(0.45) rotate(-15deg); }
+  50%  { transform: translateY(-225px) scale(0.45) rotate(18deg); }
+  60%  { transform: translateY(-225px) scale(0.45) rotate(-15deg); }
+  75%  { transform: translateY(-225px) scale(0.45) rotate(6deg); }
+  90%  { transform: translateY(-225px) scale(0.45) rotate(-3deg); }
+  100% { transform: translateY(-225px) scale(0.45) rotate(0deg); }
+}
+
+@keyframes ball-wobble-3 {
+  0%   { transform: translateY(-225px) scale(0.45) rotate(0deg); }
+  8%   { transform: translateY(-225px) scale(0.45) rotate(25deg); }
+  16%  { transform: translateY(-225px) scale(0.45) rotate(-22deg); }
+  24%  { transform: translateY(-225px) scale(0.45) rotate(20deg); }
+  32%  { transform: translateY(-225px) scale(0.45) rotate(-20deg); }
+  40%  { transform: translateY(-225px) scale(0.45) rotate(20deg); }
+  48%  { transform: translateY(-225px) scale(0.45) rotate(-18deg); }
+  56%  { transform: translateY(-225px) scale(0.45) rotate(15deg); }
+  64%  { transform: translateY(-225px) scale(0.45) rotate(-12deg); }
+  76%  { transform: translateY(-225px) scale(0.45) rotate(7deg); }
+  88%  { transform: translateY(-225px) scale(0.45) rotate(-4deg); }
+  100% { transform: translateY(-225px) scale(0.45) rotate(0deg); }
+}
+
+.capture-ball-wobble-1 {
+  animation: ball-wobble-1 0.7s ease-in-out forwards;
+  pointer-events: none;
+}
+
+.capture-ball-wobble-2 {
+  animation: ball-wobble-2 1.3s ease-in-out forwards;
+  pointer-events: none;
+}
+
+.capture-ball-wobble-3 {
+  animation: ball-wobble-3 1.8s ease-in-out forwards;
+  pointer-events: none;
+}
+
+/* Ball burst open (failed) */
+@keyframes ball-burst {
+  0%   { transform: translateY(-225px) scale(0.45) rotate(0deg); opacity: 1; }
+  30%  { transform: translateY(-225px) scale(0.7) rotate(-30deg); opacity: 1; }
+  60%  { transform: translateY(-225px) scale(1.1) rotate(10deg); opacity: 0.7; filter: brightness(2); }
+  100% { transform: translateY(-225px) scale(0.1) rotate(0deg); opacity: 0; }
+}
+
+.capture-ball-burst {
+  animation: ball-burst 0.5s ease-out forwards;
+  pointer-events: none;
+}
+
+/* === POKÉBALL VISUAL === */
+.capture-pokeball {
+  width: 68px;
+  height: 68px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 3px solid #0f172a;
+  position: relative;
+  box-shadow:
+    0 4px 18px rgba(0, 0, 0, 0.5),
+    0 0 28px rgba(6, 182, 212, 0.25),
+    inset 0 2px 4px rgba(255, 255, 255, 0.15);
+  cursor: grab;
+  transition: box-shadow 0.15s;
+}
+
+.capture-pokeball:active,
+.capture-pokeball-dragging {
+  cursor: grabbing;
+  box-shadow:
+    0 8px 28px rgba(0, 0, 0, 0.6),
+    0 0 40px rgba(6, 182, 212, 0.45),
+    inset 0 2px 4px rgba(255, 255, 255, 0.2);
+}
+
+.pokeball-top {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(135deg, #f87171 0%, #dc2626 100%);
+}
+
+.pokeball-bottom {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50%;
+  background: linear-gradient(135deg, #f8fafc 0%, #cbd5e1 100%);
+}
+
+.pokeball-band {
+  position: absolute;
+  top: 50%;
+  left: 0;
+  right: 0;
+  height: 7px;
+  background: #0f172a;
+  transform: translateY(-50%);
+  z-index: 2;
+}
+
+.pokeball-button {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #f1f5f9, #94a3b8);
+  border: 3px solid #0f172a;
+  z-index: 3;
+  box-shadow: 0 0 6px rgba(6, 182, 212, 0.4);
+}
+
+/* === ITEM ROW === */
+.capture-item-row {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  gap: 12px;
+  padding: 12px 20px 20px;
+}
+
+.capture-item-btn {
+  flex: 1;
+  padding: 13px 8px;
+  background: var(--color-bg-card);
+  border: none;
+  border-radius: 14px;
+  color: var(--color-text-primary);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s;
+}
+
+.capture-item-btn:hover {
+  background: var(--color-bg-hover);
+}
+
+.capture-item-btn-secondary {
+  color: var(--color-text-secondary);
+}
+
+/* === RESULT OVERLAY === */
+@keyframes result-appear {
+  0% { opacity: 0; transform: scale(0.85) translateY(18px); }
+  70% { opacity: 1; transform: scale(1.03) translateY(-3px); }
+  100% { opacity: 1; transform: scale(1) translateY(0); }
+}
+
+.capture-result {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  background: rgba(15, 23, 42, 0.9);
+  animation: result-appear 0.5s ease-out forwards;
+  padding: 32px 24px;
+  z-index: 20;
+}
+
+.capture-result-emoji {
+  font-size: 3.5rem;
+  line-height: 1;
+}
+
+.capture-result-title {
+  font-size: 2.2rem;
+  font-weight: 900;
+  color: var(--color-text-primary);
+  text-align: center;
+}
+
+.capture-result-success .capture-result-title {
+  color: var(--color-accent);
+  text-shadow: 0 0 20px rgba(6, 182, 212, 0.6);
+}
+
+.capture-result-subtitle {
+  font-size: 1rem;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+
+.capture-result-rewards {
+  display: flex;
+  gap: 10px;
+  margin-top: 4px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.capture-result-rewards span {
+  background: var(--color-bg-card);
+  padding: 7px 14px;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: var(--color-text-primary);
+}
+
+.capture-result-btn {
+  margin-top: 10px;
+  padding: 14px 36px;
+  background: var(--color-accent);
+  color: var(--color-bg-primary);
+  border: none;
+  border-radius: 28px;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: opacity 0.15s, transform 0.1s;
+}
+
+.capture-result-btn:hover {
+  opacity: 0.88;
+  transform: scale(1.03);
+}
