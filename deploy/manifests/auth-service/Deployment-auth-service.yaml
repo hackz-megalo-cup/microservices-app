@@ -38,7 +38,7 @@ spec:
               value: auth-service
             - name: PORT
               value: "8090"
-          image: ghcr.io/hackz-megalo-cup/auth-service:83a5a0ab4a0cfc6a6fc4f8a6ee06cbd465dd80cd
+          image: ghcr.io/hackz-megalo-cup/auth-service:186a7353c3cb8ffc0a7ba1c70e29765a3ccd8539
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
