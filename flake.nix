@@ -300,11 +300,6 @@
               ];
             };
 
-          custom-lang-service = buildNodeService "custom-lang-service" (
-            nodeServiceNodeModules "custom-lang-service"
-          );
-          custom-lang-service-image = buildNodeServiceImage "custom-lang-service" custom-lang-service;
-
           frontend-assets = pkgs.stdenv.mkDerivation {
             pname = "frontend-assets";
             version = "0.1.0";
@@ -425,8 +420,6 @@
           packages.auth-service-image = auth-image;
           packages.auth-image = auth-image;
           packages.auth-release-image = auth-release-image;
-          packages.custom-lang-service = custom-lang-service;
-          packages.custom-lang-service-image = custom-lang-service-image;
           packages.frontend = frontend-assets;
           packages.frontend-image = frontend-image;
           packages.go-services = go-services;

@@ -85,7 +85,6 @@ Traefik (localhost:30081) ─── CORS / Auth / Rate-limit / Retry
     ├── greeter          (Go/connect   :8080)  挨拶 + 外部API呼出
     ├── caller           (Go/connect   :8081)  外部エンドポイント呼出
     ├── gateway          (Go/connect   :8082)  サービスオーケストレーション
-    ├── custom-lang-service (Node/Express :3000) 言語処理
     ├── projector        (Go)                  Kafka → イベント投影
     └── frontend         (nginx :80)           SPA配信
 ```
@@ -115,7 +114,7 @@ Traefik (localhost:30081) ─── CORS / Auth / Rate-limit / Retry
   - `internal/<service>/` — ビジネスロジック
   - `internal/platform/` — 共有基盤 (EventStore, Outbox, CB, Retry等)
   - `gen/go/` — protobuf 生成コード (編集禁止)
-- **Node.js サービス**: `node-services/{auth-service,custom-lang-service,shared}/`
+- **Node.js サービス**: `node-services/{auth-service,shared}/`
 - **フロントエンド**: `frontend/` (bulletproof-react 構成: `src/features/`, `src/lib/`, `src/gen/`)
 - **Proto 定義**: `proto/<service>/<version>/<service>.proto`
 - **Docker / K8s**: `deploy/{docker,k8s,manifests,traefik,nixidy}/`

@@ -12,12 +12,6 @@ docker build -t "gateway:latest" -f "${REPO_ROOT}/deploy/docker/gateway/Dockerfi
 echo "==> Loading gateway into kind cluster '${CLUSTER_NAME}'..."
 kind load docker-image "gateway:latest" --name "${CLUSTER_NAME}"
 
-echo "==> Building custom-lang-service Docker image..."
-docker build -t "custom-lang-service:latest" -f "${REPO_ROOT}/deploy/docker/custom-lang-service/Dockerfile" "${REPO_ROOT}"
-
-echo "==> Loading custom-lang-service into kind cluster '${CLUSTER_NAME}'..."
-kind load docker-image "custom-lang-service:latest" --name "${CLUSTER_NAME}"
-
 echo "==> Building auth-service Docker image..."
 docker build -t "auth-service:latest" -f "${REPO_ROOT}/deploy/docker/auth-service/Dockerfile" "${REPO_ROOT}"
 

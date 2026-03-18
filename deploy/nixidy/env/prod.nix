@@ -2,7 +2,6 @@
 {
   imports = [
     ../../k8s/gateway.nix
-    ../../k8s/custom-lang-service.nix
     ../../k8s/auth-service.nix
     ../../k8s/frontend.nix
     ../../k8s/item.nix
@@ -50,22 +49,6 @@
           limits = {
             cpu = "500m";
             memory = "512Mi";
-          };
-        };
-      };
-    };
-
-    custom-lang-service.resources.deployments.custom-lang-service.spec = {
-      replicas = lib.mkForce 2;
-      template.spec.containers.custom-lang-service = {
-        resources = lib.mkForce {
-          requests = {
-            cpu = "50m";
-            memory = "128Mi";
-          };
-          limits = {
-            cpu = "200m";
-            memory = "384Mi";
           };
         };
       };
