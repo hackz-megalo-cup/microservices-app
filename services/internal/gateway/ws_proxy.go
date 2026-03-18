@@ -46,13 +46,16 @@ func (h *WSProxyHandler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	dialCtx, cancel := context.WithCancel(r.Context())
 	defer cancel()
 
-	backendConn, _, err := websocket.Dial(dialCtx, fmt.Sprintf("wss://%s:%d/ws", target.Host, target.Port), &websocket.DialOptions{
+	backendConn, dialResp, err := websocket.Dial(dialCtx, fmt.Sprintf("wss://%s:%d/ws", target.Host, target.Port), &websocket.DialOptions{
 		HTTPClient: &http.Client{
 			Transport: &http.Transport{
 				TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
 			},
 		},
 	})
+	if dialResp != nil && dialResp.Body != nil {
+		defer dialResp.Body.Close()
+	}
 	if err != nil {
 		_ = clientConn.Close(websocket.StatusInternalError, "failed to connect to raid server")
 		slog.Error("failed to dial backend websocket", "lobbyId", lobbyID, "host", target.Host, "port", target.Port, "error", err)
