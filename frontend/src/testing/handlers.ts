@@ -57,6 +57,33 @@ const mockPokemon = [
   },
 ];
 
+const mockOpenRaids = [
+  {
+    id: "raid-1",
+    bossPokemonId: "1",
+    currentParticipants: 5,
+    maxParticipants: 10,
+    status: "waiting",
+    createdAt: "2026-03-18T10:48:00Z",
+  },
+  {
+    id: "raid-2",
+    bossPokemonId: "2",
+    currentParticipants: 8,
+    maxParticipants: 10,
+    status: "waiting",
+    createdAt: "2026-03-18T10:55:00Z",
+  },
+  {
+    id: "raid-3",
+    bossPokemonId: "3",
+    currentParticipants: 3,
+    maxParticipants: 10,
+    status: "in_battle",
+    createdAt: "2026-03-18T10:37:00Z",
+  },
+];
+
 export const handlers = [
   http.post(`${baseUrl}/gateway.v1.GatewayService/InvokeCustom`, async ({ request }) => {
     const body = (await request.json()) as { name?: string };
@@ -66,11 +93,13 @@ export const handlers = [
       message: `Hello ${name} from mocked gateway!`,
     });
   }),
+
   http.post(`${baseUrl}/masterdata.v1.MasterdataService/ListPokemon`, () => {
     return HttpResponse.json({
       pokemon: mockPokemon,
     });
   }),
+
   http.post(`${baseUrl}/masterdata.v1.MasterdataService/GetPokemon`, async ({ request }) => {
     const body = (await request.json()) as { id?: string };
     const target = mockPokemon.find((pokemon) => pokemon.id === body.id);
@@ -89,4 +118,32 @@ export const handlers = [
       pokemon: target,
     });
   }),
+
+  // JoinRaid (Unary)
+  http.post(`${baseUrl}/raid_lobby.v1.RaidLobbyService/JoinRaid`, async ({ request }) => {
+    await request.json();
+
+    return HttpResponse.json({
+      participantId: `participant-${Math.random().toString(36).substring(7)}`,
+    });
+  }),
+
+  // StartBattle (Unary)
+  http.post(`${baseUrl}/raid_lobby.v1.RaidLobbyService/StartBattle`, async ({ request }) => {
+    await request.json();
+
+    return HttpResponse.json({
+      battleSessionId: `battle-${Math.random().toString(36).substring(7)}`,
+    });
+  }),
+
+  // ListRaids (Unary)
+  http.post(`${baseUrl}/raid_lobby.v1.RaidLobbyService/ListOpenRaids`, async () => {
+    return HttpResponse.json({
+      raids: mockOpenRaids,
+    });
+  }),
+
+  // NOTE: StreamLobby (Server Streaming) は MSW では完全にモックするのは困難
+  // 開発時は実際のバックエンドを起動するか、useLobbyStream を直接モック差し替えする
 ];

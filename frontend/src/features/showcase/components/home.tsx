@@ -1,37 +1,11 @@
-import type { Raid } from "../types";
 import "../../../styles/global.css";
+import { useOpenRaids } from "../hooks/use-open-raids";
 import { RaidCard } from "./ui/raid-card";
-
 import { TabBar } from "./ui/tab-bar";
 
-const mockRaids: Raid[] = [
-  {
-    id: "raid-1",
-    name: "JavaScript",
-    type: "Dynamic / JIT Compiled",
-    players: "5/10",
-    timer: "12:34",
-    image: "/images/raid-javascript.png",
-  },
-  {
-    id: "raid-2",
-    name: "Rust",
-    type: "Static / Compiled",
-    players: "8/10",
-    timer: "05:12",
-    image: "/images/raid-rust.png",
-  },
-  {
-    id: "raid-3",
-    name: "Go",
-    type: "Static / Compiled",
-    players: "3/10",
-    timer: "23:45",
-    image: "/images/raid-go.png",
-  },
-];
-
 export function Home() {
+  const { raids, isLoading, error } = useOpenRaids();
+
   return (
     <div className="showcase-screen">
       <header className="flex items-center justify-between px-6 py-3">
@@ -60,7 +34,9 @@ export function Home() {
 
       <section className="flex flex-col gap-3 px-6">
         <span className="text-xs font-bold tracking-widest text-text-secondary">ACTIVE RAIDS</span>
-        {mockRaids.map((raid) => (
+        {isLoading && <p className="text-sm text-text-secondary">Loading raids...</p>}
+        {error && <p className="text-sm text-red-500">Error: {error.message}</p>}
+        {raids.map((raid) => (
           <RaidCard
             key={raid.id}
             id={raid.id}
