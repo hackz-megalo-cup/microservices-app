@@ -1,7 +1,7 @@
 import type { Pokemon as RpcPokemon } from "../../../gen/masterdata/v1/masterdata_pb";
 import type { Pokemon, PokemonStat } from "../types";
 
-const IMAGE_PLACEHOLDER = "/images/collection-placeholder.png";
+const IMAGE_PLACEHOLDER = "/images/collection-python.png";
 
 export function generatePokemonNumber(index: number): string {
   return `#${String(index + 1).padStart(3, "0")}`;

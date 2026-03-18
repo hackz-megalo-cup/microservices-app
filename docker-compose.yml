@@ -52,7 +52,6 @@ services:
       dockerfile: deploy/docker/gateway/Dockerfile
     environment:
       PORT: "8082"
-      CUSTOM_LANG_BASE_URL: "http://custom-lang-service:3000"
       DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/gateway_db"
       OTEL_EXPORTER_OTLP_ENDPOINT: ""
       OTEL_SERVICE_NAME: "gateway-service"
@@ -66,25 +65,6 @@ services:
       - "traefik.http.routers.gateway.middlewares=cors@file,auth@file,rate-limit@file"
       - "traefik.http.services.gateway.loadbalancer.server.port=8082"
       - "traefik.http.services.gateway.loadbalancer.server.scheme=h2c"
-    networks:
-      - app
-    depends_on:
-      custom-lang-service:
-        condition: service_started
-      postgres-db-sync:
-        condition: service_completed_successfully
-
-  custom-lang-service:
-    build:
-      context: .
-      dockerfile: deploy/docker/custom-lang-service/Dockerfile
-    environment:
-      PORT: "3000"
-      DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/lang_db"
-      OTEL_EXPORTER_OTLP_ENDPOINT: ""
-      OTEL_SERVICE_NAME: "custom-lang-service"
-      KAFKA_BROKERS: "redpanda:9092"
-      JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
     networks:
       - app
     depends_on:

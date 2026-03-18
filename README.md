@@ -10,7 +10,7 @@
 | カテゴリ | 技術 |
 |---------|------|
 | Go サービス | connect-go / gRPC (greeter, caller, gateway, projector) |
-| Node.js サービス | Express (auth-service, custom-lang-service) |
+| Node.js サービス | Express (auth-service) |
 | フロントエンド | React 19 + TypeScript + Vite + connect-query + React Query |
 | データベース | PostgreSQL 17 |
 | イベントストリーミング | Redpanda (Kafka 互換) |
@@ -28,7 +28,7 @@
 │   ├── cmd/            # エントリーポイント
 │   ├── internal/       # サービス実装
 │   └── gen/            # buf generate で生成されたコード
-├── node-services/      # Node.js マイクロサービス (auth-service, custom-lang-service, shared)
+├── node-services/      # Node.js マイクロサービス (auth-service, shared)
 ├── frontend/           # React フロントエンド
 │   ├── src/app/        # ルートコンポーネント・プロバイダ
 │   ├── src/features/   # 機能モジュール (auth, greeter, gateway)
@@ -658,7 +658,6 @@ cd services && go test ./...
 
 # Node.js テスト (サービスごと)
 cd node-services/auth-service && npm test
-cd node-services/custom-lang-service && npm test
 
 # フロントエンドビルド (型チェック含む)
 cd frontend && npm run build

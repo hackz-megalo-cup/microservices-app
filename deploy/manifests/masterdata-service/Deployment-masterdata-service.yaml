@@ -33,7 +33,7 @@ spec:
               value: masterdata-service
             - name: PORT
               value: "8084"
-          image: ghcr.io/hackz-megalo-cup/masterdata:8014d0abd4693a4b3f45247cccf41242bb7e3287
+          image: ghcr.io/hackz-megalo-cup/masterdata:025be135538c6afb9eb6048c118d9011e9e4aebf
           imagePullPolicy: Always
           livenessProbe:
             httpGet:

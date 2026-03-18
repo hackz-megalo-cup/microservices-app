@@ -29,7 +29,6 @@ in
               env = {
                 OTEL_EXPORTER_OTLP_ENDPOINT.value = "http://otel-collector.observability:4317";
                 OTEL_SERVICE_NAME.value = "gateway-service";
-                CUSTOM_LANG_BASE_URL.value = "http://custom-lang-service.microservices:3000";
                 PORT.value = "8082";
                 DATABASE_URL.valueFrom.secretKeyRef = {
                   name = "gateway-secrets";

@@ -84,6 +84,83 @@ const mockOpenRaids = [
   },
 ];
 
+const mockItems = [
+  {
+    id: "capture-ball-basic",
+    name: "Basic Ball",
+    effects: [
+      {
+        effectType: "capture_rate_up",
+        targetType: "",
+        captureRateBonus: 0.1,
+        flavorText: "Basic Poké Ball",
+      },
+    ],
+  },
+  {
+    id: "capture-ball-super",
+    name: "Super Ball",
+    effects: [
+      {
+        effectType: "capture_rate_up",
+        targetType: "",
+        captureRateBonus: 0.2,
+        flavorText: "Super Poké Ball",
+      },
+    ],
+  },
+  {
+    id: "capture-ball-ultra",
+    name: "Ultra Ball",
+    effects: [
+      {
+        effectType: "capture_rate_up",
+        targetType: "",
+        captureRateBonus: 0.35,
+        flavorText: "Ultra Poké Ball",
+      },
+    ],
+  },
+];
+
+const mockInventoryByUser: Record<
+  string,
+  Array<{ itemId: string; quantity: number; status: string }>
+> = {
+  demo: [
+    { itemId: "capture-ball-basic", quantity: 5, status: "active" },
+    { itemId: "capture-ball-super", quantity: 2, status: "active" },
+  ],
+};
+
+function pickString(body: unknown, keys: string[]): string {
+  if (!body || typeof body !== "object") {
+    return "";
+  }
+  const record = body as Record<string, unknown>;
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "string") {
+      return value;
+    }
+  }
+  return "";
+}
+
+function pickNumber(body: unknown, keys: string[]): number | null {
+  if (!body || typeof body !== "object") {
+    return null;
+  }
+  const record = body as Record<string, unknown>;
+  for (const key of keys) {
+    const value = record[key];
+    if (typeof value === "number") {
+      return value;
+    }
+  }
+  return null;
+}
+
 export const handlers = [
   http.post(`${baseUrl}/gateway.v1.GatewayService/InvokeCustom`, async ({ request }) => {
     const body = (await request.json()) as { name?: string };
@@ -119,6 +196,12 @@ export const handlers = [
     });
   }),
 
+  http.post(`${baseUrl}/masterdata.v1.MasterdataService/ListItems`, () => {
+    return HttpResponse.json({
+      items: mockItems,
+    });
+  }),
+
   // JoinRaid (Unary)
   http.post(`${baseUrl}/raid_lobby.v1.RaidLobbyService/JoinRaid`, async ({ request }) => {
     await request.json();
@@ -146,4 +229,132 @@ export const handlers = [
 
   // NOTE: StreamLobby (Server Streaming) は MSW では完全にモックするのは困難
   // 開発時は実際のバックエンドを起動するか、useLobbyStream を直接モック差し替えする
+
+  http.post(`${baseUrl}/item.v1.ItemService/GetUserItems`, async ({ request }) => {
+    const body = await request.json();
+    const userId = pickString(body, ["userId", "user_id"]);
+
+    if (!userId) {
+      return HttpResponse.json(
+        {
+          code: "invalid_argument",
+          message: "user_id is required",
+        },
+        { status: 400 },
+      );
+    }
+
+    return HttpResponse.json({
+      items: mockInventoryByUser[userId] ?? [],
+    });
+  }),
+
+  // CaptureService mock handlers
+  http.post(`${baseUrl}/capture.v1.CaptureService/GetCaptureSession`, async ({ request }) => {
+    const body = await request.json();
+    const sessionId = pickString(body, ["sessionId", "session_id"]);
+
+    return HttpResponse.json({
+      sessionId: sessionId || "mock-session-1",
+      battleSessionId: "mock-battle-1",
+      userId: "demo",
+      pokemonId: "1",
+      baseRate: 0.3,
+      currentRate: 0.3,
+      result: "pending",
+      actions: [],
+    });
+  }),
+
+  http.post(`${baseUrl}/capture.v1.CaptureService/UseItem`, async ({ request }) => {
+    const body = await request.json();
+    const itemId = pickString(body, ["itemId", "item_id"]);
+
+    // Simulate escape effect for specific item (for testing)
+    if (itemId === "escape-item") {
+      return HttpResponse.json({
+        rateBefore: 0.3,
+        rateAfter: 0.3,
+        escaped: true,
+        flavorText: "The Pokémon fled!",
+      });
+    }
+
+    return HttpResponse.json({
+      rateBefore: 0.3,
+      rateAfter: 0.5,
+      escaped: false,
+      flavorText: "Capture rate increased!",
+    });
+  }),
+
+  http.post(`${baseUrl}/capture.v1.CaptureService/ThrowBall`, async () => {
+    const success = Math.random() < 0.5;
+    return HttpResponse.json({
+      result: success ? "success" : "fail",
+    });
+  }),
+
+  http.post(`${baseUrl}/capture.v1.CaptureService/EndSession`, async ({ request }) => {
+    const body = await request.json();
+    const sessionId = pickString(body, ["sessionId", "session_id"]);
+    return HttpResponse.json({
+      result: sessionId ? "completed" : "completed",
+    });
+  }),
+
+  http.post(`${baseUrl}/item.v1.ItemService/UseItem`, async ({ request }) => {
+    const body = await request.json();
+    const userId = pickString(body, ["userId", "user_id"]);
+    const itemId = pickString(body, ["itemId", "item_id"]);
+    const quantity = pickNumber(body, ["quantity"]) ?? 0;
+
+    if (!userId || !itemId || quantity <= 0) {
+      return HttpResponse.json(
+        {
+          code: "invalid_argument",
+          message: "user_id, item_id and positive quantity are required",
+        },
+        { status: 400 },
+      );
+    }
+
+    if (itemId === "force-unimplemented") {
+      return HttpResponse.json(
+        {
+          code: "unimplemented",
+          message: "UseItem is not implemented",
+        },
+        { status: 501 },
+      );
+    }
+
+    const inventory = mockInventoryByUser[userId] ?? [];
+    const index = inventory.findIndex((entry) => entry.itemId === itemId);
+
+    if (index < 0) {
+      return HttpResponse.json(
+        {
+          code: "not_found",
+          message: "item not found for user",
+        },
+        { status: 404 },
+      );
+    }
+
+    if (inventory[index].quantity < quantity) {
+      return HttpResponse.json(
+        {
+          code: "failed_precondition",
+          message: "not enough quantity",
+        },
+        { status: 412 },
+      );
+    }
+
+    inventory[index].quantity -= quantity;
+    mockInventoryByUser[userId] = inventory.filter((entry) => entry.quantity > 0);
+
+    return HttpResponse.json({});
+  }),
 ];

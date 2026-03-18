@@ -17,8 +17,6 @@ spec:
     spec:
       containers:
         - env:
-            - name: CUSTOM_LANG_BASE_URL
-              value: http://custom-lang-service.microservices:3000
             - name: DATABASE_URL
               valueFrom:
                 secretKeyRef:
@@ -35,7 +33,7 @@ spec:
               value: gateway-service
             - name: PORT
               value: "8082"
-          image: ghcr.io/hackz-megalo-cup/gateway:8014d0abd4693a4b3f45247cccf41242bb7e3287
+          image: ghcr.io/hackz-megalo-cup/gateway:025be135538c6afb9eb6048c118d9011e9e4aebf
           imagePullPolicy: Always
           livenessProbe:
             httpGet:

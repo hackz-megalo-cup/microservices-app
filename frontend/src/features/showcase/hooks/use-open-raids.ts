@@ -54,9 +54,7 @@ export function useOpenRaids() {
         type: boss?.type || "Unknown",
         players: `${entry.currentParticipants}/${entry.maxParticipants}`,
         timer: formatElapsed(toEpochMs(entry.createdAt)),
-        image: boss
-          ? getPokemonImageUrl({ name: boss.name })
-          : "/images/collection-placeholder.png",
+        image: boss ? getPokemonImageUrl({ name: boss.name }) : "/images/collection-python.png",
       };
     }) ?? [];
 

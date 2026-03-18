@@ -22,7 +22,7 @@ export function Battle() {
 
       <div className="flex-1 relative flex items-center justify-center">
         <img
-          src="/images/battle-python.png"
+          src="/images/capture-python.png"
           alt="Python"
           className="w-[280px] h-[280px] object-cover rounded-2xl"
         />

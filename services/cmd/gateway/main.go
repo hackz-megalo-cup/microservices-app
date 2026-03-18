@@ -14,7 +14,6 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
-	"go.opentelemetry.io/contrib/instrumentation/net/http/otelhttp"
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
@@ -47,11 +46,6 @@ func run() error {
 	defer func() {
 		err = errors.Join(err, shutdownOTel(context.Background()))
 	}()
-
-	customBaseURL := os.Getenv("CUSTOM_LANG_BASE_URL")
-	if customBaseURL == "" {
-		customBaseURL = "http://custom-lang-service.microservices:3000"
-	}
 
 	migrationsFS, _ := fs.Sub(gateway.MigrationsFS, "migrations")
 	dbPool := platform.InitDB(ctx, os.Getenv("DATABASE_URL"), migrationsFS, serviceName)
@@ -104,10 +98,7 @@ func run() error {
 	idempotencyStore := platform.NewIdempotencyStore(dbPool)
 	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
 
-	svc := gateway.NewService(&http.Client{
-		Timeout:   2 * time.Second,
-		Transport: otelhttp.NewTransport(http.DefaultTransport),
-	}, customBaseURL, time.Second, dbPool, outbox, eventStore)
+	svc := gateway.NewService(dbPool, outbox, eventStore)
 	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())
 	if err != nil {
 		return err
