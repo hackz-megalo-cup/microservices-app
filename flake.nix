@@ -446,6 +446,7 @@
           packages.caller-image = caller-image;
           packages.caller-release-image = caller-release-image;
           packages.auth = auth;
+          packages.auth-service-image = auth-image;
           packages.auth-image = auth-image;
           packages.auth-release-image = auth-release-image;
           packages.custom-lang-service = custom-lang-service;
