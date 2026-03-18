@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import type { Item } from "../../../gen/masterdata/v1/masterdata_pb";
 import { useAuthContext } from "../../../lib/auth";
 import "../../../styles/global.css";
 import "./capture.css";
@@ -89,6 +90,11 @@ function makeBonusLabel(bonus: ThrowBonus): string {
     return "NICE!";
   }
   return "";
+}
+
+function getItemCaptureBonus(item: Item): number {
+  // Calculate the maximum capture rate bonus from all effects
+  return Math.max(0, ...item.effects.map((effect) => effect.captureRateBonus ?? 0));
 }
 
 function makeParticles(): Particle[] {
@@ -561,14 +567,14 @@ export function Capture() {
                         ? "bg-accent text-text-primary"
                         : "bg-bg-card hover:bg-bg-hover text-text-primary"
                     }`}
-                    onClick={() => handleSelectItem(item.id, item.captureRateBonus)}
+                    onClick={() => handleSelectItem(item.id, getItemCaptureBonus(item))}
                     disabled={isMutationPending}
                   >
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
                         <p className="text-sm font-bold text-text-primary m-0">{item.name}</p>
                         <p className="text-xs text-text-secondary m-0">
-                          Capture Rate +{Math.round(item.captureRateBonus * 100)}%
+                          Capture Rate +{Math.round(getItemCaptureBonus(item) * 100)}%
                         </p>
                       </div>
                       <span className="text-xs font-bold text-text-secondary bg-bg-primary px-2 py-1 rounded">
