@@ -1,5 +1,5 @@
-import { useState } from "react";
 import type { FormEvent } from "react";
+import { useState } from "react";
 import { useAdminTypeMatchups } from "../../hooks/use-admin-type-matchups";
 
 const POKEMON_TYPES = [
