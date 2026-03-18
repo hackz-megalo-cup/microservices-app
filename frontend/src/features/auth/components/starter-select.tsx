@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate } from "react-router";
-import { getPokemonImageUrl } from "../../showcase/api/pokemon";
+import { getPokemonImageUrl } from "../../../lib/pokemon-image";
 import { useAuthContext } from "../hooks/use-auth-context";
 import { useStarterSelect } from "../hooks/use-starter-select";
 import "../../../styles/global.css";

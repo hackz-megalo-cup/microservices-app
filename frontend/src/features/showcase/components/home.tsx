@@ -32,10 +32,10 @@ export function Home() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (!overviewLoading && caughtCount === 0) {
+    if (!overviewLoading && !overviewError && caughtCount === 0) {
       navigate("/starter-select", { replace: true });
     }
-  }, [overviewLoading, caughtCount, navigate]);
+  }, [overviewLoading, overviewError, caughtCount, navigate]);
 
   const [showPokemonSelector, setShowPokemonSelector] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
