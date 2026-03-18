@@ -326,6 +326,16 @@ services:
       OTEL_SERVICE_NAME: "capture-service"
       KAFKA_BROKERS: "redpanda:9092"
       JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
+      MASTERDATA_URL: "http://masterdata:8084"
+      ITEM_URL: "http://item:8085"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.capture.rule=PathPrefix(`/capture.v1.CaptureService`)"
+      - "traefik.http.routers.capture.entrypoints=web"
+      - "traefik.http.routers.capture.priority=100"
+      - "traefik.http.routers.capture.middlewares=cors@file,auth@file,rate-limit@file,retry@file"
+      - "traefik.http.services.capture.loadbalancer.server.port=8088"
+      - "traefik.http.services.capture.loadbalancer.server.scheme=h2c"
     networks:
       - app
     depends_on:
