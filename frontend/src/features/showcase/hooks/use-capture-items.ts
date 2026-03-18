@@ -1,10 +1,10 @@
-import { useMutation, useQuery } from "@connectrpc/connect-query";
+import { createClient } from "@connectrpc/connect";
+import { useQuery, useTransport } from "@connectrpc/connect-query";
+import { useMutation } from "@tanstack/react-query";
 import { useCallback, useMemo } from "react";
 import type { UserItem } from "../../../gen/item/v1/item_pb";
-import {
-  getUserItems,
-  useItem as useItemMutation,
-} from "../../../gen/item/v1/item-ItemService_connectquery";
+import { ItemService } from "../../../gen/item/v1/item_pb";
+import { getUserItems } from "../../../gen/item/v1/item-ItemService_connectquery";
 import type { Item } from "../../../gen/masterdata/v1/masterdata_pb";
 import { listItems } from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 
@@ -18,9 +18,24 @@ export interface CaptureItemsState {
 }
 
 export function useCaptureItems(userId: string): CaptureItemsState {
+  const transport = useTransport();
+  const client = useMemo(() => createClient(ItemService, transport), [transport]);
+  const invokeUseItemRpc = useMemo(() => client.useItem.bind(client), [client]);
+  const invokeItemMutation = useCallback(
+    (itemId: string, quantity: number) => {
+      return invokeUseItemRpc(
+        { userId, itemId, quantity },
+        {
+          headers: new Headers({
+            "idempotency-key": crypto.randomUUID(),
+          }),
+        },
+      );
+    },
+    [invokeUseItemRpc, userId],
+  );
   const listItemsQuery = useQuery(listItems, {});
   const getUserItemsQuery = useQuery(getUserItems, { userId });
-  const useItemMut = useMutation(useItemMutation);
 
   const masterItems = useMemo<Item[]>(
     () => listItemsQuery.data?.items ?? [],
@@ -46,10 +61,16 @@ export function useCaptureItems(userId: string): CaptureItemsState {
     [masterItems, userInventory],
   );
 
+  const useItemMut = useMutation({
+    mutationFn: async ({ itemId, quantity }: { itemId: string; quantity: number }) => {
+      return invokeItemMutation(itemId, quantity);
+    },
+  });
+
   const handleUseItem = useCallback(
     (itemId: string, _bonus: number) => {
       useItemMut.mutate(
-        { userId, itemId, quantity: 1 },
+        { itemId, quantity: 1 },
         {
           onSuccess: () => {
             void getUserItemsQuery.refetch();
@@ -57,7 +78,7 @@ export function useCaptureItems(userId: string): CaptureItemsState {
         },
       );
     },
-    [userId, useItemMut, getUserItemsQuery],
+    [useItemMut, getUserItemsQuery],
   );
 
   const listItemsError =
