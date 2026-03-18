@@ -1,5 +1,5 @@
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { useCallback, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import "../../../styles/global.css";
 import { useAuthContext } from "../../../lib/auth";
@@ -73,7 +73,7 @@ export function BattlePage() {
         case "joined":
           setBossHp(msg.bossHp);
           setBossMaxHp(msg.bossMaxHp);
-          if (msg.timeoutSec) {
+          if (msg.timeoutSec !== undefined) {
             setTimeoutSec(msg.timeoutSec);
           }
           if (msg.participants) {
@@ -112,6 +112,16 @@ export function BattlePage() {
     },
     [id, navigate, spawnDmg],
   );
+
+  useEffect(() => {
+    if (result !== null) {
+      return;
+    }
+    const timer = setInterval(() => {
+      setTimeoutSec((prev) => Math.max(0, prev - 1));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [result]);
 
   const { status, sendTap, sendSpecial } = useGameConnection({
     userId,
