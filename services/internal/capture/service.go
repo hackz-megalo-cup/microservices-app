@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log/slog"
+	"math/rand"
 	"time"
 
 	"connectrpc.com/connect"
@@ -11,7 +12,9 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	pb "github.com/hackz-megalo-cup/microservices-app/services/gen/go/capture/v1"
+	itempb "github.com/hackz-megalo-cup/microservices-app/services/gen/go/item/v1"
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/item/v1/itemv1connect"
+	masterdatapb "github.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1"
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1/masterdatav1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
@@ -111,13 +114,168 @@ func (s *Service) HandleBattleFinished(ctx context.Context, battleSessionID, bos
 }
 
 func (s *Service) UseItem(ctx context.Context, req *connect.Request[pb.UseItemRequest]) (*connect.Response[pb.UseItemResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("not implemented"))
+	sessionID := req.Msg.GetSessionId()
+	itemID := req.Msg.GetItemId()
+	if sessionID == "" || itemID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("session_id and item_id are required"))
+	}
+
+	agg := NewCaptureAggregate(sessionID)
+	if err := platform.LoadAggregate(ctx, s.eventStore, agg); err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("session not found"))
+	}
+	if agg.Result != "pending" {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("session is not pending (result: %s)", agg.Result))
+	}
+
+	// Consume item from inventory
+	if s.itemClient != nil {
+		_, err := s.itemClient.UseItem(ctx, connect.NewRequest(&itempb.UseItemRequest{
+			UserId: agg.UserID, ItemId: itemID, Quantity: 1,
+		}))
+		if err != nil {
+			return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("failed to use item: %w", err))
+		}
+	}
+
+	// Get item metadata from masterdata
+	var itemName, targetType string
+	var captureRateBonus float64
+	if s.masterdataClient != nil {
+		itemResp, err := s.masterdataClient.GetItem(ctx, connect.NewRequest(&masterdatapb.GetItemRequest{Id: itemID}))
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get item metadata: %w", err))
+		}
+		item := itemResp.Msg.GetItem()
+		itemName = item.GetName()
+		targetType = item.GetTargetType()
+		captureRateBonus = item.GetCaptureRateBonus()
+	}
+
+	// Get boss pokemon type
+	var bossType string
+	if s.masterdataClient != nil {
+		pokemonResp, err := s.masterdataClient.GetPokemon(ctx, connect.NewRequest(&masterdatapb.GetPokemonRequest{Id: agg.PokemonID}))
+		if err != nil {
+			slog.Warn("failed to get pokemon metadata", "pokemon_id", agg.PokemonID, "error", err)
+		} else {
+			bossType = pokemonResp.Msg.GetPokemon().GetType()
+		}
+	}
+
+	rateBefore := agg.CurrentRate
+	var escaped bool
+
+	// Special: ざつくん + python boss → escape
+	if itemName == "ざつくん" && bossType == "python" {
+		agg.UseItem(itemID, rateBefore, 0)
+		agg.Escape()
+		escaped = true
+	} else {
+		bonus := captureRateBonus
+		if targetType == "" || targetType != bossType {
+			bonus *= 0.5
+		}
+		rateAfter := rateBefore + bonus
+		if rateAfter > 1.0 {
+			rateAfter = 1.0
+		}
+		if rateAfter < 0.0 {
+			rateAfter = 0.0
+		}
+		agg.UseItem(itemID, rateBefore, rateAfter)
+	}
+
+	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, CaptureTopicMapper); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save: %w", err))
+	}
+
+	// Update read model
+	if s.db != nil {
+		_, _ = s.db.Exec(ctx,
+			`UPDATE capture_session SET current_rate = $1, result = $2 WHERE id = $3`,
+			agg.CurrentRate, agg.Result, sessionID)
+		_, _ = s.db.Exec(ctx,
+			`INSERT INTO capture_action (id, session_id, action_type, item_id, rate_change, created_at)
+			 VALUES ($1, $2, 'use_item', $3, $4, $5)`,
+			uuid.NewString(), sessionID, itemID, agg.CurrentRate-rateBefore, time.Now().UTC())
+	}
+
+	return connect.NewResponse(&pb.UseItemResponse{
+		RateBefore: rateBefore,
+		RateAfter:  agg.CurrentRate,
+		Escaped:    escaped,
+	}), nil
 }
 
 func (s *Service) ThrowBall(ctx context.Context, req *connect.Request[pb.ThrowBallRequest]) (*connect.Response[pb.ThrowBallResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("not implemented"))
+	sessionID := req.Msg.GetSessionId()
+	if sessionID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("session_id is required"))
+	}
+
+	agg := NewCaptureAggregate(sessionID)
+	if err := platform.LoadAggregate(ctx, s.eventStore, agg); err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("session not found"))
+	}
+	if agg.Result != "pending" {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("session is not pending (result: %s)", agg.Result))
+	}
+
+	var result string
+	if rand.Float64() < agg.CurrentRate {
+		result = "success"
+	} else {
+		result = "fail"
+	}
+
+	agg.ThrowBall(result)
+	if result == "success" {
+		agg.Complete("success")
+	}
+
+	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, CaptureTopicMapper); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save: %w", err))
+	}
+
+	if s.db != nil {
+		_, _ = s.db.Exec(ctx,
+			`UPDATE capture_session SET result = $1 WHERE id = $2`,
+			agg.Result, sessionID)
+		_, _ = s.db.Exec(ctx,
+			`INSERT INTO capture_action (id, session_id, action_type, rate_change, created_at)
+			 VALUES ($1, $2, 'throw_ball', 0, $3)`,
+			uuid.NewString(), sessionID, time.Now().UTC())
+	}
+
+	return connect.NewResponse(&pb.ThrowBallResponse{
+		Result: result,
+	}), nil
 }
 
 func (s *Service) EndSession(ctx context.Context, req *connect.Request[pb.EndSessionRequest]) (*connect.Response[pb.EndSessionResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("not implemented"))
+	sessionID := req.Msg.GetSessionId()
+	if sessionID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("session_id is required"))
+	}
+
+	agg := NewCaptureAggregate(sessionID)
+	if err := platform.LoadAggregate(ctx, s.eventStore, agg); err != nil {
+		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("session not found"))
+	}
+	if agg.Result == "pending" {
+		return nil, connect.NewError(connect.CodeFailedPrecondition, fmt.Errorf("session is still pending"))
+	}
+
+	// Emit capture.completed if not already emitted (fail/escaped cases)
+	if agg.Result == "fail" || agg.Result == "escaped" {
+		agg.Complete(agg.Result)
+		if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, CaptureTopicMapper); err != nil {
+			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save: %w", err))
+		}
+	}
+
+	return connect.NewResponse(&pb.EndSessionResponse{
+		Result: agg.Result,
+	}), nil
 }
