@@ -1,0 +1,70 @@
+syntax = "proto3";
+
+package lobby.v1;
+
+import "google/protobuf/timestamp.proto";
+
+option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/lobby/v1;lobbyv1";
+
+service LobbyService {
+  rpc SetActivePokemon(SetActivePokemonRequest) returns (SetActivePokemonResponse) {}
+  rpc GetActivePokemon(GetActivePokemonRequest) returns (GetActivePokemonResponse) {}
+  rpc GetLobbyOverview(GetLobbyOverviewRequest) returns (GetLobbyOverviewResponse) {}
+}
+
+// ─── SetActivePokemon ─────────────────────────────────────────
+
+message SetActivePokemonRequest {
+  string user_id = 1;
+  string pokemon_id = 2;
+}
+message SetActivePokemonResponse {
+  bool success = 1;
+}
+
+// ─── GetActivePokemon ─────────────────────────────────────────
+
+message GetActivePokemonRequest {
+  string user_id = 1;
+}
+message GetActivePokemonResponse {
+  string pokemon_id = 1;
+}
+
+// ─── GetLobbyOverview ─────────────────────────────────────────
+
+message GetLobbyOverviewRequest {
+  string user_id = 1;
+}
+message GetLobbyOverviewResponse {
+  repeated OwnedItem items = 1;
+  repeated Raid raids = 2;
+  repeated PokedexEntry pokedex = 3;
+}
+
+message OwnedItem {
+  string item_id = 1;
+  string name = 2;
+  int32 quantity = 3;
+}
+
+enum RaidStatus {
+  RAID_STATUS_UNSPECIFIED = 0;
+  RAID_STATUS_OPEN = 1;
+  RAID_STATUS_IN_PROGRESS = 2;
+  RAID_STATUS_COMPLETED = 3;
+}
+
+message Raid {
+  string id = 1;
+  string pokemon_id = 2;
+  string pokemon_name = 3;
+  RaidStatus status = 4;
+  google.protobuf.Timestamp expires_at = 5;
+}
+
+message PokedexEntry {
+  string pokemon_id = 1;
+  string pokemon_name = 2;
+  bool caught = 3;
+}

@@ -315,6 +315,33 @@ services:
       redpanda:
         condition: service_healthy
 
+  lobby:
+    build:
+      context: .
+      dockerfile: deploy/docker/lobby/Dockerfile
+    environment:
+      PORT: "8089"
+      DATABASE_URL: "postgresql://devuser:devpass@postgres:5432/lobby_db"
+      OTEL_EXPORTER_OTLP_ENDPOINT: ""
+      OTEL_SERVICE_NAME: "lobby-service"
+      KAFKA_BROKERS: "redpanda:9092"
+      JWKS_URL: "http://auth-service:8090/.well-known/jwks.json"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.lobby.rule=PathPrefix(`/lobby.v1.LobbyService`)"
+      - "traefik.http.routers.lobby.entrypoints=web"
+      - "traefik.http.routers.lobby.priority=100"
+      - "traefik.http.routers.lobby.middlewares=cors@file,rate-limit@file,retry@file"
+      - "traefik.http.services.lobby.loadbalancer.server.port=8089"
+      - "traefik.http.services.lobby.loadbalancer.server.scheme=h2c"
+    networks:
+      - app
+    depends_on:
+      postgres-db-sync:
+        condition: service_completed_successfully
+      redpanda:
+        condition: service_healthy
+
 networks:
   app:
     driver: bridge

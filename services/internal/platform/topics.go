@@ -40,6 +40,10 @@ const (
 
 	TopicBattleFinished = "battle.finished"
 
+	TopicLobbyCreated     = "lobby.created"
+	TopicLobbyFailed      = "lobby.failed"
+	TopicLobbyCompensated = "lobby.compensated"
+
 	// Dead Letter Queue topics.
 	TopicGreetingCreatedDLQ       = "greeting.created.dlq"
 	TopicCallCompletedDLQ         = "call.completed.dlq"
@@ -51,6 +55,7 @@ const (
 	TopicRaidLobbyCreatedDLQ      = "raid_lobby.created.dlq"
 	TopicRaidUserJoinedDLQ        = "raid.user_joined.dlq"
 	TopicRaidBattleStartedDLQ     = "raid.battle_started.dlq"
+	TopicLobbyCreatedDLQ          = "lobby.created.dlq"
 )
 
 // DLQTopic returns the dead-letter queue topic for a given source topic.
@@ -67,6 +72,7 @@ func DLQTopic(source string) string {
 		TopicRaidLobbyCreated:      TopicRaidLobbyCreatedDLQ,
 		TopicRaidUserJoined:        TopicRaidUserJoinedDLQ,
 		TopicRaidBattleStarted:     TopicRaidBattleStartedDLQ,
+		TopicLobbyCreated:          TopicLobbyCreatedDLQ,
 	}
 	return m[source]
 }
@@ -110,6 +116,10 @@ func DefaultTopics() map[string]int32 {
 		TopicRaidBattleStarted:        3,
 		TopicRaidBattleStartedDLQ:     1,
 		TopicBattleFinished:           3,
+		TopicLobbyCreated:             3,
+		TopicLobbyFailed:              1,
+		TopicLobbyCompensated:         1,
+		TopicLobbyCreatedDLQ:          1,
 	}
 }
 
