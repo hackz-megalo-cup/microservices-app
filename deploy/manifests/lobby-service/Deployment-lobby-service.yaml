@@ -1,0 +1,80 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: lobby-service
+  namespace: microservices
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: lobby
+      app.kubernetes.io/version: 0.1.0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: lobby
+        app.kubernetes.io/version: 0.1.0
+    spec:
+      containers:
+        - env:
+            - name: AUTH_URL
+              valueFrom:
+                secretKeyRef:
+                  key: AUTH_URL
+                  name: lobby-secrets
+            - name: DATABASE_URL
+              valueFrom:
+                secretKeyRef:
+                  key: DATABASE_URL
+                  name: lobby-secrets
+            - name: ITEM_URL
+              valueFrom:
+                secretKeyRef:
+                  key: ITEM_URL
+                  name: lobby-secrets
+            - name: KAFKA_BROKERS
+              valueFrom:
+                secretKeyRef:
+                  key: KAFKA_BROKERS
+                  name: lobby-secrets
+            - name: MASTERDATA_URL
+              valueFrom:
+                secretKeyRef:
+                  key: MASTERDATA_URL
+                  name: lobby-secrets
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.observability:4317
+            - name: OTEL_SERVICE_NAME
+              value: lobby-service
+            - name: PORT
+              value: "8089"
+            - name: RAID_LOBBY_URL
+              valueFrom:
+                secretKeyRef:
+                  key: RAID_LOBBY_URL
+                  name: lobby-secrets
+          image: ghcr.io/hackz-megalo-cup/lobby:8a5f86f145b50ada0645e8304f42c746dfb834d5
+          imagePullPolicy: Always
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8089
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          name: lobby-service
+          ports:
+            - containerPort: 8089
+              name: http
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8089
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            limits:
+              cpu: 200m
+              memory: 128Mi
+            requests:
+              cpu: 50m
+              memory: 64Mi

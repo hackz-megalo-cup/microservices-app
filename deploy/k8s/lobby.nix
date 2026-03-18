@@ -1,5 +1,6 @@
 _:
 let
+  images = import ./images.nix;
   labels = {
     "app.kubernetes.io/name" = "lobby";
     "app.kubernetes.io/version" = "0.1.0";
@@ -17,8 +18,8 @@ in
         template = {
           metadata.labels = labels;
           spec.containers.lobby-service = {
-            image = "lobby:latest";
-            imagePullPolicy = "Never";
+            image = images.ghcrImage "lobby";
+            imagePullPolicy = "Always";
             ports.http.containerPort = 8089;
 
             env = {

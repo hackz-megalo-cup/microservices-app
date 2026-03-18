@@ -1,0 +1,14 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: lobby-service
+  namespace: microservices
+spec:
+  ports:
+    - name: http
+      port: 8089
+      protocol: TCP
+      targetPort: 8089
+  selector:
+    app.kubernetes.io/name: lobby
+    app.kubernetes.io/version: 0.1.0
