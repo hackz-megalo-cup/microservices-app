@@ -390,13 +390,20 @@ func (s *Service) ChooseStarter(ctx context.Context, req *connect.Request[authv1
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("invalid starter pokemon_id: %s", pokemonID))
 	}
 
-	// Guard: user must not already own any pokemon
+	// Guard: user must not already own any pokemon (idempotent for same starter)
 	if s.pool != nil {
 		var count int
 		if err := s.pool.QueryRow(ctx, `SELECT COUNT(*) FROM user_pokemon WHERE user_id = $1`, userID).Scan(&count); err != nil {
 			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to check existing pokemon: %w", err))
 		}
 		if count > 0 {
+			var exists bool
+			if err := s.pool.QueryRow(ctx, `SELECT EXISTS(SELECT 1 FROM user_pokemon WHERE user_id = $1 AND pokemon_id = $2)`, userID, pokemonID).Scan(&exists); err != nil {
+				return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to check starter ownership: %w", err))
+			}
+			if exists {
+				return connect.NewResponse(&authv1.ChooseStarterResponse{}), nil
+			}
 			return nil, connect.NewError(connect.CodeAlreadyExists, fmt.Errorf("user already has a starter pokemon"))
 		}
 	}

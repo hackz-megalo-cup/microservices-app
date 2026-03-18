@@ -27,7 +27,10 @@ export function useStarterSelect(userId: string) {
   const mutation = useMutation({
     mutationFn: async (pokemonId: string) => {
       // 1. Register starter Pokémon
-      await authClient.chooseStarter({ userId, pokemonId });
+      await authClient.chooseStarter(
+        { userId, pokemonId },
+        { headers: new Headers({ "idempotency-key": crypto.randomUUID() }) },
+      );
 
       // 2. Set as active Pokémon
       await lobbyClient.setActivePokemon(
