@@ -129,17 +129,13 @@ func (s *Service) UseItem(ctx context.Context, req *connect.Request[pb.UseItemRe
 	}
 
 	// Get item metadata from masterdata (before consuming item to avoid inventory loss on failure)
-	var itemName, targetType string
-	var captureRateBonus float64
+	var itemEffects []*masterdatapb.ItemEffect
 	if s.masterdataClient != nil {
 		itemResp, err := s.masterdataClient.GetItem(ctx, connect.NewRequest(&masterdatapb.GetItemRequest{Id: itemID}))
 		if err != nil {
 			return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to get item metadata: %w", err))
 		}
-		item := itemResp.Msg.GetItem()
-		itemName = item.GetName()
-		targetType = item.GetTargetType()
-		captureRateBonus = item.GetCaptureRateBonus()
+		itemEffects = itemResp.Msg.GetItem().GetEffects()
 	}
 
 	// Get boss pokemon type
@@ -165,26 +161,9 @@ func (s *Service) UseItem(ctx context.Context, req *connect.Request[pb.UseItemRe
 
 	rateBefore := agg.CurrentRate
 	var escaped bool
+	var flavorText string
 
-	// Special: ざつくん + python boss → escape
-	if itemName == "ざつくん" && bossType == "python" {
-		agg.UseItem(itemID, rateBefore, 0)
-		agg.Escape()
-		escaped = true
-	} else {
-		bonus := captureRateBonus
-		if targetType == "" || targetType != bossType {
-			bonus *= 0.5
-		}
-		rateAfter := rateBefore + bonus
-		if rateAfter > 1.0 {
-			rateAfter = 1.0
-		}
-		if rateAfter < 0.0 {
-			rateAfter = 0.0
-		}
-		agg.UseItem(itemID, rateBefore, rateAfter)
-	}
+	escaped, flavorText = applyItemEffect(agg, itemID, rateBefore, bossType, itemEffects)
 
 	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, CaptureTopicMapper); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save: %w", err))
@@ -209,6 +188,7 @@ func (s *Service) UseItem(ctx context.Context, req *connect.Request[pb.UseItemRe
 		RateBefore: rateBefore,
 		RateAfter:  agg.CurrentRate,
 		Escaped:    escaped,
+		FlavorText: flavorText,
 	}), nil
 }
 
@@ -287,4 +267,39 @@ func (s *Service) EndSession(ctx context.Context, req *connect.Request[pb.EndSes
 	return connect.NewResponse(&pb.EndSessionResponse{
 		Result: agg.Result,
 	}), nil
+}
+
+// findMatchedEffect returns the effect that matches bossType,
+// preferring specific target matches over wildcard (empty target_type).
+func findMatchedEffect(effects []*masterdatapb.ItemEffect, bossType string) *masterdatapb.ItemEffect {
+	var wildcard *masterdatapb.ItemEffect
+	for _, e := range effects {
+		if e.GetTargetType() == bossType {
+			return e
+		}
+		if e.GetTargetType() == "" && wildcard == nil {
+			wildcard = e
+		}
+	}
+	return wildcard
+}
+
+// applyItemEffect applies the matched item effect to the aggregate and returns escaped flag and flavor text.
+func applyItemEffect(agg *CaptureAggregate, itemID string, rateBefore float64, bossType string, effects []*masterdatapb.ItemEffect) (escaped bool, flavorText string) {
+	matched := findMatchedEffect(effects, bossType)
+	if matched == nil {
+		agg.UseItem(itemID, rateBefore, rateBefore)
+		return false, ""
+	}
+
+	switch matched.GetEffectType() {
+	case "escape":
+		agg.UseItem(itemID, rateBefore, rateBefore)
+		agg.Escape()
+		return true, matched.GetFlavorText()
+	default:
+		rateAfter := min(max(rateBefore+matched.GetCaptureRateBonus(), 0.0), 1.0)
+		agg.UseItem(itemID, rateBefore, rateAfter)
+		return false, matched.GetFlavorText()
+	}
 }

@@ -40,9 +40,10 @@ message UseItemRequest {
 }
 
 message UseItemResponse {
-  double rate_before = 1;
-  double rate_after = 2;
-  bool escaped = 3;
+  double rate_before  = 1;
+  double rate_after   = 2;
+  bool   escaped      = 3;
+  string flavor_text  = 4;
 }
 
 message ThrowBallRequest {
