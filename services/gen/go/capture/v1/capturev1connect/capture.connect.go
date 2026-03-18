@@ -33,13 +33,25 @@ const (
 // reflection-formatted method names, remove the leading slash and convert the remaining slash to a
 // period.
 const (
-	// CaptureServiceInvokeProcedure is the fully-qualified name of the CaptureService's Invoke RPC.
-	CaptureServiceInvokeProcedure = "/capture.v1.CaptureService/Invoke"
+	// CaptureServiceGetCaptureSessionProcedure is the fully-qualified name of the CaptureService's
+	// GetCaptureSession RPC.
+	CaptureServiceGetCaptureSessionProcedure = "/capture.v1.CaptureService/GetCaptureSession"
+	// CaptureServiceUseItemProcedure is the fully-qualified name of the CaptureService's UseItem RPC.
+	CaptureServiceUseItemProcedure = "/capture.v1.CaptureService/UseItem"
+	// CaptureServiceThrowBallProcedure is the fully-qualified name of the CaptureService's ThrowBall
+	// RPC.
+	CaptureServiceThrowBallProcedure = "/capture.v1.CaptureService/ThrowBall"
+	// CaptureServiceEndSessionProcedure is the fully-qualified name of the CaptureService's EndSession
+	// RPC.
+	CaptureServiceEndSessionProcedure = "/capture.v1.CaptureService/EndSession"
 )
 
 // CaptureServiceClient is a client for the capture.v1.CaptureService service.
 type CaptureServiceClient interface {
-	Invoke(context.Context, *connect.Request[v1.CaptureRequest]) (*connect.Response[v1.CaptureResponse], error)
+	GetCaptureSession(context.Context, *connect.Request[v1.GetCaptureSessionRequest]) (*connect.Response[v1.GetCaptureSessionResponse], error)
+	UseItem(context.Context, *connect.Request[v1.UseItemRequest]) (*connect.Response[v1.UseItemResponse], error)
+	ThrowBall(context.Context, *connect.Request[v1.ThrowBallRequest]) (*connect.Response[v1.ThrowBallResponse], error)
+	EndSession(context.Context, *connect.Request[v1.EndSessionRequest]) (*connect.Response[v1.EndSessionResponse], error)
 }
 
 // NewCaptureServiceClient constructs a client for the capture.v1.CaptureService service. By
@@ -53,10 +65,28 @@ func NewCaptureServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 	baseURL = strings.TrimRight(baseURL, "/")
 	captureServiceMethods := v1.File_capture_v1_capture_proto.Services().ByName("CaptureService").Methods()
 	return &captureServiceClient{
-		invoke: connect.NewClient[v1.CaptureRequest, v1.CaptureResponse](
+		getCaptureSession: connect.NewClient[v1.GetCaptureSessionRequest, v1.GetCaptureSessionResponse](
 			httpClient,
-			baseURL+CaptureServiceInvokeProcedure,
-			connect.WithSchema(captureServiceMethods.ByName("Invoke")),
+			baseURL+CaptureServiceGetCaptureSessionProcedure,
+			connect.WithSchema(captureServiceMethods.ByName("GetCaptureSession")),
+			connect.WithClientOptions(opts...),
+		),
+		useItem: connect.NewClient[v1.UseItemRequest, v1.UseItemResponse](
+			httpClient,
+			baseURL+CaptureServiceUseItemProcedure,
+			connect.WithSchema(captureServiceMethods.ByName("UseItem")),
+			connect.WithClientOptions(opts...),
+		),
+		throwBall: connect.NewClient[v1.ThrowBallRequest, v1.ThrowBallResponse](
+			httpClient,
+			baseURL+CaptureServiceThrowBallProcedure,
+			connect.WithSchema(captureServiceMethods.ByName("ThrowBall")),
+			connect.WithClientOptions(opts...),
+		),
+		endSession: connect.NewClient[v1.EndSessionRequest, v1.EndSessionResponse](
+			httpClient,
+			baseURL+CaptureServiceEndSessionProcedure,
+			connect.WithSchema(captureServiceMethods.ByName("EndSession")),
 			connect.WithClientOptions(opts...),
 		),
 	}
@@ -64,17 +94,38 @@ func NewCaptureServiceClient(httpClient connect.HTTPClient, baseURL string, opts
 
 // captureServiceClient implements CaptureServiceClient.
 type captureServiceClient struct {
-	invoke *connect.Client[v1.CaptureRequest, v1.CaptureResponse]
+	getCaptureSession *connect.Client[v1.GetCaptureSessionRequest, v1.GetCaptureSessionResponse]
+	useItem           *connect.Client[v1.UseItemRequest, v1.UseItemResponse]
+	throwBall         *connect.Client[v1.ThrowBallRequest, v1.ThrowBallResponse]
+	endSession        *connect.Client[v1.EndSessionRequest, v1.EndSessionResponse]
 }
 
-// Invoke calls capture.v1.CaptureService.Invoke.
-func (c *captureServiceClient) Invoke(ctx context.Context, req *connect.Request[v1.CaptureRequest]) (*connect.Response[v1.CaptureResponse], error) {
-	return c.invoke.CallUnary(ctx, req)
+// GetCaptureSession calls capture.v1.CaptureService.GetCaptureSession.
+func (c *captureServiceClient) GetCaptureSession(ctx context.Context, req *connect.Request[v1.GetCaptureSessionRequest]) (*connect.Response[v1.GetCaptureSessionResponse], error) {
+	return c.getCaptureSession.CallUnary(ctx, req)
+}
+
+// UseItem calls capture.v1.CaptureService.UseItem.
+func (c *captureServiceClient) UseItem(ctx context.Context, req *connect.Request[v1.UseItemRequest]) (*connect.Response[v1.UseItemResponse], error) {
+	return c.useItem.CallUnary(ctx, req)
+}
+
+// ThrowBall calls capture.v1.CaptureService.ThrowBall.
+func (c *captureServiceClient) ThrowBall(ctx context.Context, req *connect.Request[v1.ThrowBallRequest]) (*connect.Response[v1.ThrowBallResponse], error) {
+	return c.throwBall.CallUnary(ctx, req)
+}
+
+// EndSession calls capture.v1.CaptureService.EndSession.
+func (c *captureServiceClient) EndSession(ctx context.Context, req *connect.Request[v1.EndSessionRequest]) (*connect.Response[v1.EndSessionResponse], error) {
+	return c.endSession.CallUnary(ctx, req)
 }
 
 // CaptureServiceHandler is an implementation of the capture.v1.CaptureService service.
 type CaptureServiceHandler interface {
-	Invoke(context.Context, *connect.Request[v1.CaptureRequest]) (*connect.Response[v1.CaptureResponse], error)
+	GetCaptureSession(context.Context, *connect.Request[v1.GetCaptureSessionRequest]) (*connect.Response[v1.GetCaptureSessionResponse], error)
+	UseItem(context.Context, *connect.Request[v1.UseItemRequest]) (*connect.Response[v1.UseItemResponse], error)
+	ThrowBall(context.Context, *connect.Request[v1.ThrowBallRequest]) (*connect.Response[v1.ThrowBallResponse], error)
+	EndSession(context.Context, *connect.Request[v1.EndSessionRequest]) (*connect.Response[v1.EndSessionResponse], error)
 }
 
 // NewCaptureServiceHandler builds an HTTP handler from the service implementation. It returns the
@@ -84,16 +135,40 @@ type CaptureServiceHandler interface {
 // and JSON codecs. They also support gzip compression.
 func NewCaptureServiceHandler(svc CaptureServiceHandler, opts ...connect.HandlerOption) (string, http.Handler) {
 	captureServiceMethods := v1.File_capture_v1_capture_proto.Services().ByName("CaptureService").Methods()
-	captureServiceInvokeHandler := connect.NewUnaryHandler(
-		CaptureServiceInvokeProcedure,
-		svc.Invoke,
-		connect.WithSchema(captureServiceMethods.ByName("Invoke")),
+	captureServiceGetCaptureSessionHandler := connect.NewUnaryHandler(
+		CaptureServiceGetCaptureSessionProcedure,
+		svc.GetCaptureSession,
+		connect.WithSchema(captureServiceMethods.ByName("GetCaptureSession")),
+		connect.WithHandlerOptions(opts...),
+	)
+	captureServiceUseItemHandler := connect.NewUnaryHandler(
+		CaptureServiceUseItemProcedure,
+		svc.UseItem,
+		connect.WithSchema(captureServiceMethods.ByName("UseItem")),
+		connect.WithHandlerOptions(opts...),
+	)
+	captureServiceThrowBallHandler := connect.NewUnaryHandler(
+		CaptureServiceThrowBallProcedure,
+		svc.ThrowBall,
+		connect.WithSchema(captureServiceMethods.ByName("ThrowBall")),
+		connect.WithHandlerOptions(opts...),
+	)
+	captureServiceEndSessionHandler := connect.NewUnaryHandler(
+		CaptureServiceEndSessionProcedure,
+		svc.EndSession,
+		connect.WithSchema(captureServiceMethods.ByName("EndSession")),
 		connect.WithHandlerOptions(opts...),
 	)
 	return "/capture.v1.CaptureService/", http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		switch r.URL.Path {
-		case CaptureServiceInvokeProcedure:
-			captureServiceInvokeHandler.ServeHTTP(w, r)
+		case CaptureServiceGetCaptureSessionProcedure:
+			captureServiceGetCaptureSessionHandler.ServeHTTP(w, r)
+		case CaptureServiceUseItemProcedure:
+			captureServiceUseItemHandler.ServeHTTP(w, r)
+		case CaptureServiceThrowBallProcedure:
+			captureServiceThrowBallHandler.ServeHTTP(w, r)
+		case CaptureServiceEndSessionProcedure:
+			captureServiceEndSessionHandler.ServeHTTP(w, r)
 		default:
 			http.NotFound(w, r)
 		}
@@ -103,6 +178,18 @@ func NewCaptureServiceHandler(svc CaptureServiceHandler, opts ...connect.Handler
 // UnimplementedCaptureServiceHandler returns CodeUnimplemented from all methods.
 type UnimplementedCaptureServiceHandler struct{}
 
-func (UnimplementedCaptureServiceHandler) Invoke(context.Context, *connect.Request[v1.CaptureRequest]) (*connect.Response[v1.CaptureResponse], error) {
-	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("capture.v1.CaptureService.Invoke is not implemented"))
+func (UnimplementedCaptureServiceHandler) GetCaptureSession(context.Context, *connect.Request[v1.GetCaptureSessionRequest]) (*connect.Response[v1.GetCaptureSessionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("capture.v1.CaptureService.GetCaptureSession is not implemented"))
+}
+
+func (UnimplementedCaptureServiceHandler) UseItem(context.Context, *connect.Request[v1.UseItemRequest]) (*connect.Response[v1.UseItemResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("capture.v1.CaptureService.UseItem is not implemented"))
+}
+
+func (UnimplementedCaptureServiceHandler) ThrowBall(context.Context, *connect.Request[v1.ThrowBallRequest]) (*connect.Response[v1.ThrowBallResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("capture.v1.CaptureService.ThrowBall is not implemented"))
+}
+
+func (UnimplementedCaptureServiceHandler) EndSession(context.Context, *connect.Request[v1.EndSessionRequest]) (*connect.Response[v1.EndSessionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, errors.New("capture.v1.CaptureService.EndSession is not implemented"))
 }

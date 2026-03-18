@@ -3,10 +3,8 @@ package capture
 import (
 	"context"
 	"fmt"
-	"log/slog"
 
 	"connectrpc.com/connect"
-	"github.com/google/uuid"
 
 	pb "github.com/hackz-megalo-cup/microservices-app/services/gen/go/capture/v1"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
@@ -24,36 +22,18 @@ func NewService(eventStore *platform.EventStore, outbox *platform.OutboxStore) *
 	}
 }
 
-// ==========================================================.
-// proto を編集して RPC を定義したら、このメソッドを書き換える。
-//
-// 新規作成パターン:
-//   agg := NewCaptureAggregate(uuid.NewString())
-//   agg.Create(...)
-//   platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, CaptureTopicMapper)
-//   return agg.AggregateID()  // 生成された ID
-//
-// 既存更新パターン:
-//   agg := NewCaptureAggregate(id)
-//   platform.LoadAggregate(ctx, s.eventStore, agg)  // イベント再生で状態復元
-//   agg.SomeCommand()
-//   platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, CaptureTopicMapper)
-// ==========================================================.
+func (s *Service) GetCaptureSession(_ context.Context, _ *connect.Request[pb.GetCaptureSessionRequest]) (*connect.Response[pb.GetCaptureSessionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("GetCaptureSession is not implemented"))
+}
 
-func (s *Service) Invoke(ctx context.Context, req *connect.Request[pb.CaptureRequest]) (*connect.Response[pb.CaptureResponse], error) {
-	input := req.Msg.GetInput()
-	if input == "" {
-		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("input is required"))
-	}
+func (s *Service) UseItem(_ context.Context, _ *connect.Request[pb.UseItemRequest]) (*connect.Response[pb.UseItemResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("UseItem is not implemented"))
+}
 
-	agg := NewCaptureAggregate(uuid.NewString())
-	agg.Create()
-	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, CaptureTopicMapper); err != nil {
-		slog.Error("failed to save aggregate", "error", err)
-		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to save"))
-	}
+func (s *Service) ThrowBall(_ context.Context, _ *connect.Request[pb.ThrowBallRequest]) (*connect.Response[pb.ThrowBallResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("ThrowBall is not implemented"))
+}
 
-	return connect.NewResponse(&pb.CaptureResponse{
-		Output: agg.AggregateID(),
-	}), nil
+func (s *Service) EndSession(_ context.Context, _ *connect.Request[pb.EndSessionRequest]) (*connect.Response[pb.EndSessionResponse], error) {
+	return nil, connect.NewError(connect.CodeUnimplemented, fmt.Errorf("EndSession is not implemented"))
 }

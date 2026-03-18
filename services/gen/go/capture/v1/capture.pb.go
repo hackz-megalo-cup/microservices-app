@@ -21,27 +21,27 @@ const (
 	_ = protoimpl.EnforceVersion(protoimpl.MaxVersion - 20)
 )
 
-type CaptureRequest struct {
+type GetCaptureSessionRequest struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Input         string                 `protobuf:"bytes,1,opt,name=input,proto3" json:"input,omitempty"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CaptureRequest) Reset() {
-	*x = CaptureRequest{}
+func (x *GetCaptureSessionRequest) Reset() {
+	*x = GetCaptureSessionRequest{}
 	mi := &file_capture_v1_capture_proto_msgTypes[0]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CaptureRequest) String() string {
+func (x *GetCaptureSessionRequest) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CaptureRequest) ProtoMessage() {}
+func (*GetCaptureSessionRequest) ProtoMessage() {}
 
-func (x *CaptureRequest) ProtoReflect() protoreflect.Message {
+func (x *GetCaptureSessionRequest) ProtoReflect() protoreflect.Message {
 	mi := &file_capture_v1_capture_proto_msgTypes[0]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -53,39 +53,43 @@ func (x *CaptureRequest) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CaptureRequest.ProtoReflect.Descriptor instead.
-func (*CaptureRequest) Descriptor() ([]byte, []int) {
+// Deprecated: Use GetCaptureSessionRequest.ProtoReflect.Descriptor instead.
+func (*GetCaptureSessionRequest) Descriptor() ([]byte, []int) {
 	return file_capture_v1_capture_proto_rawDescGZIP(), []int{0}
 }
 
-func (x *CaptureRequest) GetInput() string {
+func (x *GetCaptureSessionRequest) GetSessionId() string {
 	if x != nil {
-		return x.Input
+		return x.SessionId
 	}
 	return ""
 }
 
-type CaptureResponse struct {
+type CaptureAction struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
-	Output        string                 `protobuf:"bytes,1,opt,name=output,proto3" json:"output,omitempty"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	ActionType    string                 `protobuf:"bytes,2,opt,name=action_type,json=actionType,proto3" json:"action_type,omitempty"`
+	ItemId        string                 `protobuf:"bytes,3,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	RateChange    float64                `protobuf:"fixed64,4,opt,name=rate_change,json=rateChange,proto3" json:"rate_change,omitempty"`
+	CreatedAt     string                 `protobuf:"bytes,5,opt,name=created_at,json=createdAt,proto3" json:"created_at,omitempty"`
 	unknownFields protoimpl.UnknownFields
 	sizeCache     protoimpl.SizeCache
 }
 
-func (x *CaptureResponse) Reset() {
-	*x = CaptureResponse{}
+func (x *CaptureAction) Reset() {
+	*x = CaptureAction{}
 	mi := &file_capture_v1_capture_proto_msgTypes[1]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
 
-func (x *CaptureResponse) String() string {
+func (x *CaptureAction) String() string {
 	return protoimpl.X.MessageStringOf(x)
 }
 
-func (*CaptureResponse) ProtoMessage() {}
+func (*CaptureAction) ProtoMessage() {}
 
-func (x *CaptureResponse) ProtoReflect() protoreflect.Message {
+func (x *CaptureAction) ProtoReflect() protoreflect.Message {
 	mi := &file_capture_v1_capture_proto_msgTypes[1]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
@@ -97,14 +101,430 @@ func (x *CaptureResponse) ProtoReflect() protoreflect.Message {
 	return mi.MessageOf(x)
 }
 
-// Deprecated: Use CaptureResponse.ProtoReflect.Descriptor instead.
-func (*CaptureResponse) Descriptor() ([]byte, []int) {
+// Deprecated: Use CaptureAction.ProtoReflect.Descriptor instead.
+func (*CaptureAction) Descriptor() ([]byte, []int) {
 	return file_capture_v1_capture_proto_rawDescGZIP(), []int{1}
 }
 
-func (x *CaptureResponse) GetOutput() string {
+func (x *CaptureAction) GetId() string {
 	if x != nil {
-		return x.Output
+		return x.Id
+	}
+	return ""
+}
+
+func (x *CaptureAction) GetActionType() string {
+	if x != nil {
+		return x.ActionType
+	}
+	return ""
+}
+
+func (x *CaptureAction) GetItemId() string {
+	if x != nil {
+		return x.ItemId
+	}
+	return ""
+}
+
+func (x *CaptureAction) GetRateChange() float64 {
+	if x != nil {
+		return x.RateChange
+	}
+	return 0
+}
+
+func (x *CaptureAction) GetCreatedAt() string {
+	if x != nil {
+		return x.CreatedAt
+	}
+	return ""
+}
+
+type GetCaptureSessionResponse struct {
+	state           protoimpl.MessageState `protogen:"open.v1"`
+	SessionId       string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	BattleSessionId string                 `protobuf:"bytes,2,opt,name=battle_session_id,json=battleSessionId,proto3" json:"battle_session_id,omitempty"`
+	UserId          string                 `protobuf:"bytes,3,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	PokemonId       string                 `protobuf:"bytes,4,opt,name=pokemon_id,json=pokemonId,proto3" json:"pokemon_id,omitempty"`
+	BaseRate        float64                `protobuf:"fixed64,5,opt,name=base_rate,json=baseRate,proto3" json:"base_rate,omitempty"`
+	CurrentRate     float64                `protobuf:"fixed64,6,opt,name=current_rate,json=currentRate,proto3" json:"current_rate,omitempty"`
+	Result          string                 `protobuf:"bytes,7,opt,name=result,proto3" json:"result,omitempty"`
+	Actions         []*CaptureAction       `protobuf:"bytes,8,rep,name=actions,proto3" json:"actions,omitempty"`
+	unknownFields   protoimpl.UnknownFields
+	sizeCache       protoimpl.SizeCache
+}
+
+func (x *GetCaptureSessionResponse) Reset() {
+	*x = GetCaptureSessionResponse{}
+	mi := &file_capture_v1_capture_proto_msgTypes[2]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetCaptureSessionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetCaptureSessionResponse) ProtoMessage() {}
+
+func (x *GetCaptureSessionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_capture_v1_capture_proto_msgTypes[2]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetCaptureSessionResponse.ProtoReflect.Descriptor instead.
+func (*GetCaptureSessionResponse) Descriptor() ([]byte, []int) {
+	return file_capture_v1_capture_proto_rawDescGZIP(), []int{2}
+}
+
+func (x *GetCaptureSessionResponse) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *GetCaptureSessionResponse) GetBattleSessionId() string {
+	if x != nil {
+		return x.BattleSessionId
+	}
+	return ""
+}
+
+func (x *GetCaptureSessionResponse) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+func (x *GetCaptureSessionResponse) GetPokemonId() string {
+	if x != nil {
+		return x.PokemonId
+	}
+	return ""
+}
+
+func (x *GetCaptureSessionResponse) GetBaseRate() float64 {
+	if x != nil {
+		return x.BaseRate
+	}
+	return 0
+}
+
+func (x *GetCaptureSessionResponse) GetCurrentRate() float64 {
+	if x != nil {
+		return x.CurrentRate
+	}
+	return 0
+}
+
+func (x *GetCaptureSessionResponse) GetResult() string {
+	if x != nil {
+		return x.Result
+	}
+	return ""
+}
+
+func (x *GetCaptureSessionResponse) GetActions() []*CaptureAction {
+	if x != nil {
+		return x.Actions
+	}
+	return nil
+}
+
+type UseItemRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	ItemId        string                 `protobuf:"bytes,2,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UseItemRequest) Reset() {
+	*x = UseItemRequest{}
+	mi := &file_capture_v1_capture_proto_msgTypes[3]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UseItemRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UseItemRequest) ProtoMessage() {}
+
+func (x *UseItemRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_capture_v1_capture_proto_msgTypes[3]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UseItemRequest.ProtoReflect.Descriptor instead.
+func (*UseItemRequest) Descriptor() ([]byte, []int) {
+	return file_capture_v1_capture_proto_rawDescGZIP(), []int{3}
+}
+
+func (x *UseItemRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+func (x *UseItemRequest) GetItemId() string {
+	if x != nil {
+		return x.ItemId
+	}
+	return ""
+}
+
+type UseItemResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	RateBefore    float64                `protobuf:"fixed64,1,opt,name=rate_before,json=rateBefore,proto3" json:"rate_before,omitempty"`
+	RateAfter     float64                `protobuf:"fixed64,2,opt,name=rate_after,json=rateAfter,proto3" json:"rate_after,omitempty"`
+	Escaped       bool                   `protobuf:"varint,3,opt,name=escaped,proto3" json:"escaped,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UseItemResponse) Reset() {
+	*x = UseItemResponse{}
+	mi := &file_capture_v1_capture_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UseItemResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UseItemResponse) ProtoMessage() {}
+
+func (x *UseItemResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_capture_v1_capture_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UseItemResponse.ProtoReflect.Descriptor instead.
+func (*UseItemResponse) Descriptor() ([]byte, []int) {
+	return file_capture_v1_capture_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *UseItemResponse) GetRateBefore() float64 {
+	if x != nil {
+		return x.RateBefore
+	}
+	return 0
+}
+
+func (x *UseItemResponse) GetRateAfter() float64 {
+	if x != nil {
+		return x.RateAfter
+	}
+	return 0
+}
+
+func (x *UseItemResponse) GetEscaped() bool {
+	if x != nil {
+		return x.Escaped
+	}
+	return false
+}
+
+type ThrowBallRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ThrowBallRequest) Reset() {
+	*x = ThrowBallRequest{}
+	mi := &file_capture_v1_capture_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ThrowBallRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ThrowBallRequest) ProtoMessage() {}
+
+func (x *ThrowBallRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_capture_v1_capture_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ThrowBallRequest.ProtoReflect.Descriptor instead.
+func (*ThrowBallRequest) Descriptor() ([]byte, []int) {
+	return file_capture_v1_capture_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *ThrowBallRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+type ThrowBallResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Result        string                 `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *ThrowBallResponse) Reset() {
+	*x = ThrowBallResponse{}
+	mi := &file_capture_v1_capture_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *ThrowBallResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*ThrowBallResponse) ProtoMessage() {}
+
+func (x *ThrowBallResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_capture_v1_capture_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use ThrowBallResponse.ProtoReflect.Descriptor instead.
+func (*ThrowBallResponse) Descriptor() ([]byte, []int) {
+	return file_capture_v1_capture_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *ThrowBallResponse) GetResult() string {
+	if x != nil {
+		return x.Result
+	}
+	return ""
+}
+
+type EndSessionRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	SessionId     string                 `protobuf:"bytes,1,opt,name=session_id,json=sessionId,proto3" json:"session_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EndSessionRequest) Reset() {
+	*x = EndSessionRequest{}
+	mi := &file_capture_v1_capture_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EndSessionRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EndSessionRequest) ProtoMessage() {}
+
+func (x *EndSessionRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_capture_v1_capture_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EndSessionRequest.ProtoReflect.Descriptor instead.
+func (*EndSessionRequest) Descriptor() ([]byte, []int) {
+	return file_capture_v1_capture_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *EndSessionRequest) GetSessionId() string {
+	if x != nil {
+		return x.SessionId
+	}
+	return ""
+}
+
+type EndSessionResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Result        string                 `protobuf:"bytes,1,opt,name=result,proto3" json:"result,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *EndSessionResponse) Reset() {
+	*x = EndSessionResponse{}
+	mi := &file_capture_v1_capture_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *EndSessionResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*EndSessionResponse) ProtoMessage() {}
+
+func (x *EndSessionResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_capture_v1_capture_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use EndSessionResponse.ProtoReflect.Descriptor instead.
+func (*EndSessionResponse) Descriptor() ([]byte, []int) {
+	return file_capture_v1_capture_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *EndSessionResponse) GetResult() string {
+	if x != nil {
+		return x.Result
 	}
 	return ""
 }
@@ -114,13 +534,56 @@ var File_capture_v1_capture_proto protoreflect.FileDescriptor
 const file_capture_v1_capture_proto_rawDesc = "" +
 	"\n" +
 	"\x18capture/v1/capture.proto\x12\n" +
-	"capture.v1\"&\n" +
-	"\x0eCaptureRequest\x12\x14\n" +
-	"\x05input\x18\x01 \x01(\tR\x05input\")\n" +
-	"\x0fCaptureResponse\x12\x16\n" +
-	"\x06output\x18\x01 \x01(\tR\x06output2U\n" +
-	"\x0eCaptureService\x12C\n" +
-	"\x06Invoke\x12\x1a.capture.v1.CaptureRequest\x1a\x1b.capture.v1.CaptureResponse\"\x00BTZRgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/capture/v1;capturev1b\x06proto3"
+	"capture.v1\"9\n" +
+	"\x18GetCaptureSessionRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"\x99\x01\n" +
+	"\rCaptureAction\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x1f\n" +
+	"\vaction_type\x18\x02 \x01(\tR\n" +
+	"actionType\x12\x17\n" +
+	"\aitem_id\x18\x03 \x01(\tR\x06itemId\x12\x1f\n" +
+	"\vrate_change\x18\x04 \x01(\x01R\n" +
+	"rateChange\x12\x1d\n" +
+	"\n" +
+	"created_at\x18\x05 \x01(\tR\tcreatedAt\"\xab\x02\n" +
+	"\x19GetCaptureSessionResponse\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12*\n" +
+	"\x11battle_session_id\x18\x02 \x01(\tR\x0fbattleSessionId\x12\x17\n" +
+	"\auser_id\x18\x03 \x01(\tR\x06userId\x12\x1d\n" +
+	"\n" +
+	"pokemon_id\x18\x04 \x01(\tR\tpokemonId\x12\x1b\n" +
+	"\tbase_rate\x18\x05 \x01(\x01R\bbaseRate\x12!\n" +
+	"\fcurrent_rate\x18\x06 \x01(\x01R\vcurrentRate\x12\x16\n" +
+	"\x06result\x18\a \x01(\tR\x06result\x123\n" +
+	"\aactions\x18\b \x03(\v2\x19.capture.v1.CaptureActionR\aactions\"H\n" +
+	"\x0eUseItemRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\x12\x17\n" +
+	"\aitem_id\x18\x02 \x01(\tR\x06itemId\"k\n" +
+	"\x0fUseItemResponse\x12\x1f\n" +
+	"\vrate_before\x18\x01 \x01(\x01R\n" +
+	"rateBefore\x12\x1d\n" +
+	"\n" +
+	"rate_after\x18\x02 \x01(\x01R\trateAfter\x12\x18\n" +
+	"\aescaped\x18\x03 \x01(\bR\aescaped\"1\n" +
+	"\x10ThrowBallRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\"+\n" +
+	"\x11ThrowBallResponse\x12\x16\n" +
+	"\x06result\x18\x01 \x01(\tR\x06result\"2\n" +
+	"\x11EndSessionRequest\x12\x1d\n" +
+	"\n" +
+	"session_id\x18\x01 \x01(\tR\tsessionId\",\n" +
+	"\x12EndSessionResponse\x12\x16\n" +
+	"\x06result\x18\x01 \x01(\tR\x06result2\xd5\x02\n" +
+	"\x0eCaptureService\x12b\n" +
+	"\x11GetCaptureSession\x12$.capture.v1.GetCaptureSessionRequest\x1a%.capture.v1.GetCaptureSessionResponse\"\x00\x12D\n" +
+	"\aUseItem\x12\x1a.capture.v1.UseItemRequest\x1a\x1b.capture.v1.UseItemResponse\"\x00\x12J\n" +
+	"\tThrowBall\x12\x1c.capture.v1.ThrowBallRequest\x1a\x1d.capture.v1.ThrowBallResponse\"\x00\x12M\n" +
+	"\n" +
+	"EndSession\x12\x1d.capture.v1.EndSessionRequest\x1a\x1e.capture.v1.EndSessionResponse\"\x00BTZRgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/capture/v1;capturev1b\x06proto3"
 
 var (
 	file_capture_v1_capture_proto_rawDescOnce sync.Once
@@ -134,19 +597,33 @@ func file_capture_v1_capture_proto_rawDescGZIP() []byte {
 	return file_capture_v1_capture_proto_rawDescData
 }
 
-var file_capture_v1_capture_proto_msgTypes = make([]protoimpl.MessageInfo, 2)
+var file_capture_v1_capture_proto_msgTypes = make([]protoimpl.MessageInfo, 9)
 var file_capture_v1_capture_proto_goTypes = []any{
-	(*CaptureRequest)(nil),  // 0: capture.v1.CaptureRequest
-	(*CaptureResponse)(nil), // 1: capture.v1.CaptureResponse
+	(*GetCaptureSessionRequest)(nil),  // 0: capture.v1.GetCaptureSessionRequest
+	(*CaptureAction)(nil),             // 1: capture.v1.CaptureAction
+	(*GetCaptureSessionResponse)(nil), // 2: capture.v1.GetCaptureSessionResponse
+	(*UseItemRequest)(nil),            // 3: capture.v1.UseItemRequest
+	(*UseItemResponse)(nil),           // 4: capture.v1.UseItemResponse
+	(*ThrowBallRequest)(nil),          // 5: capture.v1.ThrowBallRequest
+	(*ThrowBallResponse)(nil),         // 6: capture.v1.ThrowBallResponse
+	(*EndSessionRequest)(nil),         // 7: capture.v1.EndSessionRequest
+	(*EndSessionResponse)(nil),        // 8: capture.v1.EndSessionResponse
 }
 var file_capture_v1_capture_proto_depIdxs = []int32{
-	0, // 0: capture.v1.CaptureService.Invoke:input_type -> capture.v1.CaptureRequest
-	1, // 1: capture.v1.CaptureService.Invoke:output_type -> capture.v1.CaptureResponse
-	1, // [1:2] is the sub-list for method output_type
-	0, // [0:1] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	1, // 0: capture.v1.GetCaptureSessionResponse.actions:type_name -> capture.v1.CaptureAction
+	0, // 1: capture.v1.CaptureService.GetCaptureSession:input_type -> capture.v1.GetCaptureSessionRequest
+	3, // 2: capture.v1.CaptureService.UseItem:input_type -> capture.v1.UseItemRequest
+	5, // 3: capture.v1.CaptureService.ThrowBall:input_type -> capture.v1.ThrowBallRequest
+	7, // 4: capture.v1.CaptureService.EndSession:input_type -> capture.v1.EndSessionRequest
+	2, // 5: capture.v1.CaptureService.GetCaptureSession:output_type -> capture.v1.GetCaptureSessionResponse
+	4, // 6: capture.v1.CaptureService.UseItem:output_type -> capture.v1.UseItemResponse
+	6, // 7: capture.v1.CaptureService.ThrowBall:output_type -> capture.v1.ThrowBallResponse
+	8, // 8: capture.v1.CaptureService.EndSession:output_type -> capture.v1.EndSessionResponse
+	5, // [5:9] is the sub-list for method output_type
+	1, // [1:5] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_capture_v1_capture_proto_init() }
@@ -160,7 +637,7 @@ func file_capture_v1_capture_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_capture_v1_capture_proto_rawDesc), len(file_capture_v1_capture_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   2,
+			NumMessages:   9,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

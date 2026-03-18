@@ -5,6 +5,21 @@
 import { CaptureService } from "./capture_pb";
 
 /**
- * @generated from rpc capture.v1.CaptureService.Invoke
+ * @generated from rpc capture.v1.CaptureService.GetCaptureSession
  */
-export const invoke = CaptureService.method.invoke;
+export const getCaptureSession = CaptureService.method.getCaptureSession;
+
+/**
+ * @generated from rpc capture.v1.CaptureService.UseItem
+ */
+export const useItem = CaptureService.method.useItem;
+
+/**
+ * @generated from rpc capture.v1.CaptureService.ThrowBall
+ */
+export const throwBall = CaptureService.method.throwBall;
+
+/**
+ * @generated from rpc capture.v1.CaptureService.EndSession
+ */
+export const endSession = CaptureService.method.endSession;

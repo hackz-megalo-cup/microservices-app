@@ -5,13 +5,58 @@ package capture.v1;
 option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/go/capture/v1;capturev1";
 
 service CaptureService {
-  rpc Invoke(CaptureRequest) returns (CaptureResponse) {}
+  rpc GetCaptureSession(GetCaptureSessionRequest) returns (GetCaptureSessionResponse) {}
+  rpc UseItem(UseItemRequest) returns (UseItemResponse) {}
+  rpc ThrowBall(ThrowBallRequest) returns (ThrowBallResponse) {}
+  rpc EndSession(EndSessionRequest) returns (EndSessionResponse) {}
 }
 
-message CaptureRequest {
-  string input = 1;
+message GetCaptureSessionRequest {
+  string session_id = 1;
 }
 
-message CaptureResponse {
-  string output = 1;
+message CaptureAction {
+  string id = 1;
+  string action_type = 2;
+  string item_id = 3;
+  double rate_change = 4;
+  string created_at = 5;
+}
+
+message GetCaptureSessionResponse {
+  string session_id = 1;
+  string battle_session_id = 2;
+  string user_id = 3;
+  string pokemon_id = 4;
+  double base_rate = 5;
+  double current_rate = 6;
+  string result = 7;
+  repeated CaptureAction actions = 8;
+}
+
+message UseItemRequest {
+  string session_id = 1;
+  string item_id = 2;
+}
+
+message UseItemResponse {
+  double rate_before = 1;
+  double rate_after = 2;
+  bool escaped = 3;
+}
+
+message ThrowBallRequest {
+  string session_id = 1;
+}
+
+message ThrowBallResponse {
+  string result = 1;
+}
+
+message EndSessionRequest {
+  string session_id = 1;
+}
+
+message EndSessionResponse {
+  string result = 1;
 }

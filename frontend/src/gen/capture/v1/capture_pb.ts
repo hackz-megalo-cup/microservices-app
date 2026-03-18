@@ -10,53 +10,266 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file capture/v1/capture.proto.
  */
 export const file_capture_v1_capture: GenFile = /*@__PURE__*/
-  fileDesc("ChhjYXB0dXJlL3YxL2NhcHR1cmUucHJvdG8SCmNhcHR1cmUudjEiHwoOQ2FwdHVyZVJlcXVlc3QSDQoFaW5wdXQYASABKAkiIQoPQ2FwdHVyZVJlc3BvbnNlEg4KBm91dHB1dBgBIAEoCTJVCg5DYXB0dXJlU2VydmljZRJDCgZJbnZva2USGi5jYXB0dXJlLnYxLkNhcHR1cmVSZXF1ZXN0GhsuY2FwdHVyZS52MS5DYXB0dXJlUmVzcG9uc2UiAEJUWlJnaXRodWIuY29tL2hhY2t6LW1lZ2Fsby1jdXAvbWljcm9zZXJ2aWNlcy1hcHAvc2VydmljZXMvZ2VuL2dvL2NhcHR1cmUvdjE7Y2FwdHVyZXYxYgZwcm90bzM");
+  fileDesc("ChhjYXB0dXJlL3YxL2NhcHR1cmUucHJvdG8SCmNhcHR1cmUudjEiLgoYR2V0Q2FwdHVyZVNlc3Npb25SZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkiagoNQ2FwdHVyZUFjdGlvbhIKCgJpZBgBIAEoCRITCgthY3Rpb25fdHlwZRgCIAEoCRIPCgdpdGVtX2lkGAMgASgJEhMKC3JhdGVfY2hhbmdlGAQgASgBEhIKCmNyZWF0ZWRfYXQYBSABKAki1AEKGUdldENhcHR1cmVTZXNzaW9uUmVzcG9uc2USEgoKc2Vzc2lvbl9pZBgBIAEoCRIZChFiYXR0bGVfc2Vzc2lvbl9pZBgCIAEoCRIPCgd1c2VyX2lkGAMgASgJEhIKCnBva2Vtb25faWQYBCABKAkSEQoJYmFzZV9yYXRlGAUgASgBEhQKDGN1cnJlbnRfcmF0ZRgGIAEoARIOCgZyZXN1bHQYByABKAkSKgoHYWN0aW9ucxgIIAMoCzIZLmNhcHR1cmUudjEuQ2FwdHVyZUFjdGlvbiI1Cg5Vc2VJdGVtUmVxdWVzdBISCgpzZXNzaW9uX2lkGAEgASgJEg8KB2l0ZW1faWQYAiABKAkiSwoPVXNlSXRlbVJlc3BvbnNlEhMKC3JhdGVfYmVmb3JlGAEgASgBEhIKCnJhdGVfYWZ0ZXIYAiABKAESDwoHZXNjYXBlZBgDIAEoCCImChBUaHJvd0JhbGxSZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkiIwoRVGhyb3dCYWxsUmVzcG9uc2USDgoGcmVzdWx0GAEgASgJIicKEUVuZFNlc3Npb25SZXF1ZXN0EhIKCnNlc3Npb25faWQYASABKAkiJAoSRW5kU2Vzc2lvblJlc3BvbnNlEg4KBnJlc3VsdBgBIAEoCTLVAgoOQ2FwdHVyZVNlcnZpY2USYgoRR2V0Q2FwdHVyZVNlc3Npb24SJC5jYXB0dXJlLnYxLkdldENhcHR1cmVTZXNzaW9uUmVxdWVzdBolLmNhcHR1cmUudjEuR2V0Q2FwdHVyZVNlc3Npb25SZXNwb25zZSIAEkQKB1VzZUl0ZW0SGi5jYXB0dXJlLnYxLlVzZUl0ZW1SZXF1ZXN0GhsuY2FwdHVyZS52MS5Vc2VJdGVtUmVzcG9uc2UiABJKCglUaHJvd0JhbGwSHC5jYXB0dXJlLnYxLlRocm93QmFsbFJlcXVlc3QaHS5jYXB0dXJlLnYxLlRocm93QmFsbFJlc3BvbnNlIgASTQoKRW5kU2Vzc2lvbhIdLmNhcHR1cmUudjEuRW5kU2Vzc2lvblJlcXVlc3QaHi5jYXB0dXJlLnYxLkVuZFNlc3Npb25SZXNwb25zZSIAQlRaUmdpdGh1Yi5jb20vaGFja3otbWVnYWxvLWN1cC9taWNyb3NlcnZpY2VzLWFwcC9zZXJ2aWNlcy9nZW4vZ28vY2FwdHVyZS92MTtjYXB0dXJldjFiBnByb3RvMw");
 
 /**
- * @generated from message capture.v1.CaptureRequest
+ * @generated from message capture.v1.GetCaptureSessionRequest
  */
-export type CaptureRequest = Message<"capture.v1.CaptureRequest"> & {
+export type GetCaptureSessionRequest = Message<"capture.v1.GetCaptureSessionRequest"> & {
   /**
-   * @generated from field: string input = 1;
+   * @generated from field: string session_id = 1;
    */
-  input: string;
+  sessionId: string;
 };
 
 /**
- * Describes the message capture.v1.CaptureRequest.
- * Use `create(CaptureRequestSchema)` to create a new message.
+ * Describes the message capture.v1.GetCaptureSessionRequest.
+ * Use `create(GetCaptureSessionRequestSchema)` to create a new message.
  */
-export const CaptureRequestSchema: GenMessage<CaptureRequest> = /*@__PURE__*/
+export const GetCaptureSessionRequestSchema: GenMessage<GetCaptureSessionRequest> = /*@__PURE__*/
   messageDesc(file_capture_v1_capture, 0);
 
 /**
- * @generated from message capture.v1.CaptureResponse
+ * @generated from message capture.v1.CaptureAction
  */
-export type CaptureResponse = Message<"capture.v1.CaptureResponse"> & {
+export type CaptureAction = Message<"capture.v1.CaptureAction"> & {
   /**
-   * @generated from field: string output = 1;
+   * @generated from field: string id = 1;
    */
-  output: string;
+  id: string;
+
+  /**
+   * @generated from field: string action_type = 2;
+   */
+  actionType: string;
+
+  /**
+   * @generated from field: string item_id = 3;
+   */
+  itemId: string;
+
+  /**
+   * @generated from field: double rate_change = 4;
+   */
+  rateChange: number;
+
+  /**
+   * @generated from field: string created_at = 5;
+   */
+  createdAt: string;
 };
 
 /**
- * Describes the message capture.v1.CaptureResponse.
- * Use `create(CaptureResponseSchema)` to create a new message.
+ * Describes the message capture.v1.CaptureAction.
+ * Use `create(CaptureActionSchema)` to create a new message.
  */
-export const CaptureResponseSchema: GenMessage<CaptureResponse> = /*@__PURE__*/
+export const CaptureActionSchema: GenMessage<CaptureAction> = /*@__PURE__*/
   messageDesc(file_capture_v1_capture, 1);
+
+/**
+ * @generated from message capture.v1.GetCaptureSessionResponse
+ */
+export type GetCaptureSessionResponse = Message<"capture.v1.GetCaptureSessionResponse"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+
+  /**
+   * @generated from field: string battle_session_id = 2;
+   */
+  battleSessionId: string;
+
+  /**
+   * @generated from field: string user_id = 3;
+   */
+  userId: string;
+
+  /**
+   * @generated from field: string pokemon_id = 4;
+   */
+  pokemonId: string;
+
+  /**
+   * @generated from field: double base_rate = 5;
+   */
+  baseRate: number;
+
+  /**
+   * @generated from field: double current_rate = 6;
+   */
+  currentRate: number;
+
+  /**
+   * @generated from field: string result = 7;
+   */
+  result: string;
+
+  /**
+   * @generated from field: repeated capture.v1.CaptureAction actions = 8;
+   */
+  actions: CaptureAction[];
+};
+
+/**
+ * Describes the message capture.v1.GetCaptureSessionResponse.
+ * Use `create(GetCaptureSessionResponseSchema)` to create a new message.
+ */
+export const GetCaptureSessionResponseSchema: GenMessage<GetCaptureSessionResponse> = /*@__PURE__*/
+  messageDesc(file_capture_v1_capture, 2);
+
+/**
+ * @generated from message capture.v1.UseItemRequest
+ */
+export type UseItemRequest = Message<"capture.v1.UseItemRequest"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+
+  /**
+   * @generated from field: string item_id = 2;
+   */
+  itemId: string;
+};
+
+/**
+ * Describes the message capture.v1.UseItemRequest.
+ * Use `create(UseItemRequestSchema)` to create a new message.
+ */
+export const UseItemRequestSchema: GenMessage<UseItemRequest> = /*@__PURE__*/
+  messageDesc(file_capture_v1_capture, 3);
+
+/**
+ * @generated from message capture.v1.UseItemResponse
+ */
+export type UseItemResponse = Message<"capture.v1.UseItemResponse"> & {
+  /**
+   * @generated from field: double rate_before = 1;
+   */
+  rateBefore: number;
+
+  /**
+   * @generated from field: double rate_after = 2;
+   */
+  rateAfter: number;
+
+  /**
+   * @generated from field: bool escaped = 3;
+   */
+  escaped: boolean;
+};
+
+/**
+ * Describes the message capture.v1.UseItemResponse.
+ * Use `create(UseItemResponseSchema)` to create a new message.
+ */
+export const UseItemResponseSchema: GenMessage<UseItemResponse> = /*@__PURE__*/
+  messageDesc(file_capture_v1_capture, 4);
+
+/**
+ * @generated from message capture.v1.ThrowBallRequest
+ */
+export type ThrowBallRequest = Message<"capture.v1.ThrowBallRequest"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+};
+
+/**
+ * Describes the message capture.v1.ThrowBallRequest.
+ * Use `create(ThrowBallRequestSchema)` to create a new message.
+ */
+export const ThrowBallRequestSchema: GenMessage<ThrowBallRequest> = /*@__PURE__*/
+  messageDesc(file_capture_v1_capture, 5);
+
+/**
+ * @generated from message capture.v1.ThrowBallResponse
+ */
+export type ThrowBallResponse = Message<"capture.v1.ThrowBallResponse"> & {
+  /**
+   * @generated from field: string result = 1;
+   */
+  result: string;
+};
+
+/**
+ * Describes the message capture.v1.ThrowBallResponse.
+ * Use `create(ThrowBallResponseSchema)` to create a new message.
+ */
+export const ThrowBallResponseSchema: GenMessage<ThrowBallResponse> = /*@__PURE__*/
+  messageDesc(file_capture_v1_capture, 6);
+
+/**
+ * @generated from message capture.v1.EndSessionRequest
+ */
+export type EndSessionRequest = Message<"capture.v1.EndSessionRequest"> & {
+  /**
+   * @generated from field: string session_id = 1;
+   */
+  sessionId: string;
+};
+
+/**
+ * Describes the message capture.v1.EndSessionRequest.
+ * Use `create(EndSessionRequestSchema)` to create a new message.
+ */
+export const EndSessionRequestSchema: GenMessage<EndSessionRequest> = /*@__PURE__*/
+  messageDesc(file_capture_v1_capture, 7);
+
+/**
+ * @generated from message capture.v1.EndSessionResponse
+ */
+export type EndSessionResponse = Message<"capture.v1.EndSessionResponse"> & {
+  /**
+   * @generated from field: string result = 1;
+   */
+  result: string;
+};
+
+/**
+ * Describes the message capture.v1.EndSessionResponse.
+ * Use `create(EndSessionResponseSchema)` to create a new message.
+ */
+export const EndSessionResponseSchema: GenMessage<EndSessionResponse> = /*@__PURE__*/
+  messageDesc(file_capture_v1_capture, 8);
 
 /**
  * @generated from service capture.v1.CaptureService
  */
 export const CaptureService: GenService<{
   /**
-   * @generated from rpc capture.v1.CaptureService.Invoke
+   * @generated from rpc capture.v1.CaptureService.GetCaptureSession
    */
-  invoke: {
+  getCaptureSession: {
     methodKind: "unary";
-    input: typeof CaptureRequestSchema;
-    output: typeof CaptureResponseSchema;
+    input: typeof GetCaptureSessionRequestSchema;
+    output: typeof GetCaptureSessionResponseSchema;
+  },
+  /**
+   * @generated from rpc capture.v1.CaptureService.UseItem
+   */
+  useItem: {
+    methodKind: "unary";
+    input: typeof UseItemRequestSchema;
+    output: typeof UseItemResponseSchema;
+  },
+  /**
+   * @generated from rpc capture.v1.CaptureService.ThrowBall
+   */
+  throwBall: {
+    methodKind: "unary";
+    input: typeof ThrowBallRequestSchema;
+    output: typeof ThrowBallResponseSchema;
+  },
+  /**
+   * @generated from rpc capture.v1.CaptureService.EndSession
+   */
+  endSession: {
+    methodKind: "unary";
+    input: typeof EndSessionRequestSchema;
+    output: typeof EndSessionResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_capture_v1_capture, 0);
