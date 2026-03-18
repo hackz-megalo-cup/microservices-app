@@ -29,6 +29,7 @@ jobs:
       masterdata: ${{ steps.filter.outputs.masterdata }}
       projector: ${{ steps.filter.outputs.projector }}
       raid_lobby: ${{ steps.filter.outputs.raid_lobby }}
+      lobby: ${{ steps.filter.outputs.lobby }}
       capture: ${{ steps.filter.outputs.capture }}
       go_binary_attrs: ${{ steps.targets.outputs.go_binary_attrs }}
       image_attrs: ${{ steps.targets.outputs.image_attrs }}
@@ -70,6 +71,11 @@ jobs:
               - 'services/internal/raid_lobby/**'
               - 'proto/raid_lobby/**'
               - 'services/gen/go/raid_lobby/**'
+            lobby:
+              - 'services/cmd/lobby/**'
+              - 'services/internal/lobby/**'
+              - 'proto/lobby/**'
+              - 'services/gen/go/lobby/**'
             capture:
               - 'services/cmd/capture/**'
               - 'services/internal/capture/**'
@@ -97,11 +103,12 @@ jobs:
           MASTERDATA_CHANGED: ${{ steps.filter.outputs.masterdata }}
           PROJECTOR_CHANGED: ${{ steps.filter.outputs.projector }}
           RAID_LOBBY_CHANGED: ${{ steps.filter.outputs.raid_lobby }}
+          LOBBY_CHANGED: ${{ steps.filter.outputs.lobby }}
           CAPTURE_CHANGED: ${{ steps.filter.outputs.capture }}
         run: |
           set -euo pipefail
 
-          go_services=(auth gateway item masterdata projector raid-lobby capture)
+          go_services=(auth gateway item masterdata projector raid-lobby lobby capture)
           release_images=(
             .#auth-image
             .#frontend-image
@@ -110,6 +117,7 @@ jobs:
             .#masterdata-image
             .#projector-image
             .#raid-lobby-image
+            .#lobby-image
             .#capture-image
           )
 
@@ -153,6 +161,9 @@ jobs:
             if [[ "$RAID_LOBBY_CHANGED" == "true" ]]; then
               add_go raid-lobby
             fi
+            if [[ "$LOBBY_CHANGED" == "true" ]]; then
+              add_go lobby
+            fi
             if [[ "$CAPTURE_CHANGED" == "true" ]]; then
               add_go capture
             fi
@@ -190,6 +201,7 @@ jobs:
             .#masterdata-image
             .#projector-image
             .#raid-lobby-image
+            .#lobby-image
             .#capture-image
           )
           for attr in "${pr_image_order[@]}"; do
@@ -342,7 +354,7 @@ jobs:
             auth-service
             gateway
             frontend
-            item masterdata projector raid-lobby
+            item masterdata projector raid-lobby lobby
             capture
           )
           export REGISTRY_AUTH_FILE="$RUNNER_TEMP/containers-auth.json"
