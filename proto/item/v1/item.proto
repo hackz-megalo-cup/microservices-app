@@ -7,6 +7,7 @@ option go_package = "github.com/hackz-megalo-cup/microservices-app/services/gen/
 service ItemService {
   rpc GrantItem(GrantItemRequest) returns (GrantItemResponse) {}
   rpc UseItem(UseItemRequest) returns (UseItemResponse) {}
+  rpc GetUserItems(GetUserItemsRequest) returns (GetUserItemsResponse) {}
 }
 
 message GrantItemRequest {
@@ -27,3 +28,17 @@ message UseItemRequest {
 }
 
 message UseItemResponse {}
+
+message GetUserItemsRequest {
+  string user_id = 1;
+}
+
+message UserItem {
+  string item_id = 1;
+  int32 quantity = 2;
+  string status = 3;
+}
+
+message GetUserItemsResponse {
+  repeated UserItem items = 1;
+}
