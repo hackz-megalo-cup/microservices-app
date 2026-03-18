@@ -42,7 +42,6 @@ const (
 
 	TopicBattleFinished = "battle.finished"
 
-	TopicLobbyCreated     = "lobby.created"
 	TopicLobbyFailed      = "lobby.failed"
 	TopicLobbyCompensated = "lobby.compensated"
 
@@ -67,7 +66,6 @@ const (
 	TopicRaidLobbyCreatedDLQ      = "raid_lobby.created.dlq"
 	TopicRaidUserJoinedDLQ        = "raid.user_joined.dlq"
 	TopicRaidBattleStartedDLQ     = "raid.battle_started.dlq"
-	TopicLobbyCreatedDLQ          = "lobby.created.dlq"
 	TopicCaptureStartedDLQ        = "capture.started.dlq"
 	TopicCaptureCompletedDLQ      = "capture.completed.dlq"
 )
@@ -90,7 +88,6 @@ func DLQTopic(source string) string {
 		TopicRaidLobbyCreated:      TopicRaidLobbyCreatedDLQ,
 		TopicRaidUserJoined:        TopicRaidUserJoinedDLQ,
 		TopicRaidBattleStarted:     TopicRaidBattleStartedDLQ,
-		TopicLobbyCreated:          TopicLobbyCreatedDLQ,
 		TopicCaptureStarted:        TopicCaptureStartedDLQ,
 	}
 	return m[source]
@@ -142,10 +139,8 @@ func DefaultTopics() map[string]int32 {
 		TopicRaidBattleStarted:        3,
 		TopicRaidBattleStartedDLQ:     1,
 		TopicBattleFinished:           3,
-		TopicLobbyCreated:             3,
 		TopicLobbyFailed:              1,
 		TopicLobbyCompensated:         1,
-		TopicLobbyCreatedDLQ:          1,
 		TopicCaptureStarted:           3,
 		TopicCaptureItemUsed:          3,
 		TopicCaptureBallThrown:        3,

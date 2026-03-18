@@ -16,6 +16,9 @@ service AuthService {
 
   // ユーザープロフィール取得
   rpc GetUserProfile(GetUserProfileRequest) returns (GetUserProfileResponse) {}
+
+  // ユーザーが所持するポケモンID一覧取得
+  rpc GetUserPokemon(GetUserPokemonRequest) returns (GetUserPokemonResponse) {}
 }
 
 // ユーザー登録リクエスト
@@ -58,4 +61,14 @@ message LoginUserResponse {
 // ユーザープロフィール取得レスポンス
 message GetUserProfileResponse {
   User user = 1;
+}
+
+// ユーザーポケモン取得リクエスト
+message GetUserPokemonRequest {
+  string user_id = 1;
+}
+
+// ユーザーポケモン取得レスポンス
+message GetUserPokemonResponse {
+  repeated string pokemon_ids = 1;
 }

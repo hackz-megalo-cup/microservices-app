@@ -17,6 +17,7 @@ import (
 	"golang.org/x/net/http2"
 	"golang.org/x/net/http2/h2c"
 
+	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/auth/v1/authv1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/item/v1/itemv1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/lobby/v1/lobbyv1connect"
 	"github.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1/masterdatav1connect"
@@ -94,13 +95,15 @@ func run() error {
 		slog.WarnContext(ctx, "RAID_LOBBY_URL not set, raid data will be empty")
 	}
 
-	authDB, err := platform.NewDBPool(ctx, os.Getenv("AUTH_DATABASE_URL"))
-	if err != nil {
-		slog.WarnContext(ctx, "auth DB unavailable, ownership check will be skipped", "error", err)
-		authDB = nil
-	}
-	if authDB != nil {
-		defer authDB.Close()
+	// --- Auth service client ---
+	var authClient authv1connect.AuthServiceClient
+	if authURL := os.Getenv("AUTH_URL"); authURL != "" {
+		authClient = authv1connect.NewAuthServiceClient(
+			platform.NewInstrumentedHTTPClient(3*time.Second),
+			authURL,
+		)
+	} else {
+		slog.WarnContext(ctx, "AUTH_URL not set, ownership check will be skipped")
 	}
 
 	// --- Masterdata client ---
@@ -151,7 +154,7 @@ func run() error {
 	platform.StartIdempotencyCleanup(ctx, idempotencyStore)
 
 	// --- Service ---
-	svc := lobby.NewService(eventStore, outbox, dbPool, authDB, itemClient, raidLobbyClient, masterdataClient)
+	svc := lobby.NewService(eventStore, outbox, dbPool, authClient, itemClient, raidLobbyClient, masterdataClient)
 
 	// --- Connect-RPC Handler with interceptors ---
 	otelInterceptor, err := otelconnect.NewInterceptor(otelconnect.WithTrustRemote())

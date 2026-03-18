@@ -73,8 +73,9 @@ _: {
         stringData = {
           DATABASE_URL = "postgresql://devuser:devpass@postgresql.database:5432/lobby_db";
           KAFKA_BROKERS = "redpanda.messaging:9092";
-          ITEM_DATABASE_URL = "postgresql://devuser:devpass@postgresql.database:5432/item_db";
-          RAID_LOBBY_DATABASE_URL = "postgresql://devuser:devpass@postgresql.database:5432/raid_lobby_db";
+          AUTH_URL = "http://auth-service.microservices:8090";
+          ITEM_URL = "http://item-service.microservices:8080";
+          RAID_LOBBY_URL = "http://raid-lobby-service.microservices:8086";
           MASTERDATA_URL = "http://masterdata-service.microservices:8084";
         };
       };
