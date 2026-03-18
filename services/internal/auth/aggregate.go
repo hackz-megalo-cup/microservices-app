@@ -68,7 +68,7 @@ func (a *UserAggregate) RegisterUser(email string, passwordHash string, occurred
 
 // LoggedIn records a user login
 func (a *UserAggregate) LoggedIn(occurredAt time.Time) {
-	isFirstToday := a.LastLoginAt == nil || isFirstToday(a.LastLoginAt)
+	isFirstToday := a.LastLoginAt == nil || isFirstLoginToday(a.LastLoginAt, occurredAt)
 	a.Raise(EventUserLoggedIn, UserLoggedInData{
 		UserID:       a.AggregateID(),
 		IsFirstToday: isFirstToday,
@@ -116,13 +116,14 @@ func UserTopicMapper(eventType string) string {
 
 // Helper functions
 
-// isFirstToday checks if the given time is from before today
-func isFirstToday(lastTime *time.Time) bool {
+// isFirstLoginToday checks if the login on the given timestamp is the first for that day,
+// using the provided reference time instead of the current time.
+func isFirstLoginToday(lastTime *time.Time, now time.Time) bool {
 	if lastTime == nil {
 		return true
 	}
 	lastDate := lastTime.UTC()
-	today := time.Now().UTC()
+	today := now.UTC()
 	return lastDate.Year() != today.Year() ||
 		lastDate.Month() != today.Month() ||
 		lastDate.Day() != today.Day()
