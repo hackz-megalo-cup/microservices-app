@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file masterdata/v1/masterdata.proto.
  */
 export const file_masterdata_v1_masterdata: GenFile = /*@__PURE__*/
-  fileDesc("Ch5tYXN0ZXJkYXRhL3YxL21hc3RlcmRhdGEucHJvdG8SDW1hc3RlcmRhdGEudjEilAEKB1Bva2Vtb24SCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIMCgR0eXBlGAMgASgJEgoKAmhwGAQgASgFEg4KBmF0dGFjaxgFIAEoBRINCgVzcGVlZBgGIAEoBRIZChFzcGVjaWFsX21vdmVfbmFtZRgHIAEoCRIbChNzcGVjaWFsX21vdmVfZGFtYWdlGAggASgFIpUBChRDcmVhdGVQb2tlbW9uUmVxdWVzdBIMCgRuYW1lGAEgASgJEgwKBHR5cGUYAiABKAkSCgoCaHAYAyABKAUSDgoGYXR0YWNrGAQgASgFEg0KBXNwZWVkGAUgASgFEhkKEXNwZWNpYWxfbW92ZV9uYW1lGAYgASgJEhsKE3NwZWNpYWxfbW92ZV9kYW1hZ2UYByABKAUiIwoVQ3JlYXRlUG9rZW1vblJlc3BvbnNlEgoKAmlkGAEgASgJIh8KEUdldFBva2Vtb25SZXF1ZXN0EgoKAmlkGAEgASgJIj0KEkdldFBva2Vtb25SZXNwb25zZRInCgdwb2tlbW9uGAEgASgLMhYubWFzdGVyZGF0YS52MS5Qb2tlbW9uIhQKEkxpc3RQb2tlbW9uUmVxdWVzdCI+ChNMaXN0UG9rZW1vblJlc3BvbnNlEicKB3Bva2Vtb24YASADKAsyFi5tYXN0ZXJkYXRhLnYxLlBva2Vtb24iVAoLVHlwZU1hdGNodXASFgoOYXR0YWNraW5nX3R5cGUYASABKAkSFgoOZGVmZW5kaW5nX3R5cGUYAiABKAkSFQoNZWZmZWN0aXZlbmVzcxgDIAEoASJhChhDcmVhdGVUeXBlTWF0Y2h1cFJlcXVlc3QSFgoOYXR0YWNraW5nX3R5cGUYASABKAkSFgoOZGVmZW5kaW5nX3R5cGUYAiABKAkSFQoNZWZmZWN0aXZlbmVzcxgDIAEoASIbChlDcmVhdGVUeXBlTWF0Y2h1cFJlc3BvbnNlIhkKF0xpc3RUeXBlTWF0Y2h1cHNSZXF1ZXN0IkgKGExpc3RUeXBlTWF0Y2h1cHNSZXNwb25zZRIsCghtYXRjaHVwcxgBIAMoCzIaLm1hc3RlcmRhdGEudjEuVHlwZU1hdGNodXAiZwoKSXRlbUVmZmVjdBITCgtlZmZlY3RfdHlwZRgBIAEoCRITCgt0YXJnZXRfdHlwZRgCIAEoCRIaChJjYXB0dXJlX3JhdGVfYm9udXMYAyABKAESEwoLZmxhdm9yX3RleHQYBCABKAkiTAoESXRlbRIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEioKB2VmZmVjdHMYAyADKAsyGS5tYXN0ZXJkYXRhLnYxLkl0ZW1FZmZlY3QidAoXQ3JlYXRlSXRlbUVmZmVjdFJlcXVlc3QSEwoLZWZmZWN0X3R5cGUYASABKAkSEwoLdGFyZ2V0X3R5cGUYAiABKAkSGgoSY2FwdHVyZV9yYXRlX2JvbnVzGAMgASgBEhMKC2ZsYXZvcl90ZXh0GAQgASgJIloKEUNyZWF0ZUl0ZW1SZXF1ZXN0EgwKBG5hbWUYASABKAkSNwoHZWZmZWN0cxgCIAMoCzImLm1hc3RlcmRhdGEudjEuQ3JlYXRlSXRlbUVmZmVjdFJlcXVlc3QiIAoSQ3JlYXRlSXRlbVJlc3BvbnNlEgoKAmlkGAEgASgJIhwKDkdldEl0ZW1SZXF1ZXN0EgoKAmlkGAEgASgJIjQKD0dldEl0ZW1SZXNwb25zZRIhCgRpdGVtGAEgASgLMhMubWFzdGVyZGF0YS52MS5JdGVtIhIKEExpc3RJdGVtc1JlcXVlc3QiNwoRTGlzdEl0ZW1zUmVzcG9uc2USIgoFaXRlbXMYASADKAsyEy5tYXN0ZXJkYXRhLnYxLkl0ZW0y4gUKEU1hc3RlcmRhdGFTZXJ2aWNlElwKDUNyZWF0ZVBva2Vtb24SIy5tYXN0ZXJkYXRhLnYxLkNyZWF0ZVBva2Vtb25SZXF1ZXN0GiQubWFzdGVyZGF0YS52MS5DcmVhdGVQb2tlbW9uUmVzcG9uc2UiABJTCgpHZXRQb2tlbW9uEiAubWFzdGVyZGF0YS52MS5HZXRQb2tlbW9uUmVxdWVzdBohLm1hc3RlcmRhdGEudjEuR2V0UG9rZW1vblJlc3BvbnNlIgASVgoLTGlzdFBva2Vtb24SIS5tYXN0ZXJkYXRhLnYxLkxpc3RQb2tlbW9uUmVxdWVzdBoiLm1hc3RlcmRhdGEudjEuTGlzdFBva2Vtb25SZXNwb25zZSIAEmgKEUNyZWF0ZVR5cGVNYXRjaHVwEicubWFzdGVyZGF0YS52MS5DcmVhdGVUeXBlTWF0Y2h1cFJlcXVlc3QaKC5tYXN0ZXJkYXRhLnYxLkNyZWF0ZVR5cGVNYXRjaHVwUmVzcG9uc2UiABJlChBMaXN0VHlwZU1hdGNodXBzEiYubWFzdGVyZGF0YS52MS5MaXN0VHlwZU1hdGNodXBzUmVxdWVzdBonLm1hc3RlcmRhdGEudjEuTGlzdFR5cGVNYXRjaHVwc1Jlc3BvbnNlIgASUwoKQ3JlYXRlSXRlbRIgLm1hc3RlcmRhdGEudjEuQ3JlYXRlSXRlbVJlcXVlc3QaIS5tYXN0ZXJkYXRhLnYxLkNyZWF0ZUl0ZW1SZXNwb25zZSIAEkoKB0dldEl0ZW0SHS5tYXN0ZXJkYXRhLnYxLkdldEl0ZW1SZXF1ZXN0Gh4ubWFzdGVyZGF0YS52MS5HZXRJdGVtUmVzcG9uc2UiABJQCglMaXN0SXRlbXMSHy5tYXN0ZXJkYXRhLnYxLkxpc3RJdGVtc1JlcXVlc3QaIC5tYXN0ZXJkYXRhLnYxLkxpc3RJdGVtc1Jlc3BvbnNlIgBCWlpYZ2l0aHViLmNvbS9oYWNrei1tZWdhbG8tY3VwL21pY3Jvc2VydmljZXMtYXBwL3NlcnZpY2VzL2dlbi9nby9tYXN0ZXJkYXRhL3YxO21hc3RlcmRhdGF2MWIGcHJvdG8z");
+  fileDesc("Ch5tYXN0ZXJkYXRhL3YxL21hc3RlcmRhdGEucHJvdG8SDW1hc3RlcmRhdGEudjEilAEKB1Bva2Vtb24SCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIMCgR0eXBlGAMgASgJEgoKAmhwGAQgASgFEg4KBmF0dGFjaxgFIAEoBRINCgVzcGVlZBgGIAEoBRIZChFzcGVjaWFsX21vdmVfbmFtZRgHIAEoCRIbChNzcGVjaWFsX21vdmVfZGFtYWdlGAggASgFIpUBChRDcmVhdGVQb2tlbW9uUmVxdWVzdBIMCgRuYW1lGAEgASgJEgwKBHR5cGUYAiABKAkSCgoCaHAYAyABKAUSDgoGYXR0YWNrGAQgASgFEg0KBXNwZWVkGAUgASgFEhkKEXNwZWNpYWxfbW92ZV9uYW1lGAYgASgJEhsKE3NwZWNpYWxfbW92ZV9kYW1hZ2UYByABKAUiIwoVQ3JlYXRlUG9rZW1vblJlc3BvbnNlEgoKAmlkGAEgASgJIh8KEUdldFBva2Vtb25SZXF1ZXN0EgoKAmlkGAEgASgJIj0KEkdldFBva2Vtb25SZXNwb25zZRInCgdwb2tlbW9uGAEgASgLMhYubWFzdGVyZGF0YS52MS5Qb2tlbW9uIhQKEkxpc3RQb2tlbW9uUmVxdWVzdCI+ChNMaXN0UG9rZW1vblJlc3BvbnNlEicKB3Bva2Vtb24YASADKAsyFi5tYXN0ZXJkYXRhLnYxLlBva2Vtb24ioQEKFFVwZGF0ZVBva2Vtb25SZXF1ZXN0EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDAoEdHlwZRgDIAEoCRIKCgJocBgEIAEoBRIOCgZhdHRhY2sYBSABKAUSDQoFc3BlZWQYBiABKAUSGQoRc3BlY2lhbF9tb3ZlX25hbWUYByABKAkSGwoTc3BlY2lhbF9tb3ZlX2RhbWFnZRgIIAEoBSJAChVVcGRhdGVQb2tlbW9uUmVzcG9uc2USJwoHcG9rZW1vbhgBIAEoCzIWLm1hc3RlcmRhdGEudjEuUG9rZW1vbiIiChREZWxldGVQb2tlbW9uUmVxdWVzdBIKCgJpZBgBIAEoCSIXChVEZWxldGVQb2tlbW9uUmVzcG9uc2UiVAoLVHlwZU1hdGNodXASFgoOYXR0YWNraW5nX3R5cGUYASABKAkSFgoOZGVmZW5kaW5nX3R5cGUYAiABKAkSFQoNZWZmZWN0aXZlbmVzcxgDIAEoASJhChhDcmVhdGVUeXBlTWF0Y2h1cFJlcXVlc3QSFgoOYXR0YWNraW5nX3R5cGUYASABKAkSFgoOZGVmZW5kaW5nX3R5cGUYAiABKAkSFQoNZWZmZWN0aXZlbmVzcxgDIAEoASIbChlDcmVhdGVUeXBlTWF0Y2h1cFJlc3BvbnNlIhkKF0xpc3RUeXBlTWF0Y2h1cHNSZXF1ZXN0IkgKGExpc3RUeXBlTWF0Y2h1cHNSZXNwb25zZRIsCghtYXRjaHVwcxgBIAMoCzIaLm1hc3RlcmRhdGEudjEuVHlwZU1hdGNodXAiYQoYVXBkYXRlVHlwZU1hdGNodXBSZXF1ZXN0EhYKDmF0dGFja2luZ190eXBlGAEgASgJEhYKDmRlZmVuZGluZ190eXBlGAIgASgJEhUKDWVmZmVjdGl2ZW5lc3MYAyABKAEiSAoZVXBkYXRlVHlwZU1hdGNodXBSZXNwb25zZRIrCgdtYXRjaHVwGAEgASgLMhoubWFzdGVyZGF0YS52MS5UeXBlTWF0Y2h1cCJKChhEZWxldGVUeXBlTWF0Y2h1cFJlcXVlc3QSFgoOYXR0YWNraW5nX3R5cGUYASABKAkSFgoOZGVmZW5kaW5nX3R5cGUYAiABKAkiGwoZRGVsZXRlVHlwZU1hdGNodXBSZXNwb25zZSJnCgpJdGVtRWZmZWN0EhMKC2VmZmVjdF90eXBlGAEgASgJEhMKC3RhcmdldF90eXBlGAIgASgJEhoKEmNhcHR1cmVfcmF0ZV9ib251cxgDIAEoARITCgtmbGF2b3JfdGV4dBgEIAEoCSJMCgRJdGVtEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSKgoHZWZmZWN0cxgDIAMoCzIZLm1hc3RlcmRhdGEudjEuSXRlbUVmZmVjdCJ0ChdDcmVhdGVJdGVtRWZmZWN0UmVxdWVzdBITCgtlZmZlY3RfdHlwZRgBIAEoCRITCgt0YXJnZXRfdHlwZRgCIAEoCRIaChJjYXB0dXJlX3JhdGVfYm9udXMYAyABKAESEwoLZmxhdm9yX3RleHQYBCABKAkiWgoRQ3JlYXRlSXRlbVJlcXVlc3QSDAoEbmFtZRgBIAEoCRI3CgdlZmZlY3RzGAIgAygLMiYubWFzdGVyZGF0YS52MS5DcmVhdGVJdGVtRWZmZWN0UmVxdWVzdCIgChJDcmVhdGVJdGVtUmVzcG9uc2USCgoCaWQYASABKAkiHAoOR2V0SXRlbVJlcXVlc3QSCgoCaWQYASABKAkiNAoPR2V0SXRlbVJlc3BvbnNlEiEKBGl0ZW0YASABKAsyEy5tYXN0ZXJkYXRhLnYxLkl0ZW0iEgoQTGlzdEl0ZW1zUmVxdWVzdCI3ChFMaXN0SXRlbXNSZXNwb25zZRIiCgVpdGVtcxgBIAMoCzITLm1hc3RlcmRhdGEudjEuSXRlbSJmChFVcGRhdGVJdGVtUmVxdWVzdBIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEjcKB2VmZmVjdHMYAyADKAsyJi5tYXN0ZXJkYXRhLnYxLkNyZWF0ZUl0ZW1FZmZlY3RSZXF1ZXN0IjcKElVwZGF0ZUl0ZW1SZXNwb25zZRIhCgRpdGVtGAEgASgLMhMubWFzdGVyZGF0YS52MS5JdGVtIh8KEURlbGV0ZUl0ZW1SZXF1ZXN0EgoKAmlkGAEgASgJIhQKEkRlbGV0ZUl0ZW1SZXNwb25zZTKcCgoRTWFzdGVyZGF0YVNlcnZpY2USXAoNQ3JlYXRlUG9rZW1vbhIjLm1hc3RlcmRhdGEudjEuQ3JlYXRlUG9rZW1vblJlcXVlc3QaJC5tYXN0ZXJkYXRhLnYxLkNyZWF0ZVBva2Vtb25SZXNwb25zZSIAElMKCkdldFBva2Vtb24SIC5tYXN0ZXJkYXRhLnYxLkdldFBva2Vtb25SZXF1ZXN0GiEubWFzdGVyZGF0YS52MS5HZXRQb2tlbW9uUmVzcG9uc2UiABJWCgtMaXN0UG9rZW1vbhIhLm1hc3RlcmRhdGEudjEuTGlzdFBva2Vtb25SZXF1ZXN0GiIubWFzdGVyZGF0YS52MS5MaXN0UG9rZW1vblJlc3BvbnNlIgASXAoNVXBkYXRlUG9rZW1vbhIjLm1hc3RlcmRhdGEudjEuVXBkYXRlUG9rZW1vblJlcXVlc3QaJC5tYXN0ZXJkYXRhLnYxLlVwZGF0ZVBva2Vtb25SZXNwb25zZSIAElwKDURlbGV0ZVBva2Vtb24SIy5tYXN0ZXJkYXRhLnYxLkRlbGV0ZVBva2Vtb25SZXF1ZXN0GiQubWFzdGVyZGF0YS52MS5EZWxldGVQb2tlbW9uUmVzcG9uc2UiABJoChFDcmVhdGVUeXBlTWF0Y2h1cBInLm1hc3RlcmRhdGEudjEuQ3JlYXRlVHlwZU1hdGNodXBSZXF1ZXN0GigubWFzdGVyZGF0YS52MS5DcmVhdGVUeXBlTWF0Y2h1cFJlc3BvbnNlIgASZQoQTGlzdFR5cGVNYXRjaHVwcxImLm1hc3RlcmRhdGEudjEuTGlzdFR5cGVNYXRjaHVwc1JlcXVlc3QaJy5tYXN0ZXJkYXRhLnYxLkxpc3RUeXBlTWF0Y2h1cHNSZXNwb25zZSIAEmgKEVVwZGF0ZVR5cGVNYXRjaHVwEicubWFzdGVyZGF0YS52MS5VcGRhdGVUeXBlTWF0Y2h1cFJlcXVlc3QaKC5tYXN0ZXJkYXRhLnYxLlVwZGF0ZVR5cGVNYXRjaHVwUmVzcG9uc2UiABJoChFEZWxldGVUeXBlTWF0Y2h1cBInLm1hc3RlcmRhdGEudjEuRGVsZXRlVHlwZU1hdGNodXBSZXF1ZXN0GigubWFzdGVyZGF0YS52MS5EZWxldGVUeXBlTWF0Y2h1cFJlc3BvbnNlIgASUwoKQ3JlYXRlSXRlbRIgLm1hc3RlcmRhdGEudjEuQ3JlYXRlSXRlbVJlcXVlc3QaIS5tYXN0ZXJkYXRhLnYxLkNyZWF0ZUl0ZW1SZXNwb25zZSIAEkoKB0dldEl0ZW0SHS5tYXN0ZXJkYXRhLnYxLkdldEl0ZW1SZXF1ZXN0Gh4ubWFzdGVyZGF0YS52MS5HZXRJdGVtUmVzcG9uc2UiABJQCglMaXN0SXRlbXMSHy5tYXN0ZXJkYXRhLnYxLkxpc3RJdGVtc1JlcXVlc3QaIC5tYXN0ZXJkYXRhLnYxLkxpc3RJdGVtc1Jlc3BvbnNlIgASUwoKVXBkYXRlSXRlbRIgLm1hc3RlcmRhdGEudjEuVXBkYXRlSXRlbVJlcXVlc3QaIS5tYXN0ZXJkYXRhLnYxLlVwZGF0ZUl0ZW1SZXNwb25zZSIAElMKCkRlbGV0ZUl0ZW0SIC5tYXN0ZXJkYXRhLnYxLkRlbGV0ZUl0ZW1SZXF1ZXN0GiEubWFzdGVyZGF0YS52MS5EZWxldGVJdGVtUmVzcG9uc2UiAEJaWlhnaXRodWIuY29tL2hhY2t6LW1lZ2Fsby1jdXAvbWljcm9zZXJ2aWNlcy1hcHAvc2VydmljZXMvZ2VuL2dvL21hc3RlcmRhdGEvdjE7bWFzdGVyZGF0YXYxYgZwcm90bzM");
 
 /**
  * @generated from message masterdata.v1.Pokemon
@@ -193,6 +193,105 @@ export const ListPokemonResponseSchema: GenMessage<ListPokemonResponse> = /*@__P
   messageDesc(file_masterdata_v1_masterdata, 6);
 
 /**
+ * @generated from message masterdata.v1.UpdatePokemonRequest
+ */
+export type UpdatePokemonRequest = Message<"masterdata.v1.UpdatePokemonRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: string type = 3;
+   */
+  type: string;
+
+  /**
+   * @generated from field: int32 hp = 4;
+   */
+  hp: number;
+
+  /**
+   * @generated from field: int32 attack = 5;
+   */
+  attack: number;
+
+  /**
+   * @generated from field: int32 speed = 6;
+   */
+  speed: number;
+
+  /**
+   * @generated from field: string special_move_name = 7;
+   */
+  specialMoveName: string;
+
+  /**
+   * @generated from field: int32 special_move_damage = 8;
+   */
+  specialMoveDamage: number;
+};
+
+/**
+ * Describes the message masterdata.v1.UpdatePokemonRequest.
+ * Use `create(UpdatePokemonRequestSchema)` to create a new message.
+ */
+export const UpdatePokemonRequestSchema: GenMessage<UpdatePokemonRequest> = /*@__PURE__*/
+  messageDesc(file_masterdata_v1_masterdata, 7);
+
+/**
+ * @generated from message masterdata.v1.UpdatePokemonResponse
+ */
+export type UpdatePokemonResponse = Message<"masterdata.v1.UpdatePokemonResponse"> & {
+  /**
+   * @generated from field: masterdata.v1.Pokemon pokemon = 1;
+   */
+  pokemon?: Pokemon;
+};
+
+/**
+ * Describes the message masterdata.v1.UpdatePokemonResponse.
+ * Use `create(UpdatePokemonResponseSchema)` to create a new message.
+ */
+export const UpdatePokemonResponseSchema: GenMessage<UpdatePokemonResponse> = /*@__PURE__*/
+  messageDesc(file_masterdata_v1_masterdata, 8);
+
+/**
+ * @generated from message masterdata.v1.DeletePokemonRequest
+ */
+export type DeletePokemonRequest = Message<"masterdata.v1.DeletePokemonRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message masterdata.v1.DeletePokemonRequest.
+ * Use `create(DeletePokemonRequestSchema)` to create a new message.
+ */
+export const DeletePokemonRequestSchema: GenMessage<DeletePokemonRequest> = /*@__PURE__*/
+  messageDesc(file_masterdata_v1_masterdata, 9);
+
+/**
+ * @generated from message masterdata.v1.DeletePokemonResponse
+ */
+export type DeletePokemonResponse = Message<"masterdata.v1.DeletePokemonResponse"> & {
+};
+
+/**
+ * Describes the message masterdata.v1.DeletePokemonResponse.
+ * Use `create(DeletePokemonResponseSchema)` to create a new message.
+ */
+export const DeletePokemonResponseSchema: GenMessage<DeletePokemonResponse> = /*@__PURE__*/
+  messageDesc(file_masterdata_v1_masterdata, 10);
+
+/**
  * @generated from message masterdata.v1.TypeMatchup
  */
 export type TypeMatchup = Message<"masterdata.v1.TypeMatchup"> & {
@@ -217,7 +316,7 @@ export type TypeMatchup = Message<"masterdata.v1.TypeMatchup"> & {
  * Use `create(TypeMatchupSchema)` to create a new message.
  */
 export const TypeMatchupSchema: GenMessage<TypeMatchup> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 7);
+  messageDesc(file_masterdata_v1_masterdata, 11);
 
 /**
  * @generated from message masterdata.v1.CreateTypeMatchupRequest
@@ -244,7 +343,7 @@ export type CreateTypeMatchupRequest = Message<"masterdata.v1.CreateTypeMatchupR
  * Use `create(CreateTypeMatchupRequestSchema)` to create a new message.
  */
 export const CreateTypeMatchupRequestSchema: GenMessage<CreateTypeMatchupRequest> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 8);
+  messageDesc(file_masterdata_v1_masterdata, 12);
 
 /**
  * @generated from message masterdata.v1.CreateTypeMatchupResponse
@@ -257,7 +356,7 @@ export type CreateTypeMatchupResponse = Message<"masterdata.v1.CreateTypeMatchup
  * Use `create(CreateTypeMatchupResponseSchema)` to create a new message.
  */
 export const CreateTypeMatchupResponseSchema: GenMessage<CreateTypeMatchupResponse> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 9);
+  messageDesc(file_masterdata_v1_masterdata, 13);
 
 /**
  * @generated from message masterdata.v1.ListTypeMatchupsRequest
@@ -270,7 +369,7 @@ export type ListTypeMatchupsRequest = Message<"masterdata.v1.ListTypeMatchupsReq
  * Use `create(ListTypeMatchupsRequestSchema)` to create a new message.
  */
 export const ListTypeMatchupsRequestSchema: GenMessage<ListTypeMatchupsRequest> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 10);
+  messageDesc(file_masterdata_v1_masterdata, 14);
 
 /**
  * @generated from message masterdata.v1.ListTypeMatchupsResponse
@@ -287,7 +386,86 @@ export type ListTypeMatchupsResponse = Message<"masterdata.v1.ListTypeMatchupsRe
  * Use `create(ListTypeMatchupsResponseSchema)` to create a new message.
  */
 export const ListTypeMatchupsResponseSchema: GenMessage<ListTypeMatchupsResponse> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 11);
+  messageDesc(file_masterdata_v1_masterdata, 15);
+
+/**
+ * @generated from message masterdata.v1.UpdateTypeMatchupRequest
+ */
+export type UpdateTypeMatchupRequest = Message<"masterdata.v1.UpdateTypeMatchupRequest"> & {
+  /**
+   * @generated from field: string attacking_type = 1;
+   */
+  attackingType: string;
+
+  /**
+   * @generated from field: string defending_type = 2;
+   */
+  defendingType: string;
+
+  /**
+   * @generated from field: double effectiveness = 3;
+   */
+  effectiveness: number;
+};
+
+/**
+ * Describes the message masterdata.v1.UpdateTypeMatchupRequest.
+ * Use `create(UpdateTypeMatchupRequestSchema)` to create a new message.
+ */
+export const UpdateTypeMatchupRequestSchema: GenMessage<UpdateTypeMatchupRequest> = /*@__PURE__*/
+  messageDesc(file_masterdata_v1_masterdata, 16);
+
+/**
+ * @generated from message masterdata.v1.UpdateTypeMatchupResponse
+ */
+export type UpdateTypeMatchupResponse = Message<"masterdata.v1.UpdateTypeMatchupResponse"> & {
+  /**
+   * @generated from field: masterdata.v1.TypeMatchup matchup = 1;
+   */
+  matchup?: TypeMatchup;
+};
+
+/**
+ * Describes the message masterdata.v1.UpdateTypeMatchupResponse.
+ * Use `create(UpdateTypeMatchupResponseSchema)` to create a new message.
+ */
+export const UpdateTypeMatchupResponseSchema: GenMessage<UpdateTypeMatchupResponse> = /*@__PURE__*/
+  messageDesc(file_masterdata_v1_masterdata, 17);
+
+/**
+ * @generated from message masterdata.v1.DeleteTypeMatchupRequest
+ */
+export type DeleteTypeMatchupRequest = Message<"masterdata.v1.DeleteTypeMatchupRequest"> & {
+  /**
+   * @generated from field: string attacking_type = 1;
+   */
+  attackingType: string;
+
+  /**
+   * @generated from field: string defending_type = 2;
+   */
+  defendingType: string;
+};
+
+/**
+ * Describes the message masterdata.v1.DeleteTypeMatchupRequest.
+ * Use `create(DeleteTypeMatchupRequestSchema)` to create a new message.
+ */
+export const DeleteTypeMatchupRequestSchema: GenMessage<DeleteTypeMatchupRequest> = /*@__PURE__*/
+  messageDesc(file_masterdata_v1_masterdata, 18);
+
+/**
+ * @generated from message masterdata.v1.DeleteTypeMatchupResponse
+ */
+export type DeleteTypeMatchupResponse = Message<"masterdata.v1.DeleteTypeMatchupResponse"> & {
+};
+
+/**
+ * Describes the message masterdata.v1.DeleteTypeMatchupResponse.
+ * Use `create(DeleteTypeMatchupResponseSchema)` to create a new message.
+ */
+export const DeleteTypeMatchupResponseSchema: GenMessage<DeleteTypeMatchupResponse> = /*@__PURE__*/
+  messageDesc(file_masterdata_v1_masterdata, 19);
 
 /**
  * @generated from message masterdata.v1.ItemEffect
@@ -325,7 +503,7 @@ export type ItemEffect = Message<"masterdata.v1.ItemEffect"> & {
  * Use `create(ItemEffectSchema)` to create a new message.
  */
 export const ItemEffectSchema: GenMessage<ItemEffect> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 12);
+  messageDesc(file_masterdata_v1_masterdata, 20);
 
 /**
  * @generated from message masterdata.v1.Item
@@ -352,7 +530,7 @@ export type Item = Message<"masterdata.v1.Item"> & {
  * Use `create(ItemSchema)` to create a new message.
  */
 export const ItemSchema: GenMessage<Item> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 13);
+  messageDesc(file_masterdata_v1_masterdata, 21);
 
 /**
  * @generated from message masterdata.v1.CreateItemEffectRequest
@@ -384,7 +562,7 @@ export type CreateItemEffectRequest = Message<"masterdata.v1.CreateItemEffectReq
  * Use `create(CreateItemEffectRequestSchema)` to create a new message.
  */
 export const CreateItemEffectRequestSchema: GenMessage<CreateItemEffectRequest> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 14);
+  messageDesc(file_masterdata_v1_masterdata, 22);
 
 /**
  * @generated from message masterdata.v1.CreateItemRequest
@@ -406,7 +584,7 @@ export type CreateItemRequest = Message<"masterdata.v1.CreateItemRequest"> & {
  * Use `create(CreateItemRequestSchema)` to create a new message.
  */
 export const CreateItemRequestSchema: GenMessage<CreateItemRequest> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 15);
+  messageDesc(file_masterdata_v1_masterdata, 23);
 
 /**
  * @generated from message masterdata.v1.CreateItemResponse
@@ -423,7 +601,7 @@ export type CreateItemResponse = Message<"masterdata.v1.CreateItemResponse"> & {
  * Use `create(CreateItemResponseSchema)` to create a new message.
  */
 export const CreateItemResponseSchema: GenMessage<CreateItemResponse> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 16);
+  messageDesc(file_masterdata_v1_masterdata, 24);
 
 /**
  * @generated from message masterdata.v1.GetItemRequest
@@ -440,7 +618,7 @@ export type GetItemRequest = Message<"masterdata.v1.GetItemRequest"> & {
  * Use `create(GetItemRequestSchema)` to create a new message.
  */
 export const GetItemRequestSchema: GenMessage<GetItemRequest> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 17);
+  messageDesc(file_masterdata_v1_masterdata, 25);
 
 /**
  * @generated from message masterdata.v1.GetItemResponse
@@ -457,7 +635,7 @@ export type GetItemResponse = Message<"masterdata.v1.GetItemResponse"> & {
  * Use `create(GetItemResponseSchema)` to create a new message.
  */
 export const GetItemResponseSchema: GenMessage<GetItemResponse> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 18);
+  messageDesc(file_masterdata_v1_masterdata, 26);
 
 /**
  * @generated from message masterdata.v1.ListItemsRequest
@@ -470,7 +648,7 @@ export type ListItemsRequest = Message<"masterdata.v1.ListItemsRequest"> & {
  * Use `create(ListItemsRequestSchema)` to create a new message.
  */
 export const ListItemsRequestSchema: GenMessage<ListItemsRequest> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 19);
+  messageDesc(file_masterdata_v1_masterdata, 27);
 
 /**
  * @generated from message masterdata.v1.ListItemsResponse
@@ -487,7 +665,81 @@ export type ListItemsResponse = Message<"masterdata.v1.ListItemsResponse"> & {
  * Use `create(ListItemsResponseSchema)` to create a new message.
  */
 export const ListItemsResponseSchema: GenMessage<ListItemsResponse> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 20);
+  messageDesc(file_masterdata_v1_masterdata, 28);
+
+/**
+ * @generated from message masterdata.v1.UpdateItemRequest
+ */
+export type UpdateItemRequest = Message<"masterdata.v1.UpdateItemRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+
+  /**
+   * @generated from field: string name = 2;
+   */
+  name: string;
+
+  /**
+   * @generated from field: repeated masterdata.v1.CreateItemEffectRequest effects = 3;
+   */
+  effects: CreateItemEffectRequest[];
+};
+
+/**
+ * Describes the message masterdata.v1.UpdateItemRequest.
+ * Use `create(UpdateItemRequestSchema)` to create a new message.
+ */
+export const UpdateItemRequestSchema: GenMessage<UpdateItemRequest> = /*@__PURE__*/
+  messageDesc(file_masterdata_v1_masterdata, 29);
+
+/**
+ * @generated from message masterdata.v1.UpdateItemResponse
+ */
+export type UpdateItemResponse = Message<"masterdata.v1.UpdateItemResponse"> & {
+  /**
+   * @generated from field: masterdata.v1.Item item = 1;
+   */
+  item?: Item;
+};
+
+/**
+ * Describes the message masterdata.v1.UpdateItemResponse.
+ * Use `create(UpdateItemResponseSchema)` to create a new message.
+ */
+export const UpdateItemResponseSchema: GenMessage<UpdateItemResponse> = /*@__PURE__*/
+  messageDesc(file_masterdata_v1_masterdata, 30);
+
+/**
+ * @generated from message masterdata.v1.DeleteItemRequest
+ */
+export type DeleteItemRequest = Message<"masterdata.v1.DeleteItemRequest"> & {
+  /**
+   * @generated from field: string id = 1;
+   */
+  id: string;
+};
+
+/**
+ * Describes the message masterdata.v1.DeleteItemRequest.
+ * Use `create(DeleteItemRequestSchema)` to create a new message.
+ */
+export const DeleteItemRequestSchema: GenMessage<DeleteItemRequest> = /*@__PURE__*/
+  messageDesc(file_masterdata_v1_masterdata, 31);
+
+/**
+ * @generated from message masterdata.v1.DeleteItemResponse
+ */
+export type DeleteItemResponse = Message<"masterdata.v1.DeleteItemResponse"> & {
+};
+
+/**
+ * Describes the message masterdata.v1.DeleteItemResponse.
+ * Use `create(DeleteItemResponseSchema)` to create a new message.
+ */
+export const DeleteItemResponseSchema: GenMessage<DeleteItemResponse> = /*@__PURE__*/
+  messageDesc(file_masterdata_v1_masterdata, 32);
 
 /**
  * @generated from service masterdata.v1.MasterdataService
@@ -518,6 +770,22 @@ export const MasterdataService: GenService<{
     output: typeof ListPokemonResponseSchema;
   },
   /**
+   * @generated from rpc masterdata.v1.MasterdataService.UpdatePokemon
+   */
+  updatePokemon: {
+    methodKind: "unary";
+    input: typeof UpdatePokemonRequestSchema;
+    output: typeof UpdatePokemonResponseSchema;
+  },
+  /**
+   * @generated from rpc masterdata.v1.MasterdataService.DeletePokemon
+   */
+  deletePokemon: {
+    methodKind: "unary";
+    input: typeof DeletePokemonRequestSchema;
+    output: typeof DeletePokemonResponseSchema;
+  },
+  /**
    * @generated from rpc masterdata.v1.MasterdataService.CreateTypeMatchup
    */
   createTypeMatchup: {
@@ -532,6 +800,22 @@ export const MasterdataService: GenService<{
     methodKind: "unary";
     input: typeof ListTypeMatchupsRequestSchema;
     output: typeof ListTypeMatchupsResponseSchema;
+  },
+  /**
+   * @generated from rpc masterdata.v1.MasterdataService.UpdateTypeMatchup
+   */
+  updateTypeMatchup: {
+    methodKind: "unary";
+    input: typeof UpdateTypeMatchupRequestSchema;
+    output: typeof UpdateTypeMatchupResponseSchema;
+  },
+  /**
+   * @generated from rpc masterdata.v1.MasterdataService.DeleteTypeMatchup
+   */
+  deleteTypeMatchup: {
+    methodKind: "unary";
+    input: typeof DeleteTypeMatchupRequestSchema;
+    output: typeof DeleteTypeMatchupResponseSchema;
   },
   /**
    * @generated from rpc masterdata.v1.MasterdataService.CreateItem
@@ -556,6 +840,22 @@ export const MasterdataService: GenService<{
     methodKind: "unary";
     input: typeof ListItemsRequestSchema;
     output: typeof ListItemsResponseSchema;
+  },
+  /**
+   * @generated from rpc masterdata.v1.MasterdataService.UpdateItem
+   */
+  updateItem: {
+    methodKind: "unary";
+    input: typeof UpdateItemRequestSchema;
+    output: typeof UpdateItemResponseSchema;
+  },
+  /**
+   * @generated from rpc masterdata.v1.MasterdataService.DeleteItem
+   */
+  deleteItem: {
+    methodKind: "unary";
+    input: typeof DeleteItemRequestSchema;
+    output: typeof DeleteItemResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_masterdata_v1_masterdata, 0);
