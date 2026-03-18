@@ -31,7 +31,7 @@ func (s *Service) SetActivePokemon(ctx context.Context, req *connect.Request[pb.
 		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id and pokemon_id are required"))
 	}
 
-	agg := NewLobbyAggregate(uuid.NewString())
+	agg := NewAggregate(uuid.NewString())
 	agg.Create()
 	if err := platform.SaveAggregate(ctx, s.eventStore, s.outbox, agg, LobbyTopicMapper); err != nil {
 		slog.Error("failed to save aggregate", "error", err)

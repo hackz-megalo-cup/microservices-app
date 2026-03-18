@@ -85,7 +85,7 @@ func run() error {
 			slog.Warn("compensation: missing stream_id", "event_id", event.ID)
 			return nil
 		}
-		agg := lobby.NewLobbyAggregate(streamID)
+		agg := lobby.NewAggregate(streamID)
 		if err := platform.LoadAggregate(ctx, eventStore, agg); err != nil {
 			return err
 		}

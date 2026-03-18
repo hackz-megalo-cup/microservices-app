@@ -12,22 +12,22 @@ import (
 // ↓ ドメインの状態フィールドを追加する（例: Title string）
 // ==========================================================.
 
-type LobbyAggregate struct {
+type Aggregate struct {
 	platform.AggregateBase
 	Status string
 }
 
-func NewLobbyAggregate(id string) *LobbyAggregate {
-	return &LobbyAggregate{
+func NewAggregate(id string) *Aggregate {
+	return &Aggregate{
 		AggregateBase: platform.NewAggregateBase(id),
 	}
 }
 
-func (a *LobbyAggregate) StreamType() string { return "lobby" }
+func (a *Aggregate) StreamType() string { return "lobby" }
 
 // ApplyEvent はイベントを再生して状態を復元する。
 // Created の case を書き換え、追加イベントの case を足す。
-func (a *LobbyAggregate) ApplyEvent(eventType string, data json.RawMessage) {
+func (a *Aggregate) ApplyEvent(eventType string, data json.RawMessage) {
 	switch eventType {
 	case EventLobbyCreated:
 		var d LobbyCreatedData
@@ -56,7 +56,7 @@ func (a *LobbyAggregate) ApplyEvent(eventType string, data json.RawMessage) {
 // ==========================================================.
 
 // Create — 引数をドメインに合わせて変更する（例: Create(title string)）
-func (a *LobbyAggregate) Create() {
+func (a *Aggregate) Create() {
 	a.Raise(EventLobbyCreated, LobbyCreatedData{
 		// ↓ フィールドを渡す（例: Title: title）
 	})
@@ -66,13 +66,13 @@ func (a *LobbyAggregate) Create() {
 
 // ↓ 追加コマンドをここに定義する
 // 例:
-// func (a *LobbyAggregate) Complete() {
+// func (a *Aggregate) Complete() {
 //     a.Raise(EventLobbyCompleted, LobbyCompletedData{})
 //     a.Status = "completed"
 // }
 
 // Fail records a failed operation — main.go が参照、削除禁止。
-func (a *LobbyAggregate) Fail(input string, reason string) {
+func (a *Aggregate) Fail(input string, reason string) {
 	a.Raise(EventLobbyFailed, LobbyFailedData{
 		Input: input,
 		Error: reason,
@@ -81,7 +81,7 @@ func (a *LobbyAggregate) Fail(input string, reason string) {
 }
 
 // Compensate marks this aggregate as compensated — main.go が参照、削除禁止。
-func (a *LobbyAggregate) Compensate(reason string) {
+func (a *Aggregate) Compensate(reason string) {
 	if a.Status == "compensated" {
 		return
 	}
