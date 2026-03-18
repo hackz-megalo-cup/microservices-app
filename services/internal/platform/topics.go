@@ -40,7 +40,10 @@ const (
 
 	TopicBattleFinished = "battle.finished"
 
-	TopicCaptureCreated     = "capture.created"
+	TopicCaptureStarted     = "capture.started"
+	TopicCaptureItemUsed    = "capture.item_used"
+	TopicCaptureBallThrown  = "capture.ball_thrown"
+	TopicCaptureCompleted   = "capture.completed"
 	TopicCaptureFailed      = "capture.failed"
 	TopicCaptureCompensated = "capture.compensated"
 
@@ -55,7 +58,8 @@ const (
 	TopicRaidLobbyCreatedDLQ      = "raid_lobby.created.dlq"
 	TopicRaidUserJoinedDLQ        = "raid.user_joined.dlq"
 	TopicRaidBattleStartedDLQ     = "raid.battle_started.dlq"
-	TopicCaptureCreatedDLQ        = "capture.created.dlq"
+	TopicCaptureStartedDLQ        = "capture.started.dlq"
+	TopicCaptureCompletedDLQ      = "capture.completed.dlq"
 )
 
 // DLQTopic returns the dead-letter queue topic for a given source topic.
@@ -72,7 +76,8 @@ func DLQTopic(source string) string {
 		TopicRaidLobbyCreated:      TopicRaidLobbyCreatedDLQ,
 		TopicRaidUserJoined:        TopicRaidUserJoinedDLQ,
 		TopicRaidBattleStarted:     TopicRaidBattleStartedDLQ,
-		TopicCaptureCreated:        TopicCaptureCreatedDLQ,
+		TopicCaptureStarted:        TopicCaptureStartedDLQ,
+		TopicCaptureCompleted:      TopicCaptureCompletedDLQ,
 	}
 	return m[source]
 }
@@ -116,10 +121,14 @@ func DefaultTopics() map[string]int32 {
 		TopicRaidBattleStarted:        3,
 		TopicRaidBattleStartedDLQ:     1,
 		TopicBattleFinished:           3,
-		TopicCaptureCreated:           3,
+		TopicCaptureStarted:           3,
+		TopicCaptureItemUsed:          3,
+		TopicCaptureBallThrown:        3,
+		TopicCaptureCompleted:         3,
 		TopicCaptureFailed:            1,
 		TopicCaptureCompensated:       1,
-		TopicCaptureCreatedDLQ:        1,
+		TopicCaptureStartedDLQ:        1,
+		TopicCaptureCompletedDLQ:      1,
 	}
 }
 

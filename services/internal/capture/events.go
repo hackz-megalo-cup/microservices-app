@@ -1,31 +1,69 @@
 package capture
 
+import "github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
+
 const (
-	EventCaptureCreated = "capture.created"
-	// ↓ ドメインイベントを追加する
-	// 例: EventCaptureCompleted = "capture.completed"
-	// ⚠ 新しいイベントを追加したら platform/topics.go にもトピック定数と DefaultTopics() を追加すること
+	EventCaptureStarted    = "capture.started"
+	EventCaptureItemUsed   = "capture.item_used"
+	EventCaptureBallThrown = "capture.ball_thrown"
+	EventCaptureCompleted  = "capture.completed"
 
 	EventCaptureFailed      = "capture.failed"      // main.go が参照 — 削除禁止
 	EventCaptureCompensated = "capture.compensated" // main.go が参照 — 削除禁止
 )
 
-// CaptureCreatedData — 作成イベントのペイロード。
-// ドメインに合わせてフィールドを書き換える。
-type CaptureCreatedData struct {
-	// 例: Title string `json:"title"`
+type StartedData struct {
+	SessionID       string  `json:"session_id"`
+	BattleSessionID string  `json:"battle_session_id"`
+	UserID          string  `json:"user_id"`
+	PokemonID       string  `json:"pokemon_id"`
+	BaseRate        float64 `json:"base_rate"`
 }
 
-// ↓ 追加イベントのペイロードをここに定義する
-// 例: type CaptureCompletedData struct{}
+type ItemUsedData struct {
+	SessionID  string  `json:"session_id"`
+	ItemID     string  `json:"item_id"`
+	RateBefore float64 `json:"rate_before"`
+	RateAfter  float64 `json:"rate_after"`
+}
 
-// --- 以下は main.go の補償ハンドラが使用。型名とフィールドは残すこと。 ---
+type BallThrownData struct {
+	SessionID string `json:"session_id"`
+	Result    string `json:"result"`
+}
 
-type CaptureFailedData struct {
+type CompletedData struct {
+	SessionID string `json:"session_id"`
+	UserID    string `json:"user_id"`
+	PokemonID string `json:"pokemon_id"`
+	Result    string `json:"result"`
+}
+
+type FailedData struct {
 	Input string `json:"input"`
 	Error string `json:"error"`
 }
 
-type CaptureCompensatedData struct {
+type CompensatedData struct {
 	Reason string `json:"reason"`
+}
+
+// CaptureTopicMapper maps event types to Kafka topics.
+func CaptureTopicMapper(eventType string) string {
+	switch eventType {
+	case EventCaptureStarted:
+		return platform.TopicCaptureStarted
+	case EventCaptureItemUsed:
+		return platform.TopicCaptureItemUsed
+	case EventCaptureBallThrown:
+		return platform.TopicCaptureBallThrown
+	case EventCaptureCompleted:
+		return platform.TopicCaptureCompleted
+	case EventCaptureFailed:
+		return platform.TopicCaptureFailed
+	case EventCaptureCompensated:
+		return platform.TopicCaptureCompensated
+	default:
+		return ""
+	}
 }
