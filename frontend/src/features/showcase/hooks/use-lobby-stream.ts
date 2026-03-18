@@ -46,6 +46,8 @@ export function useLobbyStream(lobbyId: string): UseLobbyStreamResult {
     try {
       setIsConnected(true);
       setError(null);
+      setParticipants([]);
+      setBattleSessionId(null);
 
       for await (const event of client.streamLobby(
         { lobbyId },
