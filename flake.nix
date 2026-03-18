@@ -226,6 +226,7 @@
           };
 
           frontend-nginx-conf = pkgs.writeText "frontend-nginx.conf" ''
+            user root;
             worker_processes 1;
             error_log /dev/stderr info;
             pid /tmp/nginx.pid;
