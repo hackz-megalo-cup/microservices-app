@@ -12,11 +12,30 @@ export function createOutbox(serviceName, pool, kafkaClient) {
       timestamp: new Date().toISOString(),
       data: event.payload,
     };
-    await client.query(
-      `INSERT INTO outbox_events (id, event_type, topic, payload, created_at)
-       VALUES ($1, $2, $3, $4, NOW())`,
-      [envelope.id, envelope.type, topic, JSON.stringify(envelope)],
-    );
+
+    // If client is null, get a connection from the pool
+    if (!client) {
+      if (!pool) {
+        throw new Error("pool not available for outbox event");
+      }
+      const pooledClient = await pool.connect();
+      try {
+        await pooledClient.query(
+          `INSERT INTO outbox_events (id, event_type, topic, payload, created_at)
+           VALUES ($1, $2, $3, $4, NOW())`,
+          [envelope.id, envelope.type, topic, JSON.stringify(envelope)],
+        );
+      } finally {
+        pooledClient.release();
+      }
+    } else {
+      await client.query(
+        `INSERT INTO outbox_events (id, event_type, topic, payload, created_at)
+         VALUES ($1, $2, $3, $4, NOW())`,
+        [envelope.id, envelope.type, topic, JSON.stringify(envelope)],
+      );
+    }
+
     return envelope;
   }
 

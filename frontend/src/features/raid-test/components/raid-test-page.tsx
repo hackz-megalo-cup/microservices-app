@@ -78,6 +78,8 @@ function timestamp(): string {
 // Component
 // ---------------------------------------------------------------------------
 const allocateApiUrl = resolveApiUrl("/api/raid/allocate");
+const joinApiUrl = resolveApiUrl("/api/raid/join");
+const activeApiUrl = resolveApiUrl("/api/raid/active");
 
 export function RaidTestPage() {
   // --- Form state ---
@@ -86,6 +88,9 @@ export function RaidTestPage() {
   const [certHash, setCertHash] = useState("");
   const [protocol, setProtocol] = useState<"wt" | "ws">("wt");
   const [userId] = useState(generateUuid);
+  const [joinLobbyId, setJoinLobbyId] = useState("");
+  const [joinLoading, setJoinLoading] = useState(false);
+  const [currentLobbyId, setCurrentLobbyId] = useState("");
 
   // --- Connection state ---
   const [connectionState, setConnectionState] = useState<ConnectionState>("disconnected");
@@ -344,11 +349,12 @@ export function RaidTestPage() {
       certHash: string;
     } | null> => {
       try {
+        const lobbyId = generateUuid();
         const res = await fetch(allocateApiUrl, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            lobbyId: generateUuid(),
+            lobbyId,
             bossPokemonId: generateUuid(),
           }),
           signal: abort.signal,
@@ -360,6 +366,7 @@ export function RaidTestPage() {
         if (!data.host || !data.certHash) {
           return null;
         }
+        setCurrentLobbyId(lobbyId);
         return { host: data.host, port: String(data.port), certHash: data.certHash.trim() };
       } catch {
         return null;
@@ -390,15 +397,45 @@ export function RaidTestPage() {
       }
     };
 
+    const findActiveRaid = async (): Promise<{
+      host: string;
+      port: string;
+      certHash: string;
+      lobbyId?: string;
+    } | null> => {
+      try {
+        const res = await fetch(activeApiUrl, { signal: abort.signal });
+        if (!res.ok) {
+          return null;
+        }
+        const data = await res.json();
+        if (!data.host || !data.certHash) {
+          return null;
+        }
+        return {
+          host: data.host,
+          port: String(data.port),
+          certHash: String(data.certHash).trim(),
+          lobbyId: data.lobbyId,
+        };
+      } catch {
+        return null;
+      }
+    };
+
     const autoConnect = async () => {
       try {
-        // Try Gateway allocate first (EKS), then fallback to direct game server (local dev)
-        const conn = (await allocateViaGateway()) ?? (await fallbackDirect());
+        // 1. Try to join an active raid, 2. allocate new, 3. direct fallback (local dev)
+        const conn =
+          (await findActiveRaid()) ?? (await allocateViaGateway()) ?? (await fallbackDirect());
         if (!conn) {
           return;
         }
 
         const { host: connectHost, port: connectPort, certHash: hash } = conn;
+        if ("lobbyId" in conn && conn.lobbyId) {
+          setCurrentLobbyId(conn.lobbyId as string);
+        }
 
         setHost(connectHost);
         setPort(connectPort);
@@ -474,6 +511,76 @@ export function RaidTestPage() {
     }
     setConnectionState("disconnected");
   }, []);
+
+  // --- Join existing raid ---
+  const joinExistingRaid = useCallback(async () => {
+    if (!joinLobbyId.trim()) {
+      return;
+    }
+    setJoinLoading(true);
+    try {
+      const res = await fetch(`${joinApiUrl}?lobbyId=${encodeURIComponent(joinLobbyId.trim())}`);
+      if (!res.ok) {
+        const text = await res.text();
+        addLog("\u2190", `JOIN ERROR: ${res.status} ${text}`);
+        return;
+      }
+      const data = await res.json();
+      if (!data.host || !data.certHash) {
+        addLog("\u2190", "JOIN ERROR: invalid response from server");
+        return;
+      }
+      const connectHost = data.host;
+      const connectPort = String(data.port);
+      const hash = String(data.certHash).trim();
+
+      setHost(connectHost);
+      setPort(connectPort);
+      setCertHash(hash);
+
+      setConnectionState("connecting");
+      setResult(null);
+
+      const hashBytes = hexToUint8Array(hash);
+      const transport = new WebTransport(`https://${connectHost}:${connectPort}/wt`, {
+        serverCertificateHashes: [{ algorithm: "sha-256", value: hashBytes.buffer as ArrayBuffer }],
+      });
+      await transport.ready;
+      transportRef.current = transport;
+
+      const dgWriter = transport.datagrams.writable.getWriter();
+      dgWriterRef.current = dgWriter;
+
+      readDatagrams(transport);
+      readIncomingUniStreams(transport);
+      setConnectionState("connected");
+
+      transport.closed
+        .then(() => setConnectionState("disconnected"))
+        .catch(() => setConnectionState("disconnected"));
+
+      // Auto-join the battle session
+      const joinPayload = JSON.stringify({ t: "join", userId });
+      addLog("\u2192", joinPayload);
+      const stream = await transport.createBidirectionalStream();
+      const writer = stream.writable.getWriter();
+      await writer.write(new TextEncoder().encode(joinPayload));
+      await writer.close();
+      const reader = stream.readable.getReader();
+      try {
+        while (!(await reader.read()).done) {
+          /* drain */
+        }
+      } catch {
+        /* stream closed */
+      }
+    } catch (err) {
+      addLog("\u2190", `JOIN ERROR: ${err instanceof Error ? err.message : String(err)}`);
+      setConnectionState("disconnected");
+    } finally {
+      setJoinLoading(false);
+    }
+  }, [joinLobbyId, userId, addLog, readDatagrams, readIncomingUniStreams]);
 
   // --- Actions ---
   const handleJoin = () => {
@@ -631,14 +738,46 @@ export function RaidTestPage() {
           </div>
         </section>
 
+        {/* Join Existing Raid */}
+        <section className="rounded-xl bg-bg-card p-5 shadow-card space-y-4">
+          <h2 className="text-sm font-semibold text-text-secondary">Join Existing Raid</h2>
+          <div className="flex gap-3">
+            <input
+              type="text"
+              value={joinLobbyId}
+              onChange={(e) => setJoinLobbyId(e.target.value)}
+              placeholder="Lobby ID"
+              className="flex-1 rounded-lg bg-bg-primary px-3 py-2 text-sm font-mono text-text-primary border border-bg-hover focus:border-accent focus:outline-none"
+            />
+            <button
+              type="button"
+              onClick={joinExistingRaid}
+              disabled={joinLoading || !joinLobbyId.trim() || isConnected}
+              className="rounded-lg bg-green px-5 py-2 text-sm font-semibold text-bg-primary hover:opacity-80 disabled:opacity-40 disabled:cursor-not-allowed transition"
+            >
+              {joinLoading ? "JOINING..." : "JOIN RAID"}
+            </button>
+          </div>
+        </section>
+
         {/* Status */}
-        <section className="rounded-xl bg-bg-card p-4 shadow-card flex items-center gap-3">
-          <span className="text-lg">{statusIndicator}</span>
-          <span className="text-sm font-medium capitalize">{connectionState}</span>
-          {result && (
-            <span className="ml-auto rounded-full bg-accent/20 px-3 py-1 text-xs font-semibold text-accent">
-              {result}
-            </span>
+        <section className="rounded-xl bg-bg-card p-4 shadow-card space-y-2">
+          <div className="flex items-center gap-3">
+            <span className="text-lg">{statusIndicator}</span>
+            <span className="text-sm font-medium capitalize">{connectionState}</span>
+            {result && (
+              <span className="ml-auto rounded-full bg-accent/20 px-3 py-1 text-xs font-semibold text-accent">
+                {result}
+              </span>
+            )}
+          </div>
+          {currentLobbyId && (
+            <div className="flex items-center gap-2">
+              <span className="text-xs text-text-secondary">Lobby ID:</span>
+              <span className="text-xs font-mono text-text-primary select-all">
+                {currentLobbyId}
+              </span>
+            </div>
           )}
         </section>
 

@@ -34,6 +34,11 @@
       "cmd_path": "cmd/lobby",
       "port": 8089,
       "k8s_resource": "lobby-service"
+    },
+    "capture": {
+      "cmd_path": "cmd/capture",
+      "port": 8088,
+      "k8s_resource": "capture-service"
     }
   },
   "custom_services": {

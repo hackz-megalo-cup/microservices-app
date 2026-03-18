@@ -324,6 +324,36 @@
             apiVersion = "traefik.io/v1alpha1";
             kind = "IngressRoute";
             metadata = {
+              name = "capture-route";
+              namespace = "microservices";
+            };
+            spec = {
+              entryPoints = [ "web" ];
+              routes = [
+                {
+                  match = "PathPrefix(`/capture.v1.CaptureService`)";
+                  kind = "Rule";
+                  priority = 100;
+                  middlewares = [
+                    { name = "cors-middleware"; }
+                    { name = "rate-limit-middleware"; }
+                    { name = "retry-middleware"; }
+                  ];
+                  services = [
+                    {
+                      name = "capture-service";
+                      port = 8088;
+                      scheme = "h2c";
+                    }
+                  ];
+                }
+              ];
+            };
+          }
+          {
+            apiVersion = "traefik.io/v1alpha1";
+            kind = "IngressRoute";
+            metadata = {
               name = "frontend-route";
               namespace = "microservices";
             };

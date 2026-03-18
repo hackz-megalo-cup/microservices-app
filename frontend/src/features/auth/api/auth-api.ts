@@ -1,28 +1,44 @@
-import { apiBaseUrl } from "../../../lib/transport";
+import { createClient } from "@connectrpc/connect";
+import type { User as RpcUser } from "../../../gen/auth/v1/auth_pb";
+import { AuthService } from "../../../gen/auth/v1/auth_pb";
+import { transport } from "../../../lib/transport";
 import type { AuthCredentials, LoginResponse, RegisterResponse } from "../types";
 
-export async function registerUser(credentials: AuthCredentials): Promise<RegisterResponse> {
-  const res = await fetch(`${apiBaseUrl}/auth/register`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(credentials),
-  });
-  const json = await res.json();
-  if (!res.ok) {
-    throw new Error(json.error || `register failed: ${res.status}`);
+const client = createClient(AuthService, transport);
+
+function toUserResponse(user: RpcUser | undefined): RegisterResponse {
+  if (!user) {
+    throw new Error("invalid response: user is missing");
   }
-  return json as RegisterResponse;
+
+  return {
+    id: user.id,
+    email: user.email,
+    role: user.role,
+  };
+}
+
+export async function registerUser(credentials: AuthCredentials): Promise<RegisterResponse> {
+  const response = await client.registerUser({
+    email: credentials.email,
+    password: credentials.password,
+  });
+
+  return toUserResponse(response.user);
 }
 
 export async function loginUser(credentials: AuthCredentials): Promise<LoginResponse> {
-  const res = await fetch(`${apiBaseUrl}/auth/login`, {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify(credentials),
+  const response = await client.loginUser({
+    email: credentials.email,
+    password: credentials.password,
   });
-  const json = await res.json();
-  if (!res.ok) {
-    throw new Error(json.error || `login failed: ${res.status}`);
+
+  if (!response.token) {
+    throw new Error("invalid response: token is missing");
   }
-  return json as LoginResponse;
+
+  return {
+    token: response.token,
+    user: toUserResponse(response.user),
+  };
 }
