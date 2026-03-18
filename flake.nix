@@ -95,7 +95,7 @@
           # Microservices (connect-go) — go.mod requires go 1.26
           buildGoModule = pkgs.buildGo126Module;
           goServiceVersion = "0.1.0";
-          goVendorHash = "sha256-DW+NKaC3W4XXy1/tGCOgwbwqnwiwVwcZvtffZ7dPrcU=";
+          goVendorHash = "sha256-MMHm0r37BNzgmkrZUb+OCbbcptqpBJEoK1hSgBM+ceY=";
           servicesRoot = toString ./services;
           goServiceInputs = {
             auth = {
@@ -175,38 +175,12 @@
                   || lib.any (prefix: matchesTree relPath "gen/go/${prefix}") cfg.gen
                 );
             };
-          buildGoPackage =
-            {
-              name,
-              src,
-              subPackages,
-              vendorHash ? goVendorHash,
-            }:
-            buildGoModule {
-              pname = name;
-              version = goServiceVersion;
-              inherit src subPackages vendorHash;
-              doCheck = false;
-              env.CGO_ENABLED = 0;
-              ldflags = [
-                "-s"
-                "-w"
-              ];
-            };
-          buildGoService =
-            name:
-            let
-              cfg = goServiceInputs.${name};
-            in
-            buildGoPackage {
-              inherit name;
-              src = goServiceSource name;
-              subPackages = [ "cmd/${name}" ];
-              vendorHash = cfg.vendorHash or goVendorHash;
-            };
-          go-services = buildGoPackage {
-            name = "go-services";
+          # Build go-services with full source — its goModules is reused by per-service builds.
+          go-services = buildGoModule {
+            pname = "go-services";
+            version = goServiceVersion;
             src = ./services;
+            vendorHash = goVendorHash;
             subPackages = [
               "cmd/auth"
               "cmd/caller"
@@ -218,8 +192,33 @@
               "cmd/raid-lobby"
               "cmd/capture"
             ];
-            vendorHash = "sha256-MMHm0r37BNzgmkrZUb+OCbbcptqpBJEoK1hSgBM+ceY=";
+            doCheck = false;
+            env.CGO_ENABLED = 0;
+            ldflags = [
+              "-s"
+              "-w"
+            ];
           };
+          # Per-service builds: vendorHash = null + copy vendor from go-services.goModules.
+          # Only ONE vendorHash (goVendorHash) needs to be maintained.
+          buildGoService =
+            name:
+            buildGoModule {
+              pname = name;
+              version = goServiceVersion;
+              src = goServiceSource name;
+              vendorHash = null;
+              subPackages = [ "cmd/${name}" ];
+              doCheck = false;
+              env.CGO_ENABLED = 0;
+              ldflags = [
+                "-s"
+                "-w"
+              ];
+              preBuild = ''
+                cp -r --reflink=auto ${go-services.goModules} vendor
+              '';
+            };
 
           buildGoServiceImage =
             name: package:
@@ -447,6 +446,7 @@
           packages.caller-image = caller-image;
           packages.caller-release-image = caller-release-image;
           packages.auth = auth;
+          packages.auth-service-image = auth-image;
           packages.auth-image = auth-image;
           packages.auth-release-image = auth-release-image;
           packages.custom-lang-service = custom-lang-service;
