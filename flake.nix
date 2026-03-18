@@ -95,7 +95,7 @@
           # Microservices (connect-go) — go.mod requires go 1.26
           buildGoModule = pkgs.buildGo126Module;
           goServiceVersion = "0.1.0";
-          goVendorHash = "sha256-0kjB3UTON7eZJEZ9vIZlN3RqGLryhklu8fcMLowv53A=";
+          goVendorHash = "sha256-fzgNa+0Y5biTxqcK6VelnCzzIElzxeiLb653GhKKR7E=";
           servicesRoot = toString ./services;
           goServiceInputs = {
             caller = {
@@ -142,6 +142,7 @@
                 "item"
                 "masterdata"
               ];
+              vendorHash = "sha256-0kjB3UTON7eZJEZ9vIZlN3RqGLryhklu8fcMLowv53A=";
             };
           };
           goServiceSource =
@@ -176,12 +177,12 @@
               name,
               src,
               subPackages,
+              vendorHash ? goVendorHash,
             }:
             buildGoModule {
               pname = name;
               version = goServiceVersion;
-              inherit src subPackages;
-              vendorHash = goVendorHash;
+              inherit src subPackages vendorHash;
               doCheck = false;
               env.CGO_ENABLED = 0;
               ldflags = [
@@ -191,10 +192,14 @@
             };
           buildGoService =
             name:
+            let
+              cfg = goServiceInputs.${name};
+            in
             buildGoPackage {
               inherit name;
               src = goServiceSource name;
               subPackages = [ "cmd/${name}" ];
+              vendorHash = cfg.vendorHash or goVendorHash;
             };
           go-services = buildGoPackage {
             name = "go-services";
