@@ -16,6 +16,7 @@ type pokemonRegistrar interface {
 type PokemonCaught struct {
 	UserID    string `json:"user_id"`
 	PokemonID string `json:"pokemon_id"`
+	Result    string `json:"result"`
 }
 
 // ConsumerConfig holds Kafka consumer configuration
@@ -24,7 +25,7 @@ type ConsumerConfig struct {
 	Repo   pokemonRegistrar
 }
 
-// RunConsumer starts consuming capture.caught events and registers pokemon
+// RunConsumer starts consuming capture.completed events and registers pokemon
 func RunConsumer(ctx context.Context, cfg ConsumerConfig) error {
 	if cfg.Client == nil || cfg.Repo == nil {
 		slog.Info("consumer skipped (no kafka client or repo)")
@@ -49,7 +50,7 @@ func RunConsumer(ctx context.Context, cfg ConsumerConfig) error {
 		fetches.EachPartition(func(p kgo.FetchTopicPartition) {
 			for _, record := range p.Records {
 				if err := handleCaughtPokemon(ctx, cfg.Repo, record.Value); err != nil {
-					slog.Error("failed to process capture.caught event", "error", err)
+					slog.Error("failed to process capture.completed event", "error", err)
 					// Do not commit offset on error so Kafka can retry this record.
 					return
 				}
@@ -67,12 +68,17 @@ func RunConsumer(ctx context.Context, cfg ConsumerConfig) error {
 func handleCaughtPokemon(ctx context.Context, repo pokemonRegistrar, data []byte) error {
 	var event PokemonCaught
 	if err := json.Unmarshal(data, &event); err != nil {
-		slog.Error("failed to unmarshal capture.caught event", "error", err)
+		slog.Error("failed to unmarshal capture.completed event", "error", err)
 		return err
 	}
 
+	if event.Result != "" && event.Result != "success" {
+		slog.Info("skip capture.completed event: result is not success", "result", event.Result)
+		return nil
+	}
+
 	if event.UserID == "" || event.PokemonID == "" {
-		slog.Warn("invalid capture.caught event: missing user_id or pokemon_id")
+		slog.Warn("invalid capture.completed event: missing user_id or pokemon_id")
 		return nil
 	}
 

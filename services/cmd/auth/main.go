@@ -222,7 +222,7 @@ func startCaptureConsumer(ctx context.Context, brokers []string, svc *auth.Servi
 		ctx,
 		brokers,
 		"auth-service-consumer",
-		[]string{platform.TopicCaptureCaught},
+		[]string{platform.TopicCaptureCompleted},
 	)
 	if err != nil {
 		slog.Error("failed to create kafka consumer", "error", err)
