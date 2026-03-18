@@ -7,15 +7,9 @@ export interface Raid {
   image: string;
 }
 
-export interface Trainer {
-  name: string;
-  pokemon: string;
-  online: boolean;
-}
+import type { Participant } from "../../../lib/parse-lobby-payload";
 
-export interface Participant {
-  id: string;
-  userId: string;
+export interface Trainer {
   name: string;
   pokemon: string;
   online: boolean;

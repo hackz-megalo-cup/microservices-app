@@ -1,5 +1,13 @@
-import type { Participant } from "../types";
+// Type definitions for Raid Lobby participants
+export interface Participant {
+  id: string;
+  userId: string;
+  name: string;
+  pokemon: string;
+  online: boolean;
+}
 
+// Payload interfaces
 export interface ParticipantPayload {
   participants: Participant[];
 }

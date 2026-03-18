@@ -2,12 +2,12 @@ import { createClient } from "@connectrpc/connect";
 import { useTransport } from "@connectrpc/connect-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RaidLobbyService } from "../../../gen/raid_lobby/v1/raid_lobby_pb";
-import type { Participant } from "../types";
+import type { Participant } from "../../../lib/parse-lobby-payload";
 import {
   parseBattleStarted,
   parseParticipantEvent,
   parseParticipants,
-} from "../utils/parse-lobby-payload";
+} from "../../../lib/parse-lobby-payload";
 
 interface UseLobbyStreamResult {
   participants: Participant[];
