@@ -2,7 +2,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { useLobbyActions } from "../hooks/use-lobby-actions";
 import { useLobbyStream } from "../hooks/use-lobby-stream";
-import "../styles/global.css";
+import "../../../styles/global.css";
 import { NavBar } from "./ui/nav-bar";
 
 export function Lobby() {
