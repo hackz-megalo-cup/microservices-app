@@ -12,25 +12,25 @@ import (
 // ↓ ドメインの状態フィールドを追加する（例: Title string）
 // ==========================================================.
 
-type CaptureAggregate struct {
+type Aggregate struct {
 	platform.AggregateBase
 	Status string
 }
 
-func NewCaptureAggregate(id string) *CaptureAggregate {
-	return &CaptureAggregate{
+func NewAggregate(id string) *Aggregate {
+	return &Aggregate{
 		AggregateBase: platform.NewAggregateBase(id),
 	}
 }
 
-func (a *CaptureAggregate) StreamType() string { return "capture" }
+func (a *Aggregate) StreamType() string { return "capture" }
 
 // ApplyEvent はイベントを再生して状態を復元する。
 // Created の case を書き換え、追加イベントの case を足す。
-func (a *CaptureAggregate) ApplyEvent(eventType string, data json.RawMessage) {
+func (a *Aggregate) ApplyEvent(eventType string, data json.RawMessage) {
 	switch eventType {
 	case EventCaptureCreated:
-		var d CaptureCreatedData
+		var d CreatedData
 		if err := json.Unmarshal(data, &d); err != nil {
 			slog.Warn("failed to unmarshal created data", "error", err)
 		}
@@ -56,8 +56,8 @@ func (a *CaptureAggregate) ApplyEvent(eventType string, data json.RawMessage) {
 // ==========================================================.
 
 // Create — 引数をドメインに合わせて変更する（例: Create(title string)）
-func (a *CaptureAggregate) Create() {
-	a.Raise(EventCaptureCreated, CaptureCreatedData{
+func (a *Aggregate) Create() {
+	a.Raise(EventCaptureCreated, CreatedData{
 		// ↓ フィールドを渡す（例: Title: title）
 	})
 	// ↓ 状態を更新する（例: a.Title = title）
@@ -66,14 +66,14 @@ func (a *CaptureAggregate) Create() {
 
 // ↓ 追加コマンドをここに定義する
 // 例:
-// func (a *CaptureAggregate) Complete() {
+// func (a *Aggregate) Complete() {
 //     a.Raise(EventCaptureCompleted, CaptureCompletedData{})
 //     a.Status = "completed"
 // }
 
 // Fail records a failed operation — main.go が参照、削除禁止。
-func (a *CaptureAggregate) Fail(input string, reason string) {
-	a.Raise(EventCaptureFailed, CaptureFailedData{
+func (a *Aggregate) Fail(input string, reason string) {
+	a.Raise(EventCaptureFailed, FailedData{
 		Input: input,
 		Error: reason,
 	})
@@ -81,23 +81,25 @@ func (a *CaptureAggregate) Fail(input string, reason string) {
 }
 
 // Compensate marks this aggregate as compensated — main.go が参照、削除禁止。
-func (a *CaptureAggregate) Compensate(reason string) {
+func (a *Aggregate) Compensate(reason string) {
 	if a.Status == "compensated" {
 		return
 	}
-	a.Raise(EventCaptureCompensated, CaptureCompensatedData{
+	a.Raise(EventCaptureCompensated, CompensatedData{
 		Reason: reason,
 	})
 	a.Status = "compensated"
 }
 
-// CaptureTopicMapper maps event types to Kafka topics.
-func CaptureTopicMapper(eventType string) string {
+// TopicMapper maps event types to Kafka topics.
+func TopicMapper(eventType string) string {
 	switch eventType {
 	case EventCaptureCreated:
 		return platform.TopicCaptureCreated
 	case EventCaptureFailed:
 		return platform.TopicCaptureFailed
+	case EventCaptureCompensated:
+		return platform.TopicCaptureCompensated
 	default:
 		return ""
 	}
