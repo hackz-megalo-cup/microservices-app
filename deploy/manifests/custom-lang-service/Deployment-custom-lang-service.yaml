@@ -33,7 +33,7 @@ spec:
               value: custom-lang-service
             - name: PORT
               value: "3000"
-          image: ghcr.io/hackz-megalo-cup/custom-lang-service:39576cafc97b6bf2a3b18b29e48ec96059e0f948
+          image: ghcr.io/hackz-megalo-cup/custom-lang-service:538128242c0b42dd1eb82d031c02b81a51f74c7f
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
