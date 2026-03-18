@@ -43,10 +43,7 @@ func run() error {
 	}
 	projection := projector.NewProjectionHandler(pool, itemEventStore, itemOutbox)
 
-	rebuilder, greeterPool := initRebuilder(ctx, pool, projection)
-	if greeterPool != nil {
-		defer greeterPool.Close()
-	}
+	rebuilder := projector.NewRebuilder(pool, nil, projection)
 
 	p, err := projector.New(brokers, pool, publisher, projection)
 	if err != nil {
@@ -113,21 +110,6 @@ func initItemEventSourcing(ctx context.Context, publisher *platform.EventPublish
 	return itemEventStore, itemOutbox, itemPool
 }
 
-func initRebuilder(ctx context.Context, pool *pgxpool.Pool, projection *projector.ProjectionHandler) (*projector.Rebuilder, *pgxpool.Pool) {
-	greeterDBURL := os.Getenv("GREETER_DATABASE_URL")
-	if greeterDBURL == "" {
-		return projector.NewRebuilder(pool, nil, projection), nil
-	}
-
-	greeterPool, _ := platform.NewDBPool(ctx, greeterDBURL)
-	if greeterPool == nil {
-		return projector.NewRebuilder(pool, nil, projection), nil
-	}
-
-	eventStore := platform.NewEventStore(greeterPool)
-	return projector.NewRebuilder(pool, eventStore, projection), greeterPool
-}
-
 func startHealthServer(pool *pgxpool.Pool, rebuilder *projector.Rebuilder) {
 	healthPort := os.Getenv("HEALTH_PORT")
 	if healthPort == "" {
@@ -154,7 +136,8 @@ func startHealthServer(pool *pgxpool.Pool, rebuilder *projector.Rebuilder) {
 		}
 		name := r.URL.Query().Get("projection")
 		if name == "" {
-			name = projector.ProjectionGreetingsView
+			http.Error(w, "projection query param required", http.StatusBadRequest)
+			return
 		}
 		if rebuilder == nil {
 			http.Error(w, "rebuilder not configured", http.StatusServiceUnavailable)
