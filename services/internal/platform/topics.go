@@ -12,7 +12,6 @@ const (
 	TopicInvocationCreated = "invocation.created"
 	TopicUserRegistered    = "user.registered"
 	TopicUserLoggedIn      = "user.logged_in"
-	TopicCaptureCompleted  = "capture.completed"
 
 	// Saga compensation topics.
 	TopicGreetingFailed        = "greeting.failed"
@@ -50,6 +49,7 @@ const (
 	TopicCaptureStarted     = "capture.started"
 	TopicCaptureItemUsed    = "capture.item_used"
 	TopicCaptureBallThrown  = "capture.ball_thrown"
+	TopicCaptureCompleted   = "capture.completed"
 	TopicCaptureFailed      = "capture.failed"
 	TopicCaptureCompensated = "capture.compensated"
 
@@ -61,7 +61,6 @@ const (
 	TopicUserLoggedInDLQ          = "user.logged_in.dlq"
 	TopicUserFailedDLQ            = "user.failed.dlq"
 	TopicUserCompensatedDLQ       = "user.compensated.dlq"
-	TopicCaptureCompletedDLQ      = "capture.completed.dlq"
 	TopicInvocationCompensatedDLQ = "invocation.compensated.dlq"
 	TopicItemCreatedDLQ           = "item.created.dlq"
 	TopicMasterdataCreatedDLQ     = "masterdata.created.dlq"
@@ -70,6 +69,7 @@ const (
 	TopicRaidBattleStartedDLQ     = "raid.battle_started.dlq"
 	TopicLobbyCreatedDLQ          = "lobby.created.dlq"
 	TopicCaptureStartedDLQ        = "capture.started.dlq"
+	TopicCaptureCompletedDLQ      = "capture.completed.dlq"
 )
 
 // DLQTopic returns the dead-letter queue topic for a given source topic.
