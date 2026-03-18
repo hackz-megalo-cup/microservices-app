@@ -244,6 +244,102 @@ func (s *Service) ListItems(ctx context.Context, _ *connect.Request[pb.ListItems
 	return connect.NewResponse(&pb.ListItemsResponse{Items: items}), nil
 }
 
+func (s *Service) UpdatePokemon(ctx context.Context, req *connect.Request[pb.UpdatePokemonRequest]) (*connect.Response[pb.UpdatePokemonResponse], error) {
+	tag, err := s.pool.Exec(ctx,
+		`UPDATE pokemon SET name=$2, type=$3, hp=$4, attack=$5, speed=$6, special_move_name=$7, special_move_damage=$8 WHERE id=$1`,
+		req.Msg.Id, req.Msg.Name, req.Msg.Type, req.Msg.Hp, req.Msg.Attack, req.Msg.Speed,
+		req.Msg.SpecialMoveName, req.Msg.SpecialMoveDamage,
+	)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	if tag.RowsAffected() == 0 {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("pokemon not found"))
+	}
+
+	p := &pb.Pokemon{
+		Id: req.Msg.Id, Name: req.Msg.Name, Type: req.Msg.Type,
+		Hp: req.Msg.Hp, Attack: req.Msg.Attack, Speed: req.Msg.Speed,
+		SpecialMoveName: req.Msg.SpecialMoveName, SpecialMoveDamage: req.Msg.SpecialMoveDamage,
+	}
+	return connect.NewResponse(&pb.UpdatePokemonResponse{Pokemon: p}), nil
+}
+
+func (s *Service) DeletePokemon(ctx context.Context, req *connect.Request[pb.DeletePokemonRequest]) (*connect.Response[pb.DeletePokemonResponse], error) {
+	tag, err := s.pool.Exec(ctx, `DELETE FROM pokemon WHERE id=$1`, req.Msg.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	if tag.RowsAffected() == 0 {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("pokemon not found"))
+	}
+	return connect.NewResponse(&pb.DeletePokemonResponse{}), nil
+}
+
+func (s *Service) UpdateTypeMatchup(ctx context.Context, req *connect.Request[pb.UpdateTypeMatchupRequest]) (*connect.Response[pb.UpdateTypeMatchupResponse], error) {
+	tag, err := s.pool.Exec(ctx,
+		`UPDATE type_matchup SET effectiveness=$3 WHERE attacking_type=$1 AND defending_type=$2`,
+		req.Msg.AttackingType, req.Msg.DefendingType, req.Msg.Effectiveness,
+	)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	if tag.RowsAffected() == 0 {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("type matchup not found"))
+	}
+
+	m := &pb.TypeMatchup{
+		AttackingType: req.Msg.AttackingType,
+		DefendingType: req.Msg.DefendingType,
+		Effectiveness: req.Msg.Effectiveness,
+	}
+	return connect.NewResponse(&pb.UpdateTypeMatchupResponse{Matchup: m}), nil
+}
+
+func (s *Service) DeleteTypeMatchup(ctx context.Context, req *connect.Request[pb.DeleteTypeMatchupRequest]) (*connect.Response[pb.DeleteTypeMatchupResponse], error) {
+	tag, err := s.pool.Exec(ctx,
+		`DELETE FROM type_matchup WHERE attacking_type=$1 AND defending_type=$2`,
+		req.Msg.AttackingType, req.Msg.DefendingType,
+	)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	if tag.RowsAffected() == 0 {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("type matchup not found"))
+	}
+	return connect.NewResponse(&pb.DeleteTypeMatchupResponse{}), nil
+}
+
+func (s *Service) UpdateItem(ctx context.Context, req *connect.Request[pb.UpdateItemRequest]) (*connect.Response[pb.UpdateItemResponse], error) {
+	tag, err := s.pool.Exec(ctx,
+		`UPDATE item_master SET name=$2, effect_type=$3, target_type=$4, capture_rate_bonus=$5 WHERE id=$1`,
+		req.Msg.Id, req.Msg.Name, req.Msg.EffectType, nullableString(req.Msg.TargetType), req.Msg.CaptureRateBonus,
+	)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	if tag.RowsAffected() == 0 {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("item not found"))
+	}
+
+	item := &pb.Item{
+		Id: req.Msg.Id, Name: req.Msg.Name, EffectType: req.Msg.EffectType,
+		TargetType: req.Msg.TargetType, CaptureRateBonus: req.Msg.CaptureRateBonus,
+	}
+	return connect.NewResponse(&pb.UpdateItemResponse{Item: item}), nil
+}
+
+func (s *Service) DeleteItem(ctx context.Context, req *connect.Request[pb.DeleteItemRequest]) (*connect.Response[pb.DeleteItemResponse], error) {
+	tag, err := s.pool.Exec(ctx, `DELETE FROM item_master WHERE id=$1`, req.Msg.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	if tag.RowsAffected() == 0 {
+		return nil, connect.NewError(connect.CodeNotFound, errors.New("item not found"))
+	}
+	return connect.NewResponse(&pb.DeleteItemResponse{}), nil
+}
+
 // nullableString converts empty string to nil for nullable DB columns.
 func nullableString(s string) *string {
 	if s == "" {

@@ -425,6 +425,230 @@ func (x *ListPokemonResponse) GetPokemon() []*Pokemon {
 	return nil
 }
 
+type UpdatePokemonRequest struct {
+	state             protoimpl.MessageState `protogen:"open.v1"`
+	Id                string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name              string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	Type              string                 `protobuf:"bytes,3,opt,name=type,proto3" json:"type,omitempty"`
+	Hp                int32                  `protobuf:"varint,4,opt,name=hp,proto3" json:"hp,omitempty"`
+	Attack            int32                  `protobuf:"varint,5,opt,name=attack,proto3" json:"attack,omitempty"`
+	Speed             int32                  `protobuf:"varint,6,opt,name=speed,proto3" json:"speed,omitempty"`
+	SpecialMoveName   string                 `protobuf:"bytes,7,opt,name=special_move_name,json=specialMoveName,proto3" json:"special_move_name,omitempty"`
+	SpecialMoveDamage int32                  `protobuf:"varint,8,opt,name=special_move_damage,json=specialMoveDamage,proto3" json:"special_move_damage,omitempty"`
+	unknownFields     protoimpl.UnknownFields
+	sizeCache         protoimpl.SizeCache
+}
+
+func (x *UpdatePokemonRequest) Reset() {
+	*x = UpdatePokemonRequest{}
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[7]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdatePokemonRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdatePokemonRequest) ProtoMessage() {}
+
+func (x *UpdatePokemonRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[7]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdatePokemonRequest.ProtoReflect.Descriptor instead.
+func (*UpdatePokemonRequest) Descriptor() ([]byte, []int) {
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{7}
+}
+
+func (x *UpdatePokemonRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdatePokemonRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *UpdatePokemonRequest) GetType() string {
+	if x != nil {
+		return x.Type
+	}
+	return ""
+}
+
+func (x *UpdatePokemonRequest) GetHp() int32 {
+	if x != nil {
+		return x.Hp
+	}
+	return 0
+}
+
+func (x *UpdatePokemonRequest) GetAttack() int32 {
+	if x != nil {
+		return x.Attack
+	}
+	return 0
+}
+
+func (x *UpdatePokemonRequest) GetSpeed() int32 {
+	if x != nil {
+		return x.Speed
+	}
+	return 0
+}
+
+func (x *UpdatePokemonRequest) GetSpecialMoveName() string {
+	if x != nil {
+		return x.SpecialMoveName
+	}
+	return ""
+}
+
+func (x *UpdatePokemonRequest) GetSpecialMoveDamage() int32 {
+	if x != nil {
+		return x.SpecialMoveDamage
+	}
+	return 0
+}
+
+type UpdatePokemonResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Pokemon       *Pokemon               `protobuf:"bytes,1,opt,name=pokemon,proto3" json:"pokemon,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdatePokemonResponse) Reset() {
+	*x = UpdatePokemonResponse{}
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[8]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdatePokemonResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdatePokemonResponse) ProtoMessage() {}
+
+func (x *UpdatePokemonResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[8]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdatePokemonResponse.ProtoReflect.Descriptor instead.
+func (*UpdatePokemonResponse) Descriptor() ([]byte, []int) {
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{8}
+}
+
+func (x *UpdatePokemonResponse) GetPokemon() *Pokemon {
+	if x != nil {
+		return x.Pokemon
+	}
+	return nil
+}
+
+type DeletePokemonRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeletePokemonRequest) Reset() {
+	*x = DeletePokemonRequest{}
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[9]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeletePokemonRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeletePokemonRequest) ProtoMessage() {}
+
+func (x *DeletePokemonRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[9]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeletePokemonRequest.ProtoReflect.Descriptor instead.
+func (*DeletePokemonRequest) Descriptor() ([]byte, []int) {
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{9}
+}
+
+func (x *DeletePokemonRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type DeletePokemonResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeletePokemonResponse) Reset() {
+	*x = DeletePokemonResponse{}
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[10]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeletePokemonResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeletePokemonResponse) ProtoMessage() {}
+
+func (x *DeletePokemonResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[10]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeletePokemonResponse.ProtoReflect.Descriptor instead.
+func (*DeletePokemonResponse) Descriptor() ([]byte, []int) {
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{10}
+}
+
 type TypeMatchup struct {
 	state         protoimpl.MessageState `protogen:"open.v1"`
 	AttackingType string                 `protobuf:"bytes,1,opt,name=attacking_type,json=attackingType,proto3" json:"attacking_type,omitempty"`
@@ -436,7 +660,7 @@ type TypeMatchup struct {
 
 func (x *TypeMatchup) Reset() {
 	*x = TypeMatchup{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[7]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[11]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -448,7 +672,7 @@ func (x *TypeMatchup) String() string {
 func (*TypeMatchup) ProtoMessage() {}
 
 func (x *TypeMatchup) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[7]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[11]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -461,7 +685,7 @@ func (x *TypeMatchup) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use TypeMatchup.ProtoReflect.Descriptor instead.
 func (*TypeMatchup) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{7}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{11}
 }
 
 func (x *TypeMatchup) GetAttackingType() string {
@@ -496,7 +720,7 @@ type CreateTypeMatchupRequest struct {
 
 func (x *CreateTypeMatchupRequest) Reset() {
 	*x = CreateTypeMatchupRequest{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[8]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[12]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -508,7 +732,7 @@ func (x *CreateTypeMatchupRequest) String() string {
 func (*CreateTypeMatchupRequest) ProtoMessage() {}
 
 func (x *CreateTypeMatchupRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[8]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[12]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -521,7 +745,7 @@ func (x *CreateTypeMatchupRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTypeMatchupRequest.ProtoReflect.Descriptor instead.
 func (*CreateTypeMatchupRequest) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{8}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{12}
 }
 
 func (x *CreateTypeMatchupRequest) GetAttackingType() string {
@@ -553,7 +777,7 @@ type CreateTypeMatchupResponse struct {
 
 func (x *CreateTypeMatchupResponse) Reset() {
 	*x = CreateTypeMatchupResponse{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[9]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[13]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -565,7 +789,7 @@ func (x *CreateTypeMatchupResponse) String() string {
 func (*CreateTypeMatchupResponse) ProtoMessage() {}
 
 func (x *CreateTypeMatchupResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[9]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[13]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -578,7 +802,7 @@ func (x *CreateTypeMatchupResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateTypeMatchupResponse.ProtoReflect.Descriptor instead.
 func (*CreateTypeMatchupResponse) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{9}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{13}
 }
 
 type ListTypeMatchupsRequest struct {
@@ -589,7 +813,7 @@ type ListTypeMatchupsRequest struct {
 
 func (x *ListTypeMatchupsRequest) Reset() {
 	*x = ListTypeMatchupsRequest{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[10]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[14]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -601,7 +825,7 @@ func (x *ListTypeMatchupsRequest) String() string {
 func (*ListTypeMatchupsRequest) ProtoMessage() {}
 
 func (x *ListTypeMatchupsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[10]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[14]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -614,7 +838,7 @@ func (x *ListTypeMatchupsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTypeMatchupsRequest.ProtoReflect.Descriptor instead.
 func (*ListTypeMatchupsRequest) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{10}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{14}
 }
 
 type ListTypeMatchupsResponse struct {
@@ -626,7 +850,7 @@ type ListTypeMatchupsResponse struct {
 
 func (x *ListTypeMatchupsResponse) Reset() {
 	*x = ListTypeMatchupsResponse{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[11]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[15]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -638,7 +862,7 @@ func (x *ListTypeMatchupsResponse) String() string {
 func (*ListTypeMatchupsResponse) ProtoMessage() {}
 
 func (x *ListTypeMatchupsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[11]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[15]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -651,7 +875,7 @@ func (x *ListTypeMatchupsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListTypeMatchupsResponse.ProtoReflect.Descriptor instead.
 func (*ListTypeMatchupsResponse) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{11}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{15}
 }
 
 func (x *ListTypeMatchupsResponse) GetMatchups() []*TypeMatchup {
@@ -659,6 +883,198 @@ func (x *ListTypeMatchupsResponse) GetMatchups() []*TypeMatchup {
 		return x.Matchups
 	}
 	return nil
+}
+
+type UpdateTypeMatchupRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AttackingType string                 `protobuf:"bytes,1,opt,name=attacking_type,json=attackingType,proto3" json:"attacking_type,omitempty"`
+	DefendingType string                 `protobuf:"bytes,2,opt,name=defending_type,json=defendingType,proto3" json:"defending_type,omitempty"`
+	Effectiveness float64                `protobuf:"fixed64,3,opt,name=effectiveness,proto3" json:"effectiveness,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateTypeMatchupRequest) Reset() {
+	*x = UpdateTypeMatchupRequest{}
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[16]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateTypeMatchupRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateTypeMatchupRequest) ProtoMessage() {}
+
+func (x *UpdateTypeMatchupRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[16]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateTypeMatchupRequest.ProtoReflect.Descriptor instead.
+func (*UpdateTypeMatchupRequest) Descriptor() ([]byte, []int) {
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{16}
+}
+
+func (x *UpdateTypeMatchupRequest) GetAttackingType() string {
+	if x != nil {
+		return x.AttackingType
+	}
+	return ""
+}
+
+func (x *UpdateTypeMatchupRequest) GetDefendingType() string {
+	if x != nil {
+		return x.DefendingType
+	}
+	return ""
+}
+
+func (x *UpdateTypeMatchupRequest) GetEffectiveness() float64 {
+	if x != nil {
+		return x.Effectiveness
+	}
+	return 0
+}
+
+type UpdateTypeMatchupResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Matchup       *TypeMatchup           `protobuf:"bytes,1,opt,name=matchup,proto3" json:"matchup,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateTypeMatchupResponse) Reset() {
+	*x = UpdateTypeMatchupResponse{}
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[17]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateTypeMatchupResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateTypeMatchupResponse) ProtoMessage() {}
+
+func (x *UpdateTypeMatchupResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[17]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateTypeMatchupResponse.ProtoReflect.Descriptor instead.
+func (*UpdateTypeMatchupResponse) Descriptor() ([]byte, []int) {
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{17}
+}
+
+func (x *UpdateTypeMatchupResponse) GetMatchup() *TypeMatchup {
+	if x != nil {
+		return x.Matchup
+	}
+	return nil
+}
+
+type DeleteTypeMatchupRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	AttackingType string                 `protobuf:"bytes,1,opt,name=attacking_type,json=attackingType,proto3" json:"attacking_type,omitempty"`
+	DefendingType string                 `protobuf:"bytes,2,opt,name=defending_type,json=defendingType,proto3" json:"defending_type,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteTypeMatchupRequest) Reset() {
+	*x = DeleteTypeMatchupRequest{}
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[18]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteTypeMatchupRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteTypeMatchupRequest) ProtoMessage() {}
+
+func (x *DeleteTypeMatchupRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[18]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteTypeMatchupRequest.ProtoReflect.Descriptor instead.
+func (*DeleteTypeMatchupRequest) Descriptor() ([]byte, []int) {
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{18}
+}
+
+func (x *DeleteTypeMatchupRequest) GetAttackingType() string {
+	if x != nil {
+		return x.AttackingType
+	}
+	return ""
+}
+
+func (x *DeleteTypeMatchupRequest) GetDefendingType() string {
+	if x != nil {
+		return x.DefendingType
+	}
+	return ""
+}
+
+type DeleteTypeMatchupResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteTypeMatchupResponse) Reset() {
+	*x = DeleteTypeMatchupResponse{}
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[19]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteTypeMatchupResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteTypeMatchupResponse) ProtoMessage() {}
+
+func (x *DeleteTypeMatchupResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[19]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteTypeMatchupResponse.ProtoReflect.Descriptor instead.
+func (*DeleteTypeMatchupResponse) Descriptor() ([]byte, []int) {
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{19}
 }
 
 type Item struct {
@@ -674,7 +1090,7 @@ type Item struct {
 
 func (x *Item) Reset() {
 	*x = Item{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[12]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[20]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -686,7 +1102,7 @@ func (x *Item) String() string {
 func (*Item) ProtoMessage() {}
 
 func (x *Item) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[12]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[20]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -699,7 +1115,7 @@ func (x *Item) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use Item.ProtoReflect.Descriptor instead.
 func (*Item) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{12}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{20}
 }
 
 func (x *Item) GetId() string {
@@ -749,7 +1165,7 @@ type CreateItemRequest struct {
 
 func (x *CreateItemRequest) Reset() {
 	*x = CreateItemRequest{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[13]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[21]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -761,7 +1177,7 @@ func (x *CreateItemRequest) String() string {
 func (*CreateItemRequest) ProtoMessage() {}
 
 func (x *CreateItemRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[13]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[21]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -774,7 +1190,7 @@ func (x *CreateItemRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateItemRequest.ProtoReflect.Descriptor instead.
 func (*CreateItemRequest) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{13}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{21}
 }
 
 func (x *CreateItemRequest) GetName() string {
@@ -814,7 +1230,7 @@ type CreateItemResponse struct {
 
 func (x *CreateItemResponse) Reset() {
 	*x = CreateItemResponse{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[14]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[22]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -826,7 +1242,7 @@ func (x *CreateItemResponse) String() string {
 func (*CreateItemResponse) ProtoMessage() {}
 
 func (x *CreateItemResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[14]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[22]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -839,7 +1255,7 @@ func (x *CreateItemResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use CreateItemResponse.ProtoReflect.Descriptor instead.
 func (*CreateItemResponse) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{14}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{22}
 }
 
 func (x *CreateItemResponse) GetId() string {
@@ -858,7 +1274,7 @@ type GetItemRequest struct {
 
 func (x *GetItemRequest) Reset() {
 	*x = GetItemRequest{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[15]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[23]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -870,7 +1286,7 @@ func (x *GetItemRequest) String() string {
 func (*GetItemRequest) ProtoMessage() {}
 
 func (x *GetItemRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[15]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[23]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -883,7 +1299,7 @@ func (x *GetItemRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetItemRequest.ProtoReflect.Descriptor instead.
 func (*GetItemRequest) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{15}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{23}
 }
 
 func (x *GetItemRequest) GetId() string {
@@ -902,7 +1318,7 @@ type GetItemResponse struct {
 
 func (x *GetItemResponse) Reset() {
 	*x = GetItemResponse{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[16]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[24]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -914,7 +1330,7 @@ func (x *GetItemResponse) String() string {
 func (*GetItemResponse) ProtoMessage() {}
 
 func (x *GetItemResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[16]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[24]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -927,7 +1343,7 @@ func (x *GetItemResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use GetItemResponse.ProtoReflect.Descriptor instead.
 func (*GetItemResponse) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{16}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{24}
 }
 
 func (x *GetItemResponse) GetItem() *Item {
@@ -945,7 +1361,7 @@ type ListItemsRequest struct {
 
 func (x *ListItemsRequest) Reset() {
 	*x = ListItemsRequest{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[17]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[25]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -957,7 +1373,7 @@ func (x *ListItemsRequest) String() string {
 func (*ListItemsRequest) ProtoMessage() {}
 
 func (x *ListItemsRequest) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[17]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[25]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -970,7 +1386,7 @@ func (x *ListItemsRequest) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListItemsRequest.ProtoReflect.Descriptor instead.
 func (*ListItemsRequest) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{17}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{25}
 }
 
 type ListItemsResponse struct {
@@ -982,7 +1398,7 @@ type ListItemsResponse struct {
 
 func (x *ListItemsResponse) Reset() {
 	*x = ListItemsResponse{}
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[18]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[26]
 	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 	ms.StoreMessageInfo(mi)
 }
@@ -994,7 +1410,7 @@ func (x *ListItemsResponse) String() string {
 func (*ListItemsResponse) ProtoMessage() {}
 
 func (x *ListItemsResponse) ProtoReflect() protoreflect.Message {
-	mi := &file_masterdata_v1_masterdata_proto_msgTypes[18]
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[26]
 	if x != nil {
 		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
 		if ms.LoadMessageInfo() == nil {
@@ -1007,7 +1423,7 @@ func (x *ListItemsResponse) ProtoReflect() protoreflect.Message {
 
 // Deprecated: Use ListItemsResponse.ProtoReflect.Descriptor instead.
 func (*ListItemsResponse) Descriptor() ([]byte, []int) {
-	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{18}
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{26}
 }
 
 func (x *ListItemsResponse) GetItems() []*Item {
@@ -1015,6 +1431,206 @@ func (x *ListItemsResponse) GetItems() []*Item {
 		return x.Items
 	}
 	return nil
+}
+
+type UpdateItemRequest struct {
+	state            protoimpl.MessageState `protogen:"open.v1"`
+	Id               string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	Name             string                 `protobuf:"bytes,2,opt,name=name,proto3" json:"name,omitempty"`
+	EffectType       string                 `protobuf:"bytes,3,opt,name=effect_type,json=effectType,proto3" json:"effect_type,omitempty"`
+	TargetType       string                 `protobuf:"bytes,4,opt,name=target_type,json=targetType,proto3" json:"target_type,omitempty"`
+	CaptureRateBonus float64                `protobuf:"fixed64,5,opt,name=capture_rate_bonus,json=captureRateBonus,proto3" json:"capture_rate_bonus,omitempty"`
+	unknownFields    protoimpl.UnknownFields
+	sizeCache        protoimpl.SizeCache
+}
+
+func (x *UpdateItemRequest) Reset() {
+	*x = UpdateItemRequest{}
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[27]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateItemRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateItemRequest) ProtoMessage() {}
+
+func (x *UpdateItemRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[27]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateItemRequest.ProtoReflect.Descriptor instead.
+func (*UpdateItemRequest) Descriptor() ([]byte, []int) {
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{27}
+}
+
+func (x *UpdateItemRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+func (x *UpdateItemRequest) GetName() string {
+	if x != nil {
+		return x.Name
+	}
+	return ""
+}
+
+func (x *UpdateItemRequest) GetEffectType() string {
+	if x != nil {
+		return x.EffectType
+	}
+	return ""
+}
+
+func (x *UpdateItemRequest) GetTargetType() string {
+	if x != nil {
+		return x.TargetType
+	}
+	return ""
+}
+
+func (x *UpdateItemRequest) GetCaptureRateBonus() float64 {
+	if x != nil {
+		return x.CaptureRateBonus
+	}
+	return 0
+}
+
+type UpdateItemResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Item          *Item                  `protobuf:"bytes,1,opt,name=item,proto3" json:"item,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *UpdateItemResponse) Reset() {
+	*x = UpdateItemResponse{}
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[28]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *UpdateItemResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*UpdateItemResponse) ProtoMessage() {}
+
+func (x *UpdateItemResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[28]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use UpdateItemResponse.ProtoReflect.Descriptor instead.
+func (*UpdateItemResponse) Descriptor() ([]byte, []int) {
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{28}
+}
+
+func (x *UpdateItemResponse) GetItem() *Item {
+	if x != nil {
+		return x.Item
+	}
+	return nil
+}
+
+type DeleteItemRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Id            string                 `protobuf:"bytes,1,opt,name=id,proto3" json:"id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteItemRequest) Reset() {
+	*x = DeleteItemRequest{}
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[29]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteItemRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteItemRequest) ProtoMessage() {}
+
+func (x *DeleteItemRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[29]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteItemRequest.ProtoReflect.Descriptor instead.
+func (*DeleteItemRequest) Descriptor() ([]byte, []int) {
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{29}
+}
+
+func (x *DeleteItemRequest) GetId() string {
+	if x != nil {
+		return x.Id
+	}
+	return ""
+}
+
+type DeleteItemResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *DeleteItemResponse) Reset() {
+	*x = DeleteItemResponse{}
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[30]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *DeleteItemResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*DeleteItemResponse) ProtoMessage() {}
+
+func (x *DeleteItemResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_masterdata_v1_masterdata_proto_msgTypes[30]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use DeleteItemResponse.ProtoReflect.Descriptor instead.
+func (*DeleteItemResponse) Descriptor() ([]byte, []int) {
+	return file_masterdata_v1_masterdata_proto_rawDescGZIP(), []int{30}
 }
 
 var File_masterdata_v1_masterdata_proto protoreflect.FileDescriptor
@@ -1047,7 +1663,21 @@ const file_masterdata_v1_masterdata_proto_rawDesc = "" +
 	"\apokemon\x18\x01 \x01(\v2\x16.masterdata.v1.PokemonR\apokemon\"\x14\n" +
 	"\x12ListPokemonRequest\"G\n" +
 	"\x13ListPokemonResponse\x120\n" +
-	"\apokemon\x18\x01 \x03(\v2\x16.masterdata.v1.PokemonR\apokemon\"\x81\x01\n" +
+	"\apokemon\x18\x01 \x03(\v2\x16.masterdata.v1.PokemonR\apokemon\"\xe8\x01\n" +
+	"\x14UpdatePokemonRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x12\n" +
+	"\x04type\x18\x03 \x01(\tR\x04type\x12\x0e\n" +
+	"\x02hp\x18\x04 \x01(\x05R\x02hp\x12\x16\n" +
+	"\x06attack\x18\x05 \x01(\x05R\x06attack\x12\x14\n" +
+	"\x05speed\x18\x06 \x01(\x05R\x05speed\x12*\n" +
+	"\x11special_move_name\x18\a \x01(\tR\x0fspecialMoveName\x12.\n" +
+	"\x13special_move_damage\x18\b \x01(\x05R\x11specialMoveDamage\"I\n" +
+	"\x15UpdatePokemonResponse\x120\n" +
+	"\apokemon\x18\x01 \x01(\v2\x16.masterdata.v1.PokemonR\apokemon\"&\n" +
+	"\x14DeletePokemonRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"\x17\n" +
+	"\x15DeletePokemonResponse\"\x81\x01\n" +
 	"\vTypeMatchup\x12%\n" +
 	"\x0eattacking_type\x18\x01 \x01(\tR\rattackingType\x12%\n" +
 	"\x0edefending_type\x18\x02 \x01(\tR\rdefendingType\x12$\n" +
@@ -1059,7 +1689,17 @@ const file_masterdata_v1_masterdata_proto_rawDesc = "" +
 	"\x19CreateTypeMatchupResponse\"\x19\n" +
 	"\x17ListTypeMatchupsRequest\"R\n" +
 	"\x18ListTypeMatchupsResponse\x126\n" +
-	"\bmatchups\x18\x01 \x03(\v2\x1a.masterdata.v1.TypeMatchupR\bmatchups\"\x9a\x01\n" +
+	"\bmatchups\x18\x01 \x03(\v2\x1a.masterdata.v1.TypeMatchupR\bmatchups\"\x8e\x01\n" +
+	"\x18UpdateTypeMatchupRequest\x12%\n" +
+	"\x0eattacking_type\x18\x01 \x01(\tR\rattackingType\x12%\n" +
+	"\x0edefending_type\x18\x02 \x01(\tR\rdefendingType\x12$\n" +
+	"\reffectiveness\x18\x03 \x01(\x01R\reffectiveness\"Q\n" +
+	"\x19UpdateTypeMatchupResponse\x124\n" +
+	"\amatchup\x18\x01 \x01(\v2\x1a.masterdata.v1.TypeMatchupR\amatchup\"h\n" +
+	"\x18DeleteTypeMatchupRequest\x12%\n" +
+	"\x0eattacking_type\x18\x01 \x01(\tR\rattackingType\x12%\n" +
+	"\x0edefending_type\x18\x02 \x01(\tR\rdefendingType\"\x1b\n" +
+	"\x19DeleteTypeMatchupResponse\"\x9a\x01\n" +
 	"\x04Item\x12\x0e\n" +
 	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
 	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n" +
@@ -1083,18 +1723,40 @@ const file_masterdata_v1_masterdata_proto_rawDesc = "" +
 	"\x04item\x18\x01 \x01(\v2\x13.masterdata.v1.ItemR\x04item\"\x12\n" +
 	"\x10ListItemsRequest\">\n" +
 	"\x11ListItemsResponse\x12)\n" +
-	"\x05items\x18\x01 \x03(\v2\x13.masterdata.v1.ItemR\x05items2\xe2\x05\n" +
+	"\x05items\x18\x01 \x03(\v2\x13.masterdata.v1.ItemR\x05items\"\xa7\x01\n" +
+	"\x11UpdateItemRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\x12\x12\n" +
+	"\x04name\x18\x02 \x01(\tR\x04name\x12\x1f\n" +
+	"\veffect_type\x18\x03 \x01(\tR\n" +
+	"effectType\x12\x1f\n" +
+	"\vtarget_type\x18\x04 \x01(\tR\n" +
+	"targetType\x12,\n" +
+	"\x12capture_rate_bonus\x18\x05 \x01(\x01R\x10captureRateBonus\"=\n" +
+	"\x12UpdateItemResponse\x12'\n" +
+	"\x04item\x18\x01 \x01(\v2\x13.masterdata.v1.ItemR\x04item\"#\n" +
+	"\x11DeleteItemRequest\x12\x0e\n" +
+	"\x02id\x18\x01 \x01(\tR\x02id\"\x14\n" +
+	"\x12DeleteItemResponse2\x9c\n" +
+	"\n" +
 	"\x11MasterdataService\x12\\\n" +
 	"\rCreatePokemon\x12#.masterdata.v1.CreatePokemonRequest\x1a$.masterdata.v1.CreatePokemonResponse\"\x00\x12S\n" +
 	"\n" +
 	"GetPokemon\x12 .masterdata.v1.GetPokemonRequest\x1a!.masterdata.v1.GetPokemonResponse\"\x00\x12V\n" +
-	"\vListPokemon\x12!.masterdata.v1.ListPokemonRequest\x1a\".masterdata.v1.ListPokemonResponse\"\x00\x12h\n" +
+	"\vListPokemon\x12!.masterdata.v1.ListPokemonRequest\x1a\".masterdata.v1.ListPokemonResponse\"\x00\x12\\\n" +
+	"\rUpdatePokemon\x12#.masterdata.v1.UpdatePokemonRequest\x1a$.masterdata.v1.UpdatePokemonResponse\"\x00\x12\\\n" +
+	"\rDeletePokemon\x12#.masterdata.v1.DeletePokemonRequest\x1a$.masterdata.v1.DeletePokemonResponse\"\x00\x12h\n" +
 	"\x11CreateTypeMatchup\x12'.masterdata.v1.CreateTypeMatchupRequest\x1a(.masterdata.v1.CreateTypeMatchupResponse\"\x00\x12e\n" +
-	"\x10ListTypeMatchups\x12&.masterdata.v1.ListTypeMatchupsRequest\x1a'.masterdata.v1.ListTypeMatchupsResponse\"\x00\x12S\n" +
+	"\x10ListTypeMatchups\x12&.masterdata.v1.ListTypeMatchupsRequest\x1a'.masterdata.v1.ListTypeMatchupsResponse\"\x00\x12h\n" +
+	"\x11UpdateTypeMatchup\x12'.masterdata.v1.UpdateTypeMatchupRequest\x1a(.masterdata.v1.UpdateTypeMatchupResponse\"\x00\x12h\n" +
+	"\x11DeleteTypeMatchup\x12'.masterdata.v1.DeleteTypeMatchupRequest\x1a(.masterdata.v1.DeleteTypeMatchupResponse\"\x00\x12S\n" +
 	"\n" +
 	"CreateItem\x12 .masterdata.v1.CreateItemRequest\x1a!.masterdata.v1.CreateItemResponse\"\x00\x12J\n" +
 	"\aGetItem\x12\x1d.masterdata.v1.GetItemRequest\x1a\x1e.masterdata.v1.GetItemResponse\"\x00\x12P\n" +
-	"\tListItems\x12\x1f.masterdata.v1.ListItemsRequest\x1a .masterdata.v1.ListItemsResponse\"\x00BZZXgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1;masterdatav1b\x06proto3"
+	"\tListItems\x12\x1f.masterdata.v1.ListItemsRequest\x1a .masterdata.v1.ListItemsResponse\"\x00\x12S\n" +
+	"\n" +
+	"UpdateItem\x12 .masterdata.v1.UpdateItemRequest\x1a!.masterdata.v1.UpdateItemResponse\"\x00\x12S\n" +
+	"\n" +
+	"DeleteItem\x12 .masterdata.v1.DeleteItemRequest\x1a!.masterdata.v1.DeleteItemResponse\"\x00BZZXgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/masterdata/v1;masterdatav1b\x06proto3"
 
 var (
 	file_masterdata_v1_masterdata_proto_rawDescOnce sync.Once
@@ -1108,7 +1770,7 @@ func file_masterdata_v1_masterdata_proto_rawDescGZIP() []byte {
 	return file_masterdata_v1_masterdata_proto_rawDescData
 }
 
-var file_masterdata_v1_masterdata_proto_msgTypes = make([]protoimpl.MessageInfo, 19)
+var file_masterdata_v1_masterdata_proto_msgTypes = make([]protoimpl.MessageInfo, 31)
 var file_masterdata_v1_masterdata_proto_goTypes = []any{
 	(*Pokemon)(nil),                   // 0: masterdata.v1.Pokemon
 	(*CreatePokemonRequest)(nil),      // 1: masterdata.v1.CreatePokemonRequest
@@ -1117,46 +1779,73 @@ var file_masterdata_v1_masterdata_proto_goTypes = []any{
 	(*GetPokemonResponse)(nil),        // 4: masterdata.v1.GetPokemonResponse
 	(*ListPokemonRequest)(nil),        // 5: masterdata.v1.ListPokemonRequest
 	(*ListPokemonResponse)(nil),       // 6: masterdata.v1.ListPokemonResponse
-	(*TypeMatchup)(nil),               // 7: masterdata.v1.TypeMatchup
-	(*CreateTypeMatchupRequest)(nil),  // 8: masterdata.v1.CreateTypeMatchupRequest
-	(*CreateTypeMatchupResponse)(nil), // 9: masterdata.v1.CreateTypeMatchupResponse
-	(*ListTypeMatchupsRequest)(nil),   // 10: masterdata.v1.ListTypeMatchupsRequest
-	(*ListTypeMatchupsResponse)(nil),  // 11: masterdata.v1.ListTypeMatchupsResponse
-	(*Item)(nil),                      // 12: masterdata.v1.Item
-	(*CreateItemRequest)(nil),         // 13: masterdata.v1.CreateItemRequest
-	(*CreateItemResponse)(nil),        // 14: masterdata.v1.CreateItemResponse
-	(*GetItemRequest)(nil),            // 15: masterdata.v1.GetItemRequest
-	(*GetItemResponse)(nil),           // 16: masterdata.v1.GetItemResponse
-	(*ListItemsRequest)(nil),          // 17: masterdata.v1.ListItemsRequest
-	(*ListItemsResponse)(nil),         // 18: masterdata.v1.ListItemsResponse
+	(*UpdatePokemonRequest)(nil),      // 7: masterdata.v1.UpdatePokemonRequest
+	(*UpdatePokemonResponse)(nil),     // 8: masterdata.v1.UpdatePokemonResponse
+	(*DeletePokemonRequest)(nil),      // 9: masterdata.v1.DeletePokemonRequest
+	(*DeletePokemonResponse)(nil),     // 10: masterdata.v1.DeletePokemonResponse
+	(*TypeMatchup)(nil),               // 11: masterdata.v1.TypeMatchup
+	(*CreateTypeMatchupRequest)(nil),  // 12: masterdata.v1.CreateTypeMatchupRequest
+	(*CreateTypeMatchupResponse)(nil), // 13: masterdata.v1.CreateTypeMatchupResponse
+	(*ListTypeMatchupsRequest)(nil),   // 14: masterdata.v1.ListTypeMatchupsRequest
+	(*ListTypeMatchupsResponse)(nil),  // 15: masterdata.v1.ListTypeMatchupsResponse
+	(*UpdateTypeMatchupRequest)(nil),  // 16: masterdata.v1.UpdateTypeMatchupRequest
+	(*UpdateTypeMatchupResponse)(nil), // 17: masterdata.v1.UpdateTypeMatchupResponse
+	(*DeleteTypeMatchupRequest)(nil),  // 18: masterdata.v1.DeleteTypeMatchupRequest
+	(*DeleteTypeMatchupResponse)(nil), // 19: masterdata.v1.DeleteTypeMatchupResponse
+	(*Item)(nil),                      // 20: masterdata.v1.Item
+	(*CreateItemRequest)(nil),         // 21: masterdata.v1.CreateItemRequest
+	(*CreateItemResponse)(nil),        // 22: masterdata.v1.CreateItemResponse
+	(*GetItemRequest)(nil),            // 23: masterdata.v1.GetItemRequest
+	(*GetItemResponse)(nil),           // 24: masterdata.v1.GetItemResponse
+	(*ListItemsRequest)(nil),          // 25: masterdata.v1.ListItemsRequest
+	(*ListItemsResponse)(nil),         // 26: masterdata.v1.ListItemsResponse
+	(*UpdateItemRequest)(nil),         // 27: masterdata.v1.UpdateItemRequest
+	(*UpdateItemResponse)(nil),        // 28: masterdata.v1.UpdateItemResponse
+	(*DeleteItemRequest)(nil),         // 29: masterdata.v1.DeleteItemRequest
+	(*DeleteItemResponse)(nil),        // 30: masterdata.v1.DeleteItemResponse
 }
 var file_masterdata_v1_masterdata_proto_depIdxs = []int32{
 	0,  // 0: masterdata.v1.GetPokemonResponse.pokemon:type_name -> masterdata.v1.Pokemon
 	0,  // 1: masterdata.v1.ListPokemonResponse.pokemon:type_name -> masterdata.v1.Pokemon
-	7,  // 2: masterdata.v1.ListTypeMatchupsResponse.matchups:type_name -> masterdata.v1.TypeMatchup
-	12, // 3: masterdata.v1.GetItemResponse.item:type_name -> masterdata.v1.Item
-	12, // 4: masterdata.v1.ListItemsResponse.items:type_name -> masterdata.v1.Item
-	1,  // 5: masterdata.v1.MasterdataService.CreatePokemon:input_type -> masterdata.v1.CreatePokemonRequest
-	3,  // 6: masterdata.v1.MasterdataService.GetPokemon:input_type -> masterdata.v1.GetPokemonRequest
-	5,  // 7: masterdata.v1.MasterdataService.ListPokemon:input_type -> masterdata.v1.ListPokemonRequest
-	8,  // 8: masterdata.v1.MasterdataService.CreateTypeMatchup:input_type -> masterdata.v1.CreateTypeMatchupRequest
-	10, // 9: masterdata.v1.MasterdataService.ListTypeMatchups:input_type -> masterdata.v1.ListTypeMatchupsRequest
-	13, // 10: masterdata.v1.MasterdataService.CreateItem:input_type -> masterdata.v1.CreateItemRequest
-	15, // 11: masterdata.v1.MasterdataService.GetItem:input_type -> masterdata.v1.GetItemRequest
-	17, // 12: masterdata.v1.MasterdataService.ListItems:input_type -> masterdata.v1.ListItemsRequest
-	2,  // 13: masterdata.v1.MasterdataService.CreatePokemon:output_type -> masterdata.v1.CreatePokemonResponse
-	4,  // 14: masterdata.v1.MasterdataService.GetPokemon:output_type -> masterdata.v1.GetPokemonResponse
-	6,  // 15: masterdata.v1.MasterdataService.ListPokemon:output_type -> masterdata.v1.ListPokemonResponse
-	9,  // 16: masterdata.v1.MasterdataService.CreateTypeMatchup:output_type -> masterdata.v1.CreateTypeMatchupResponse
-	11, // 17: masterdata.v1.MasterdataService.ListTypeMatchups:output_type -> masterdata.v1.ListTypeMatchupsResponse
-	14, // 18: masterdata.v1.MasterdataService.CreateItem:output_type -> masterdata.v1.CreateItemResponse
-	16, // 19: masterdata.v1.MasterdataService.GetItem:output_type -> masterdata.v1.GetItemResponse
-	18, // 20: masterdata.v1.MasterdataService.ListItems:output_type -> masterdata.v1.ListItemsResponse
-	13, // [13:21] is the sub-list for method output_type
-	5,  // [5:13] is the sub-list for method input_type
-	5,  // [5:5] is the sub-list for extension type_name
-	5,  // [5:5] is the sub-list for extension extendee
-	0,  // [0:5] is the sub-list for field type_name
+	0,  // 2: masterdata.v1.UpdatePokemonResponse.pokemon:type_name -> masterdata.v1.Pokemon
+	11, // 3: masterdata.v1.ListTypeMatchupsResponse.matchups:type_name -> masterdata.v1.TypeMatchup
+	11, // 4: masterdata.v1.UpdateTypeMatchupResponse.matchup:type_name -> masterdata.v1.TypeMatchup
+	20, // 5: masterdata.v1.GetItemResponse.item:type_name -> masterdata.v1.Item
+	20, // 6: masterdata.v1.ListItemsResponse.items:type_name -> masterdata.v1.Item
+	20, // 7: masterdata.v1.UpdateItemResponse.item:type_name -> masterdata.v1.Item
+	1,  // 8: masterdata.v1.MasterdataService.CreatePokemon:input_type -> masterdata.v1.CreatePokemonRequest
+	3,  // 9: masterdata.v1.MasterdataService.GetPokemon:input_type -> masterdata.v1.GetPokemonRequest
+	5,  // 10: masterdata.v1.MasterdataService.ListPokemon:input_type -> masterdata.v1.ListPokemonRequest
+	7,  // 11: masterdata.v1.MasterdataService.UpdatePokemon:input_type -> masterdata.v1.UpdatePokemonRequest
+	9,  // 12: masterdata.v1.MasterdataService.DeletePokemon:input_type -> masterdata.v1.DeletePokemonRequest
+	12, // 13: masterdata.v1.MasterdataService.CreateTypeMatchup:input_type -> masterdata.v1.CreateTypeMatchupRequest
+	14, // 14: masterdata.v1.MasterdataService.ListTypeMatchups:input_type -> masterdata.v1.ListTypeMatchupsRequest
+	16, // 15: masterdata.v1.MasterdataService.UpdateTypeMatchup:input_type -> masterdata.v1.UpdateTypeMatchupRequest
+	18, // 16: masterdata.v1.MasterdataService.DeleteTypeMatchup:input_type -> masterdata.v1.DeleteTypeMatchupRequest
+	21, // 17: masterdata.v1.MasterdataService.CreateItem:input_type -> masterdata.v1.CreateItemRequest
+	23, // 18: masterdata.v1.MasterdataService.GetItem:input_type -> masterdata.v1.GetItemRequest
+	25, // 19: masterdata.v1.MasterdataService.ListItems:input_type -> masterdata.v1.ListItemsRequest
+	27, // 20: masterdata.v1.MasterdataService.UpdateItem:input_type -> masterdata.v1.UpdateItemRequest
+	29, // 21: masterdata.v1.MasterdataService.DeleteItem:input_type -> masterdata.v1.DeleteItemRequest
+	2,  // 22: masterdata.v1.MasterdataService.CreatePokemon:output_type -> masterdata.v1.CreatePokemonResponse
+	4,  // 23: masterdata.v1.MasterdataService.GetPokemon:output_type -> masterdata.v1.GetPokemonResponse
+	6,  // 24: masterdata.v1.MasterdataService.ListPokemon:output_type -> masterdata.v1.ListPokemonResponse
+	8,  // 25: masterdata.v1.MasterdataService.UpdatePokemon:output_type -> masterdata.v1.UpdatePokemonResponse
+	10, // 26: masterdata.v1.MasterdataService.DeletePokemon:output_type -> masterdata.v1.DeletePokemonResponse
+	13, // 27: masterdata.v1.MasterdataService.CreateTypeMatchup:output_type -> masterdata.v1.CreateTypeMatchupResponse
+	15, // 28: masterdata.v1.MasterdataService.ListTypeMatchups:output_type -> masterdata.v1.ListTypeMatchupsResponse
+	17, // 29: masterdata.v1.MasterdataService.UpdateTypeMatchup:output_type -> masterdata.v1.UpdateTypeMatchupResponse
+	19, // 30: masterdata.v1.MasterdataService.DeleteTypeMatchup:output_type -> masterdata.v1.DeleteTypeMatchupResponse
+	22, // 31: masterdata.v1.MasterdataService.CreateItem:output_type -> masterdata.v1.CreateItemResponse
+	24, // 32: masterdata.v1.MasterdataService.GetItem:output_type -> masterdata.v1.GetItemResponse
+	26, // 33: masterdata.v1.MasterdataService.ListItems:output_type -> masterdata.v1.ListItemsResponse
+	28, // 34: masterdata.v1.MasterdataService.UpdateItem:output_type -> masterdata.v1.UpdateItemResponse
+	30, // 35: masterdata.v1.MasterdataService.DeleteItem:output_type -> masterdata.v1.DeleteItemResponse
+	22, // [22:36] is the sub-list for method output_type
+	8,  // [8:22] is the sub-list for method input_type
+	8,  // [8:8] is the sub-list for extension type_name
+	8,  // [8:8] is the sub-list for extension extendee
+	0,  // [0:8] is the sub-list for field type_name
 }
 
 func init() { file_masterdata_v1_masterdata_proto_init() }
@@ -1170,7 +1859,7 @@ func file_masterdata_v1_masterdata_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_masterdata_v1_masterdata_proto_rawDesc), len(file_masterdata_v1_masterdata_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   19,
+			NumMessages:   31,
 			NumExtensions: 0,
 			NumServices:   1,
 		},
