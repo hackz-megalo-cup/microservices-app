@@ -171,13 +171,25 @@ func (s *Service) CreateItem(ctx context.Context, req *connect.Request[pb.Create
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
 
-	_, execErr := tx.Exec(ctx,
-		`INSERT INTO item_master (id, name, effect_type, target_type, capture_rate_bonus)
-		 VALUES ($1, $2, $3, $4, $5)`,
-		id, req.Msg.Name, req.Msg.EffectType, nullableString(req.Msg.TargetType), req.Msg.CaptureRateBonus,
-	)
-	if execErr != nil {
+	if _, execErr := tx.Exec(ctx,
+		`INSERT INTO item_master (id, name) VALUES ($1, $2)`,
+		id, req.Msg.Name,
+	); execErr != nil {
 		return nil, connect.NewError(connect.CodeInternal, execErr)
+	}
+
+	for _, e := range req.Msg.Effects {
+		effectID, err := uuid.NewV7()
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, err)
+		}
+		if _, execErr := tx.Exec(ctx,
+			`INSERT INTO item_effect (id, item_id, effect_type, target_type, capture_rate_bonus, flavor_text)
+			 VALUES ($1, $2, $3, $4, $5, $6)`,
+			effectID, id, e.EffectType, nullableString(e.TargetType), e.CaptureRateBonus, nullableString(e.FlavorText),
+		); execErr != nil {
+			return nil, connect.NewError(connect.CodeInternal, execErr)
+		}
 	}
 
 	event := platform.NewEvent(EventCreated, "masterdata-service", map[string]any{"stream_id": id.String()})
@@ -194,54 +206,96 @@ func (s *Service) CreateItem(ctx context.Context, req *connect.Request[pb.Create
 
 func (s *Service) GetItem(ctx context.Context, req *connect.Request[pb.GetItemRequest]) (*connect.Response[pb.GetItemResponse], error) {
 	var item pb.Item
-	var targetType *string
-	var captureRateBonus float32
 	err := s.pool.QueryRow(ctx,
-		`SELECT id, name, effect_type, target_type, capture_rate_bonus FROM item_master WHERE id = $1`,
+		`SELECT id, name FROM item_master WHERE id = $1`,
 		req.Msg.Id,
-	).Scan(&item.Id, &item.Name, &item.EffectType, &targetType, &captureRateBonus)
+	).Scan(&item.Id, &item.Name)
 	if err != nil {
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil, connect.NewError(connect.CodeNotFound, err)
 		}
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
-	if targetType != nil {
-		item.TargetType = *targetType
+
+	effects, err := s.loadEffects(ctx, item.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
 	}
-	item.CaptureRateBonus = float64(captureRateBonus)
+	item.Effects = effects
 
 	return connect.NewResponse(&pb.GetItemResponse{Item: &item}), nil
 }
 
 func (s *Service) ListItems(ctx context.Context, _ *connect.Request[pb.ListItemsRequest]) (*connect.Response[pb.ListItemsResponse], error) {
 	rows, err := s.pool.Query(ctx,
-		`SELECT id, name, effect_type, target_type, capture_rate_bonus FROM item_master ORDER BY created_at`,
+		`SELECT m.id, m.name,
+		        COALESCE(e.effect_type, ''), COALESCE(e.target_type, ''),
+		        COALESCE(e.capture_rate_bonus, 0), COALESCE(e.flavor_text, '')
+		 FROM item_master m
+		 LEFT JOIN item_effect e ON e.item_id = m.id
+		 ORDER BY m.created_at, e.priority, e.created_at`,
 	)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 	defer rows.Close()
 
-	var items []*pb.Item
+	itemMap := make(map[string]*pb.Item)
+	var order []string
 	for rows.Next() {
-		var item pb.Item
-		var targetType *string
-		var captureRateBonus float32
-		if err := rows.Scan(&item.Id, &item.Name, &item.EffectType, &targetType, &captureRateBonus); err != nil {
+		var itemID, itemName, effectType, targetType, flavorText string
+		var bonus float32
+		if err := rows.Scan(&itemID, &itemName, &effectType, &targetType, &bonus, &flavorText); err != nil {
 			return nil, connect.NewError(connect.CodeInternal, err)
 		}
-		if targetType != nil {
-			item.TargetType = *targetType
+		if _, ok := itemMap[itemID]; !ok {
+			itemMap[itemID] = &pb.Item{Id: itemID, Name: itemName}
+			order = append(order, itemID)
 		}
-		item.CaptureRateBonus = float64(captureRateBonus)
-		items = append(items, &item)
+		if effectType != "" {
+			itemMap[itemID].Effects = append(itemMap[itemID].Effects, &pb.ItemEffect{
+				EffectType:       effectType,
+				TargetType:       targetType,
+				CaptureRateBonus: float64(bonus),
+				FlavorText:       flavorText,
+			})
+		}
 	}
 	if err := rows.Err(); err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
 
+	items := make([]*pb.Item, 0, len(order))
+	for _, id := range order {
+		items = append(items, itemMap[id])
+	}
+
 	return connect.NewResponse(&pb.ListItemsResponse{Items: items}), nil
+}
+
+// loadEffects fetches all effects for a given item id.
+func (s *Service) loadEffects(ctx context.Context, itemID string) ([]*pb.ItemEffect, error) {
+	rows, err := s.pool.Query(ctx,
+		`SELECT effect_type, COALESCE(target_type, ''), capture_rate_bonus, COALESCE(flavor_text, '')
+		 FROM item_effect WHERE item_id = $1 ORDER BY priority, created_at`,
+		itemID,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var effects []*pb.ItemEffect
+	for rows.Next() {
+		var e pb.ItemEffect
+		var bonus float32
+		if err := rows.Scan(&e.EffectType, &e.TargetType, &bonus, &e.FlavorText); err != nil {
+			return nil, err
+		}
+		e.CaptureRateBonus = float64(bonus)
+		effects = append(effects, &e)
+	}
+	return effects, rows.Err()
 }
 
 func (s *Service) UpdatePokemon(ctx context.Context, req *connect.Request[pb.UpdatePokemonRequest]) (*connect.Response[pb.UpdatePokemonResponse], error) {
@@ -256,7 +310,6 @@ func (s *Service) UpdatePokemon(ctx context.Context, req *connect.Request[pb.Upd
 	if tag.RowsAffected() == 0 {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("pokemon not found"))
 	}
-
 	p := &pb.Pokemon{
 		Id: req.Msg.Id, Name: req.Msg.Name, Type: req.Msg.Type,
 		Hp: req.Msg.Hp, Attack: req.Msg.Attack, Speed: req.Msg.Speed,
@@ -287,7 +340,6 @@ func (s *Service) UpdateTypeMatchup(ctx context.Context, req *connect.Request[pb
 	if tag.RowsAffected() == 0 {
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("type matchup not found"))
 	}
-
 	m := &pb.TypeMatchup{
 		AttackingType: req.Msg.AttackingType,
 		DefendingType: req.Msg.DefendingType,
@@ -311,10 +363,13 @@ func (s *Service) DeleteTypeMatchup(ctx context.Context, req *connect.Request[pb
 }
 
 func (s *Service) UpdateItem(ctx context.Context, req *connect.Request[pb.UpdateItemRequest]) (*connect.Response[pb.UpdateItemResponse], error) {
-	tag, err := s.pool.Exec(ctx,
-		`UPDATE item_master SET name=$2, effect_type=$3, target_type=$4, capture_rate_bonus=$5 WHERE id=$1`,
-		req.Msg.Id, req.Msg.Name, req.Msg.EffectType, nullableString(req.Msg.TargetType), req.Msg.CaptureRateBonus,
-	)
+	tx, txErr := s.outbox.BeginTx(ctx)
+	if txErr != nil {
+		return nil, connect.NewError(connect.CodeInternal, txErr)
+	}
+	defer func() { _ = tx.Rollback(ctx) }()
+
+	tag, err := tx.Exec(ctx, `UPDATE item_master SET name=$2 WHERE id=$1`, req.Msg.Id, req.Msg.Name)
 	if err != nil {
 		return nil, connect.NewError(connect.CodeInternal, err)
 	}
@@ -322,11 +377,32 @@ func (s *Service) UpdateItem(ctx context.Context, req *connect.Request[pb.Update
 		return nil, connect.NewError(connect.CodeNotFound, errors.New("item not found"))
 	}
 
-	item := &pb.Item{
-		Id: req.Msg.Id, Name: req.Msg.Name, EffectType: req.Msg.EffectType,
-		TargetType: req.Msg.TargetType, CaptureRateBonus: req.Msg.CaptureRateBonus,
+	if _, err := tx.Exec(ctx, `DELETE FROM item_effect WHERE item_id=$1`, req.Msg.Id); err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
 	}
-	return connect.NewResponse(&pb.UpdateItemResponse{Item: item}), nil
+	for _, e := range req.Msg.Effects {
+		effectID, err := uuid.NewV7()
+		if err != nil {
+			return nil, connect.NewError(connect.CodeInternal, err)
+		}
+		if _, execErr := tx.Exec(ctx,
+			`INSERT INTO item_effect (id, item_id, effect_type, target_type, capture_rate_bonus, flavor_text)
+			 VALUES ($1, $2, $3, $4, $5, $6)`,
+			effectID, req.Msg.Id, e.EffectType, nullableString(e.TargetType), e.CaptureRateBonus, nullableString(e.FlavorText),
+		); execErr != nil {
+			return nil, connect.NewError(connect.CodeInternal, execErr)
+		}
+	}
+
+	if commitErr := tx.Commit(ctx); commitErr != nil {
+		return nil, connect.NewError(connect.CodeInternal, commitErr)
+	}
+
+	effects, err := s.loadEffects(ctx, req.Msg.Id)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, err)
+	}
+	return connect.NewResponse(&pb.UpdateItemResponse{Item: &pb.Item{Id: req.Msg.Id, Name: req.Msg.Name, Effects: effects}}), nil
 }
 
 func (s *Service) DeleteItem(ctx context.Context, req *connect.Request[pb.DeleteItemRequest]) (*connect.Response[pb.DeleteItemResponse], error) {

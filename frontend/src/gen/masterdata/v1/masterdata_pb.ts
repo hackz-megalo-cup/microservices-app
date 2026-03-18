@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file masterdata/v1/masterdata.proto.
  */
 export const file_masterdata_v1_masterdata: GenFile = /*@__PURE__*/
-  fileDesc("Ch5tYXN0ZXJkYXRhL3YxL21hc3RlcmRhdGEucHJvdG8SDW1hc3RlcmRhdGEudjEilAEKB1Bva2Vtb24SCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIMCgR0eXBlGAMgASgJEgoKAmhwGAQgASgFEg4KBmF0dGFjaxgFIAEoBRINCgVzcGVlZBgGIAEoBRIZChFzcGVjaWFsX21vdmVfbmFtZRgHIAEoCRIbChNzcGVjaWFsX21vdmVfZGFtYWdlGAggASgFIpUBChRDcmVhdGVQb2tlbW9uUmVxdWVzdBIMCgRuYW1lGAEgASgJEgwKBHR5cGUYAiABKAkSCgoCaHAYAyABKAUSDgoGYXR0YWNrGAQgASgFEg0KBXNwZWVkGAUgASgFEhkKEXNwZWNpYWxfbW92ZV9uYW1lGAYgASgJEhsKE3NwZWNpYWxfbW92ZV9kYW1hZ2UYByABKAUiIwoVQ3JlYXRlUG9rZW1vblJlc3BvbnNlEgoKAmlkGAEgASgJIh8KEUdldFBva2Vtb25SZXF1ZXN0EgoKAmlkGAEgASgJIj0KEkdldFBva2Vtb25SZXNwb25zZRInCgdwb2tlbW9uGAEgASgLMhYubWFzdGVyZGF0YS52MS5Qb2tlbW9uIhQKEkxpc3RQb2tlbW9uUmVxdWVzdCI+ChNMaXN0UG9rZW1vblJlc3BvbnNlEicKB3Bva2Vtb24YASADKAsyFi5tYXN0ZXJkYXRhLnYxLlBva2Vtb24ioQEKFFVwZGF0ZVBva2Vtb25SZXF1ZXN0EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDAoEdHlwZRgDIAEoCRIKCgJocBgEIAEoBRIOCgZhdHRhY2sYBSABKAUSDQoFc3BlZWQYBiABKAUSGQoRc3BlY2lhbF9tb3ZlX25hbWUYByABKAkSGwoTc3BlY2lhbF9tb3ZlX2RhbWFnZRgIIAEoBSJAChVVcGRhdGVQb2tlbW9uUmVzcG9uc2USJwoHcG9rZW1vbhgBIAEoCzIWLm1hc3RlcmRhdGEudjEuUG9rZW1vbiIiChREZWxldGVQb2tlbW9uUmVxdWVzdBIKCgJpZBgBIAEoCSIXChVEZWxldGVQb2tlbW9uUmVzcG9uc2UiVAoLVHlwZU1hdGNodXASFgoOYXR0YWNraW5nX3R5cGUYASABKAkSFgoOZGVmZW5kaW5nX3R5cGUYAiABKAkSFQoNZWZmZWN0aXZlbmVzcxgDIAEoASJhChhDcmVhdGVUeXBlTWF0Y2h1cFJlcXVlc3QSFgoOYXR0YWNraW5nX3R5cGUYASABKAkSFgoOZGVmZW5kaW5nX3R5cGUYAiABKAkSFQoNZWZmZWN0aXZlbmVzcxgDIAEoASIbChlDcmVhdGVUeXBlTWF0Y2h1cFJlc3BvbnNlIhkKF0xpc3RUeXBlTWF0Y2h1cHNSZXF1ZXN0IkgKGExpc3RUeXBlTWF0Y2h1cHNSZXNwb25zZRIsCghtYXRjaHVwcxgBIAMoCzIaLm1hc3RlcmRhdGEudjEuVHlwZU1hdGNodXAiYQoYVXBkYXRlVHlwZU1hdGNodXBSZXF1ZXN0EhYKDmF0dGFja2luZ190eXBlGAEgASgJEhYKDmRlZmVuZGluZ190eXBlGAIgASgJEhUKDWVmZmVjdGl2ZW5lc3MYAyABKAEiSAoZVXBkYXRlVHlwZU1hdGNodXBSZXNwb25zZRIrCgdtYXRjaHVwGAEgASgLMhoubWFzdGVyZGF0YS52MS5UeXBlTWF0Y2h1cCJKChhEZWxldGVUeXBlTWF0Y2h1cFJlcXVlc3QSFgoOYXR0YWNraW5nX3R5cGUYASABKAkSFgoOZGVmZW5kaW5nX3R5cGUYAiABKAkiGwoZRGVsZXRlVHlwZU1hdGNodXBSZXNwb25zZSJmCgRJdGVtEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSEwoLZWZmZWN0X3R5cGUYAyABKAkSEwoLdGFyZ2V0X3R5cGUYBCABKAkSGgoSY2FwdHVyZV9yYXRlX2JvbnVzGAUgASgBImcKEUNyZWF0ZUl0ZW1SZXF1ZXN0EgwKBG5hbWUYASABKAkSEwoLZWZmZWN0X3R5cGUYAiABKAkSEwoLdGFyZ2V0X3R5cGUYAyABKAkSGgoSY2FwdHVyZV9yYXRlX2JvbnVzGAQgASgBIiAKEkNyZWF0ZUl0ZW1SZXNwb25zZRIKCgJpZBgBIAEoCSIcCg5HZXRJdGVtUmVxdWVzdBIKCgJpZBgBIAEoCSI0Cg9HZXRJdGVtUmVzcG9uc2USIQoEaXRlbRgBIAEoCzITLm1hc3RlcmRhdGEudjEuSXRlbSISChBMaXN0SXRlbXNSZXF1ZXN0IjcKEUxpc3RJdGVtc1Jlc3BvbnNlEiIKBWl0ZW1zGAEgAygLMhMubWFzdGVyZGF0YS52MS5JdGVtInMKEVVwZGF0ZUl0ZW1SZXF1ZXN0EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSEwoLZWZmZWN0X3R5cGUYAyABKAkSEwoLdGFyZ2V0X3R5cGUYBCABKAkSGgoSY2FwdHVyZV9yYXRlX2JvbnVzGAUgASgBIjcKElVwZGF0ZUl0ZW1SZXNwb25zZRIhCgRpdGVtGAEgASgLMhMubWFzdGVyZGF0YS52MS5JdGVtIh8KEURlbGV0ZUl0ZW1SZXF1ZXN0EgoKAmlkGAEgASgJIhQKEkRlbGV0ZUl0ZW1SZXNwb25zZTKcCgoRTWFzdGVyZGF0YVNlcnZpY2USXAoNQ3JlYXRlUG9rZW1vbhIjLm1hc3RlcmRhdGEudjEuQ3JlYXRlUG9rZW1vblJlcXVlc3QaJC5tYXN0ZXJkYXRhLnYxLkNyZWF0ZVBva2Vtb25SZXNwb25zZSIAElMKCkdldFBva2Vtb24SIC5tYXN0ZXJkYXRhLnYxLkdldFBva2Vtb25SZXF1ZXN0GiEubWFzdGVyZGF0YS52MS5HZXRQb2tlbW9uUmVzcG9uc2UiABJWCgtMaXN0UG9rZW1vbhIhLm1hc3RlcmRhdGEudjEuTGlzdFBva2Vtb25SZXF1ZXN0GiIubWFzdGVyZGF0YS52MS5MaXN0UG9rZW1vblJlc3BvbnNlIgASXAoNVXBkYXRlUG9rZW1vbhIjLm1hc3RlcmRhdGEudjEuVXBkYXRlUG9rZW1vblJlcXVlc3QaJC5tYXN0ZXJkYXRhLnYxLlVwZGF0ZVBva2Vtb25SZXNwb25zZSIAElwKDURlbGV0ZVBva2Vtb24SIy5tYXN0ZXJkYXRhLnYxLkRlbGV0ZVBva2Vtb25SZXF1ZXN0GiQubWFzdGVyZGF0YS52MS5EZWxldGVQb2tlbW9uUmVzcG9uc2UiABJoChFDcmVhdGVUeXBlTWF0Y2h1cBInLm1hc3RlcmRhdGEudjEuQ3JlYXRlVHlwZU1hdGNodXBSZXF1ZXN0GigubWFzdGVyZGF0YS52MS5DcmVhdGVUeXBlTWF0Y2h1cFJlc3BvbnNlIgASZQoQTGlzdFR5cGVNYXRjaHVwcxImLm1hc3RlcmRhdGEudjEuTGlzdFR5cGVNYXRjaHVwc1JlcXVlc3QaJy5tYXN0ZXJkYXRhLnYxLkxpc3RUeXBlTWF0Y2h1cHNSZXNwb25zZSIAEmgKEVVwZGF0ZVR5cGVNYXRjaHVwEicubWFzdGVyZGF0YS52MS5VcGRhdGVUeXBlTWF0Y2h1cFJlcXVlc3QaKC5tYXN0ZXJkYXRhLnYxLlVwZGF0ZVR5cGVNYXRjaHVwUmVzcG9uc2UiABJoChFEZWxldGVUeXBlTWF0Y2h1cBInLm1hc3RlcmRhdGEudjEuRGVsZXRlVHlwZU1hdGNodXBSZXF1ZXN0GigubWFzdGVyZGF0YS52MS5EZWxldGVUeXBlTWF0Y2h1cFJlc3BvbnNlIgASUwoKQ3JlYXRlSXRlbRIgLm1hc3RlcmRhdGEudjEuQ3JlYXRlSXRlbVJlcXVlc3QaIS5tYXN0ZXJkYXRhLnYxLkNyZWF0ZUl0ZW1SZXNwb25zZSIAEkoKB0dldEl0ZW0SHS5tYXN0ZXJkYXRhLnYxLkdldEl0ZW1SZXF1ZXN0Gh4ubWFzdGVyZGF0YS52MS5HZXRJdGVtUmVzcG9uc2UiABJQCglMaXN0SXRlbXMSHy5tYXN0ZXJkYXRhLnYxLkxpc3RJdGVtc1JlcXVlc3QaIC5tYXN0ZXJkYXRhLnYxLkxpc3RJdGVtc1Jlc3BvbnNlIgASUwoKVXBkYXRlSXRlbRIgLm1hc3RlcmRhdGEudjEuVXBkYXRlSXRlbVJlcXVlc3QaIS5tYXN0ZXJkYXRhLnYxLlVwZGF0ZUl0ZW1SZXNwb25zZSIAElMKCkRlbGV0ZUl0ZW0SIC5tYXN0ZXJkYXRhLnYxLkRlbGV0ZUl0ZW1SZXF1ZXN0GiEubWFzdGVyZGF0YS52MS5EZWxldGVJdGVtUmVzcG9uc2UiAEJaWlhnaXRodWIuY29tL2hhY2t6LW1lZ2Fsby1jdXAvbWljcm9zZXJ2aWNlcy1hcHAvc2VydmljZXMvZ2VuL2dvL21hc3RlcmRhdGEvdjE7bWFzdGVyZGF0YXYxYgZwcm90bzM");
+  fileDesc("Ch5tYXN0ZXJkYXRhL3YxL21hc3RlcmRhdGEucHJvdG8SDW1hc3RlcmRhdGEudjEilAEKB1Bva2Vtb24SCgoCaWQYASABKAkSDAoEbmFtZRgCIAEoCRIMCgR0eXBlGAMgASgJEgoKAmhwGAQgASgFEg4KBmF0dGFjaxgFIAEoBRINCgVzcGVlZBgGIAEoBRIZChFzcGVjaWFsX21vdmVfbmFtZRgHIAEoCRIbChNzcGVjaWFsX21vdmVfZGFtYWdlGAggASgFIpUBChRDcmVhdGVQb2tlbW9uUmVxdWVzdBIMCgRuYW1lGAEgASgJEgwKBHR5cGUYAiABKAkSCgoCaHAYAyABKAUSDgoGYXR0YWNrGAQgASgFEg0KBXNwZWVkGAUgASgFEhkKEXNwZWNpYWxfbW92ZV9uYW1lGAYgASgJEhsKE3NwZWNpYWxfbW92ZV9kYW1hZ2UYByABKAUiIwoVQ3JlYXRlUG9rZW1vblJlc3BvbnNlEgoKAmlkGAEgASgJIh8KEUdldFBva2Vtb25SZXF1ZXN0EgoKAmlkGAEgASgJIj0KEkdldFBva2Vtb25SZXNwb25zZRInCgdwb2tlbW9uGAEgASgLMhYubWFzdGVyZGF0YS52MS5Qb2tlbW9uIhQKEkxpc3RQb2tlbW9uUmVxdWVzdCI+ChNMaXN0UG9rZW1vblJlc3BvbnNlEicKB3Bva2Vtb24YASADKAsyFi5tYXN0ZXJkYXRhLnYxLlBva2Vtb24ioQEKFFVwZGF0ZVBva2Vtb25SZXF1ZXN0EgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSDAoEdHlwZRgDIAEoCRIKCgJocBgEIAEoBRIOCgZhdHRhY2sYBSABKAUSDQoFc3BlZWQYBiABKAUSGQoRc3BlY2lhbF9tb3ZlX25hbWUYByABKAkSGwoTc3BlY2lhbF9tb3ZlX2RhbWFnZRgIIAEoBSJAChVVcGRhdGVQb2tlbW9uUmVzcG9uc2USJwoHcG9rZW1vbhgBIAEoCzIWLm1hc3RlcmRhdGEudjEuUG9rZW1vbiIiChREZWxldGVQb2tlbW9uUmVxdWVzdBIKCgJpZBgBIAEoCSIXChVEZWxldGVQb2tlbW9uUmVzcG9uc2UiVAoLVHlwZU1hdGNodXASFgoOYXR0YWNraW5nX3R5cGUYASABKAkSFgoOZGVmZW5kaW5nX3R5cGUYAiABKAkSFQoNZWZmZWN0aXZlbmVzcxgDIAEoASJhChhDcmVhdGVUeXBlTWF0Y2h1cFJlcXVlc3QSFgoOYXR0YWNraW5nX3R5cGUYASABKAkSFgoOZGVmZW5kaW5nX3R5cGUYAiABKAkSFQoNZWZmZWN0aXZlbmVzcxgDIAEoASIbChlDcmVhdGVUeXBlTWF0Y2h1cFJlc3BvbnNlIhkKF0xpc3RUeXBlTWF0Y2h1cHNSZXF1ZXN0IkgKGExpc3RUeXBlTWF0Y2h1cHNSZXNwb25zZRIsCghtYXRjaHVwcxgBIAMoCzIaLm1hc3RlcmRhdGEudjEuVHlwZU1hdGNodXAiYQoYVXBkYXRlVHlwZU1hdGNodXBSZXF1ZXN0EhYKDmF0dGFja2luZ190eXBlGAEgASgJEhYKDmRlZmVuZGluZ190eXBlGAIgASgJEhUKDWVmZmVjdGl2ZW5lc3MYAyABKAEiSAoZVXBkYXRlVHlwZU1hdGNodXBSZXNwb25zZRIrCgdtYXRjaHVwGAEgASgLMhoubWFzdGVyZGF0YS52MS5UeXBlTWF0Y2h1cCJKChhEZWxldGVUeXBlTWF0Y2h1cFJlcXVlc3QSFgoOYXR0YWNraW5nX3R5cGUYASABKAkSFgoOZGVmZW5kaW5nX3R5cGUYAiABKAkiGwoZRGVsZXRlVHlwZU1hdGNodXBSZXNwb25zZSJnCgpJdGVtRWZmZWN0EhMKC2VmZmVjdF90eXBlGAEgASgJEhMKC3RhcmdldF90eXBlGAIgASgJEhoKEmNhcHR1cmVfcmF0ZV9ib251cxgDIAEoARITCgtmbGF2b3JfdGV4dBgEIAEoCSJMCgRJdGVtEgoKAmlkGAEgASgJEgwKBG5hbWUYAiABKAkSKgoHZWZmZWN0cxgDIAMoCzIZLm1hc3RlcmRhdGEudjEuSXRlbUVmZmVjdCJ0ChdDcmVhdGVJdGVtRWZmZWN0UmVxdWVzdBITCgtlZmZlY3RfdHlwZRgBIAEoCRITCgt0YXJnZXRfdHlwZRgCIAEoCRIaChJjYXB0dXJlX3JhdGVfYm9udXMYAyABKAESEwoLZmxhdm9yX3RleHQYBCABKAkiWgoRQ3JlYXRlSXRlbVJlcXVlc3QSDAoEbmFtZRgBIAEoCRI3CgdlZmZlY3RzGAIgAygLMiYubWFzdGVyZGF0YS52MS5DcmVhdGVJdGVtRWZmZWN0UmVxdWVzdCIgChJDcmVhdGVJdGVtUmVzcG9uc2USCgoCaWQYASABKAkiHAoOR2V0SXRlbVJlcXVlc3QSCgoCaWQYASABKAkiNAoPR2V0SXRlbVJlc3BvbnNlEiEKBGl0ZW0YASABKAsyEy5tYXN0ZXJkYXRhLnYxLkl0ZW0iEgoQTGlzdEl0ZW1zUmVxdWVzdCI3ChFMaXN0SXRlbXNSZXNwb25zZRIiCgVpdGVtcxgBIAMoCzITLm1hc3RlcmRhdGEudjEuSXRlbSJmChFVcGRhdGVJdGVtUmVxdWVzdBIKCgJpZBgBIAEoCRIMCgRuYW1lGAIgASgJEjcKB2VmZmVjdHMYAyADKAsyJi5tYXN0ZXJkYXRhLnYxLkNyZWF0ZUl0ZW1FZmZlY3RSZXF1ZXN0IjcKElVwZGF0ZUl0ZW1SZXNwb25zZRIhCgRpdGVtGAEgASgLMhMubWFzdGVyZGF0YS52MS5JdGVtIh8KEURlbGV0ZUl0ZW1SZXF1ZXN0EgoKAmlkGAEgASgJIhQKEkRlbGV0ZUl0ZW1SZXNwb25zZTKcCgoRTWFzdGVyZGF0YVNlcnZpY2USXAoNQ3JlYXRlUG9rZW1vbhIjLm1hc3RlcmRhdGEudjEuQ3JlYXRlUG9rZW1vblJlcXVlc3QaJC5tYXN0ZXJkYXRhLnYxLkNyZWF0ZVBva2Vtb25SZXNwb25zZSIAElMKCkdldFBva2Vtb24SIC5tYXN0ZXJkYXRhLnYxLkdldFBva2Vtb25SZXF1ZXN0GiEubWFzdGVyZGF0YS52MS5HZXRQb2tlbW9uUmVzcG9uc2UiABJWCgtMaXN0UG9rZW1vbhIhLm1hc3RlcmRhdGEudjEuTGlzdFBva2Vtb25SZXF1ZXN0GiIubWFzdGVyZGF0YS52MS5MaXN0UG9rZW1vblJlc3BvbnNlIgASXAoNVXBkYXRlUG9rZW1vbhIjLm1hc3RlcmRhdGEudjEuVXBkYXRlUG9rZW1vblJlcXVlc3QaJC5tYXN0ZXJkYXRhLnYxLlVwZGF0ZVBva2Vtb25SZXNwb25zZSIAElwKDURlbGV0ZVBva2Vtb24SIy5tYXN0ZXJkYXRhLnYxLkRlbGV0ZVBva2Vtb25SZXF1ZXN0GiQubWFzdGVyZGF0YS52MS5EZWxldGVQb2tlbW9uUmVzcG9uc2UiABJoChFDcmVhdGVUeXBlTWF0Y2h1cBInLm1hc3RlcmRhdGEudjEuQ3JlYXRlVHlwZU1hdGNodXBSZXF1ZXN0GigubWFzdGVyZGF0YS52MS5DcmVhdGVUeXBlTWF0Y2h1cFJlc3BvbnNlIgASZQoQTGlzdFR5cGVNYXRjaHVwcxImLm1hc3RlcmRhdGEudjEuTGlzdFR5cGVNYXRjaHVwc1JlcXVlc3QaJy5tYXN0ZXJkYXRhLnYxLkxpc3RUeXBlTWF0Y2h1cHNSZXNwb25zZSIAEmgKEVVwZGF0ZVR5cGVNYXRjaHVwEicubWFzdGVyZGF0YS52MS5VcGRhdGVUeXBlTWF0Y2h1cFJlcXVlc3QaKC5tYXN0ZXJkYXRhLnYxLlVwZGF0ZVR5cGVNYXRjaHVwUmVzcG9uc2UiABJoChFEZWxldGVUeXBlTWF0Y2h1cBInLm1hc3RlcmRhdGEudjEuRGVsZXRlVHlwZU1hdGNodXBSZXF1ZXN0GigubWFzdGVyZGF0YS52MS5EZWxldGVUeXBlTWF0Y2h1cFJlc3BvbnNlIgASUwoKQ3JlYXRlSXRlbRIgLm1hc3RlcmRhdGEudjEuQ3JlYXRlSXRlbVJlcXVlc3QaIS5tYXN0ZXJkYXRhLnYxLkNyZWF0ZUl0ZW1SZXNwb25zZSIAEkoKB0dldEl0ZW0SHS5tYXN0ZXJkYXRhLnYxLkdldEl0ZW1SZXF1ZXN0Gh4ubWFzdGVyZGF0YS52MS5HZXRJdGVtUmVzcG9uc2UiABJQCglMaXN0SXRlbXMSHy5tYXN0ZXJkYXRhLnYxLkxpc3RJdGVtc1JlcXVlc3QaIC5tYXN0ZXJkYXRhLnYxLkxpc3RJdGVtc1Jlc3BvbnNlIgASUwoKVXBkYXRlSXRlbRIgLm1hc3RlcmRhdGEudjEuVXBkYXRlSXRlbVJlcXVlc3QaIS5tYXN0ZXJkYXRhLnYxLlVwZGF0ZUl0ZW1SZXNwb25zZSIAElMKCkRlbGV0ZUl0ZW0SIC5tYXN0ZXJkYXRhLnYxLkRlbGV0ZUl0ZW1SZXF1ZXN0GiEubWFzdGVyZGF0YS52MS5EZWxldGVJdGVtUmVzcG9uc2UiAEJaWlhnaXRodWIuY29tL2hhY2t6LW1lZ2Fsby1jdXAvbWljcm9zZXJ2aWNlcy1hcHAvc2VydmljZXMvZ2VuL2dvL21hc3RlcmRhdGEvdjE7bWFzdGVyZGF0YXYxYgZwcm90bzM");
 
 /**
  * @generated from message masterdata.v1.Pokemon
@@ -468,6 +468,44 @@ export const DeleteTypeMatchupResponseSchema: GenMessage<DeleteTypeMatchupRespon
   messageDesc(file_masterdata_v1_masterdata, 19);
 
 /**
+ * @generated from message masterdata.v1.ItemEffect
+ */
+export type ItemEffect = Message<"masterdata.v1.ItemEffect"> & {
+  /**
+   * "capture_rate_up" | "escape"
+   *
+   * @generated from field: string effect_type = 1;
+   */
+  effectType: string;
+
+  /**
+   * 対象タイプ。空 = 全タイプに適用
+   *
+   * @generated from field: string target_type = 2;
+   */
+  targetType: string;
+
+  /**
+   * @generated from field: double capture_rate_bonus = 3;
+   */
+  captureRateBonus: number;
+
+  /**
+   * 例: "ざつくんはPythonが嫌いすぎて群馬に帰った。"
+   *
+   * @generated from field: string flavor_text = 4;
+   */
+  flavorText: string;
+};
+
+/**
+ * Describes the message masterdata.v1.ItemEffect.
+ * Use `create(ItemEffectSchema)` to create a new message.
+ */
+export const ItemEffectSchema: GenMessage<ItemEffect> = /*@__PURE__*/
+  messageDesc(file_masterdata_v1_masterdata, 20);
+
+/**
  * @generated from message masterdata.v1.Item
  */
 export type Item = Message<"masterdata.v1.Item"> & {
@@ -482,19 +520,9 @@ export type Item = Message<"masterdata.v1.Item"> & {
   name: string;
 
   /**
-   * @generated from field: string effect_type = 3;
+   * @generated from field: repeated masterdata.v1.ItemEffect effects = 3;
    */
-  effectType: string;
-
-  /**
-   * @generated from field: string target_type = 4;
-   */
-  targetType: string;
-
-  /**
-   * @generated from field: double capture_rate_bonus = 5;
-   */
-  captureRateBonus: number;
+  effects: ItemEffect[];
 };
 
 /**
@@ -502,7 +530,39 @@ export type Item = Message<"masterdata.v1.Item"> & {
  * Use `create(ItemSchema)` to create a new message.
  */
 export const ItemSchema: GenMessage<Item> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 20);
+  messageDesc(file_masterdata_v1_masterdata, 21);
+
+/**
+ * @generated from message masterdata.v1.CreateItemEffectRequest
+ */
+export type CreateItemEffectRequest = Message<"masterdata.v1.CreateItemEffectRequest"> & {
+  /**
+   * @generated from field: string effect_type = 1;
+   */
+  effectType: string;
+
+  /**
+   * @generated from field: string target_type = 2;
+   */
+  targetType: string;
+
+  /**
+   * @generated from field: double capture_rate_bonus = 3;
+   */
+  captureRateBonus: number;
+
+  /**
+   * @generated from field: string flavor_text = 4;
+   */
+  flavorText: string;
+};
+
+/**
+ * Describes the message masterdata.v1.CreateItemEffectRequest.
+ * Use `create(CreateItemEffectRequestSchema)` to create a new message.
+ */
+export const CreateItemEffectRequestSchema: GenMessage<CreateItemEffectRequest> = /*@__PURE__*/
+  messageDesc(file_masterdata_v1_masterdata, 22);
 
 /**
  * @generated from message masterdata.v1.CreateItemRequest
@@ -514,19 +574,9 @@ export type CreateItemRequest = Message<"masterdata.v1.CreateItemRequest"> & {
   name: string;
 
   /**
-   * @generated from field: string effect_type = 2;
+   * @generated from field: repeated masterdata.v1.CreateItemEffectRequest effects = 2;
    */
-  effectType: string;
-
-  /**
-   * @generated from field: string target_type = 3;
-   */
-  targetType: string;
-
-  /**
-   * @generated from field: double capture_rate_bonus = 4;
-   */
-  captureRateBonus: number;
+  effects: CreateItemEffectRequest[];
 };
 
 /**
@@ -534,7 +584,7 @@ export type CreateItemRequest = Message<"masterdata.v1.CreateItemRequest"> & {
  * Use `create(CreateItemRequestSchema)` to create a new message.
  */
 export const CreateItemRequestSchema: GenMessage<CreateItemRequest> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 21);
+  messageDesc(file_masterdata_v1_masterdata, 23);
 
 /**
  * @generated from message masterdata.v1.CreateItemResponse
@@ -551,7 +601,7 @@ export type CreateItemResponse = Message<"masterdata.v1.CreateItemResponse"> & {
  * Use `create(CreateItemResponseSchema)` to create a new message.
  */
 export const CreateItemResponseSchema: GenMessage<CreateItemResponse> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 22);
+  messageDesc(file_masterdata_v1_masterdata, 24);
 
 /**
  * @generated from message masterdata.v1.GetItemRequest
@@ -568,7 +618,7 @@ export type GetItemRequest = Message<"masterdata.v1.GetItemRequest"> & {
  * Use `create(GetItemRequestSchema)` to create a new message.
  */
 export const GetItemRequestSchema: GenMessage<GetItemRequest> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 23);
+  messageDesc(file_masterdata_v1_masterdata, 25);
 
 /**
  * @generated from message masterdata.v1.GetItemResponse
@@ -585,7 +635,7 @@ export type GetItemResponse = Message<"masterdata.v1.GetItemResponse"> & {
  * Use `create(GetItemResponseSchema)` to create a new message.
  */
 export const GetItemResponseSchema: GenMessage<GetItemResponse> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 24);
+  messageDesc(file_masterdata_v1_masterdata, 26);
 
 /**
  * @generated from message masterdata.v1.ListItemsRequest
@@ -598,7 +648,7 @@ export type ListItemsRequest = Message<"masterdata.v1.ListItemsRequest"> & {
  * Use `create(ListItemsRequestSchema)` to create a new message.
  */
 export const ListItemsRequestSchema: GenMessage<ListItemsRequest> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 25);
+  messageDesc(file_masterdata_v1_masterdata, 27);
 
 /**
  * @generated from message masterdata.v1.ListItemsResponse
@@ -615,7 +665,7 @@ export type ListItemsResponse = Message<"masterdata.v1.ListItemsResponse"> & {
  * Use `create(ListItemsResponseSchema)` to create a new message.
  */
 export const ListItemsResponseSchema: GenMessage<ListItemsResponse> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 26);
+  messageDesc(file_masterdata_v1_masterdata, 28);
 
 /**
  * @generated from message masterdata.v1.UpdateItemRequest
@@ -632,19 +682,9 @@ export type UpdateItemRequest = Message<"masterdata.v1.UpdateItemRequest"> & {
   name: string;
 
   /**
-   * @generated from field: string effect_type = 3;
+   * @generated from field: repeated masterdata.v1.CreateItemEffectRequest effects = 3;
    */
-  effectType: string;
-
-  /**
-   * @generated from field: string target_type = 4;
-   */
-  targetType: string;
-
-  /**
-   * @generated from field: double capture_rate_bonus = 5;
-   */
-  captureRateBonus: number;
+  effects: CreateItemEffectRequest[];
 };
 
 /**
@@ -652,7 +692,7 @@ export type UpdateItemRequest = Message<"masterdata.v1.UpdateItemRequest"> & {
  * Use `create(UpdateItemRequestSchema)` to create a new message.
  */
 export const UpdateItemRequestSchema: GenMessage<UpdateItemRequest> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 27);
+  messageDesc(file_masterdata_v1_masterdata, 29);
 
 /**
  * @generated from message masterdata.v1.UpdateItemResponse
@@ -669,7 +709,7 @@ export type UpdateItemResponse = Message<"masterdata.v1.UpdateItemResponse"> & {
  * Use `create(UpdateItemResponseSchema)` to create a new message.
  */
 export const UpdateItemResponseSchema: GenMessage<UpdateItemResponse> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 28);
+  messageDesc(file_masterdata_v1_masterdata, 30);
 
 /**
  * @generated from message masterdata.v1.DeleteItemRequest
@@ -686,7 +726,7 @@ export type DeleteItemRequest = Message<"masterdata.v1.DeleteItemRequest"> & {
  * Use `create(DeleteItemRequestSchema)` to create a new message.
  */
 export const DeleteItemRequestSchema: GenMessage<DeleteItemRequest> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 29);
+  messageDesc(file_masterdata_v1_masterdata, 31);
 
 /**
  * @generated from message masterdata.v1.DeleteItemResponse
@@ -699,7 +739,7 @@ export type DeleteItemResponse = Message<"masterdata.v1.DeleteItemResponse"> & {
  * Use `create(DeleteItemResponseSchema)` to create a new message.
  */
 export const DeleteItemResponseSchema: GenMessage<DeleteItemResponse> = /*@__PURE__*/
-  messageDesc(file_masterdata_v1_masterdata, 30);
+  messageDesc(file_masterdata_v1_masterdata, 32);
 
 /**
  * @generated from service masterdata.v1.MasterdataService
