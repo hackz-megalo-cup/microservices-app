@@ -1,5 +1,5 @@
 import type { MouseEvent as ReactMouseEvent } from "react";
-import { useCallback, useState } from "react";
+import { useCallback, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import "../../../styles/global.css";
 import { useAuthContext } from "../../../lib/auth";
@@ -37,6 +37,9 @@ export function BattlePage() {
   const [timeoutSec, setTimeoutSec] = useState(300);
   const [floatingDmgs, setFloatingDmgs] = useState<FloatingDmg[]>([]);
   const [ripples, setRipples] = useState<Ripple[]>([]);
+  const [squashing, setSquashing] = useState(false);
+  const hitCount = useRef(0);
+  const squashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const requiredForSpecial = 10;
 
   const spawnDmg = useCallback((value: number, isSpecial: boolean) => {
@@ -72,10 +75,23 @@ export function BattlePage() {
         case "hp":
           setBossHp(msg.hp);
           spawnDmg(msg.lastDmg, false);
+          hitCount.current++;
+          if (hitCount.current % 3 === 0) {
+            setSquashing(true);
+            if (squashTimer.current) {
+              clearTimeout(squashTimer.current);
+            }
+            squashTimer.current = setTimeout(() => setSquashing(false), 100);
+          }
           break;
         case "special_used":
           setBossHp(msg.bossHp);
           spawnDmg(msg.dmg, true);
+          setSquashing(true);
+          if (squashTimer.current) {
+            clearTimeout(squashTimer.current);
+          }
+          squashTimer.current = setTimeout(() => setSquashing(false), 150);
           break;
         case "finished":
           setResult(msg.result);
@@ -128,6 +144,11 @@ export function BattlePage() {
             0% { opacity: 1; transform: translateY(0) scale(1.5); }
             30% { opacity: 1; transform: translateY(-20px) scale(2); }
             100% { opacity: 0; transform: translateY(-80px) scale(1); }
+          }
+          @keyframes boss-nudge {
+            0% { transform: scaleX(1) scaleY(1); }
+            40% { transform: scaleX(1.03) scaleY(0.97); }
+            100% { transform: scaleX(1) scaleY(1); }
           }
           @keyframes tap-ripple {
             0% { transform: translate(-50%, -50%) scale(0); opacity: 0.5; }
@@ -191,6 +212,7 @@ export function BattlePage() {
           src="/images/battle-python.png"
           alt="Raid Boss"
           className="w-[280px] h-[280px] object-cover rounded-2xl pointer-events-none"
+          style={squashing ? { animation: "boss-nudge 0.1s ease-out" } : undefined}
         />
 
         {/* Tap ripples */}
