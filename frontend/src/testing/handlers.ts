@@ -144,6 +144,20 @@ export const handlers = [
     });
   }),
 
+  // GetActivePokemon
+  http.post(`${baseUrl}/lobby.v1.LobbyService/GetActivePokemon`, () => {
+    return HttpResponse.json({
+      pokemonId: "1",
+    });
+  }),
+
+  // SetActivePokemon
+  http.post(`${baseUrl}/lobby.v1.LobbyService/SetActivePokemon`, () => {
+    return HttpResponse.json({
+      success: true,
+    });
+  }),
+
   // NOTE: StreamLobby (Server Streaming) は MSW では完全にモックするのは困難
   // 開発時は実際のバックエンドを起動するか、useLobbyStream を直接モック差し替えする
 ];
