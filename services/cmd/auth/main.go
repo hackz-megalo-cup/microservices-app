@@ -24,6 +24,8 @@ import (
 
 	"connectrpc.com/connect"
 	"connectrpc.com/otelconnect"
+	"github.com/go-jose/go-jose/v4"
+	"github.com/go-jose/go-jose/v4/jwt"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"golang.org/x/net/http2"
@@ -133,7 +135,7 @@ func newServerMux(path string, handler http.Handler, dbPool *pgxpool.Pool, verif
 	mux := http.NewServeMux()
 	mux.Handle(path, handler)
 	registerHealthzHandler(mux, dbPool)
-	registerVerifyHandler(mux, verifier)
+	registerVerifyHandler(mux, verifier, publicKey)
 	registerJWKSHandler(mux, publicKey, kid)
 	return mux
 }
@@ -152,7 +154,7 @@ func registerHealthzHandler(mux *http.ServeMux, dbPool *pgxpool.Pool) {
 	})
 }
 
-func registerVerifyHandler(mux *http.ServeMux, verifier *platform.JWTVerifier) {
+func registerVerifyHandler(mux *http.ServeMux, verifier *platform.JWTVerifier, publicKey *rsa.PublicKey) {
 	mux.HandleFunc("/verify", func(w http.ResponseWriter, r *http.Request) {
 		if r.Method != http.MethodGet {
 			w.WriteHeader(http.StatusMethodNotAllowed)
@@ -170,12 +172,7 @@ func registerVerifyHandler(mux *http.ServeMux, verifier *platform.JWTVerifier) {
 			token = authHeader[7:]
 		}
 
-		if verifier == nil {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
-		claims, err := verifier.Verify(token)
+		claims, err := verifyForwardAuthToken(token, verifier, publicKey)
 		if err != nil {
 			w.WriteHeader(http.StatusUnauthorized)
 			return
@@ -190,6 +187,36 @@ func registerVerifyHandler(mux *http.ServeMux, verifier *platform.JWTVerifier) {
 
 		w.WriteHeader(http.StatusOK)
 	})
+}
+
+func verifyForwardAuthToken(token string, verifier *platform.JWTVerifier, publicKey *rsa.PublicKey) (*platform.Claims, error) {
+	if verifier != nil {
+		return verifier.Verify(token)
+	}
+	if publicKey == nil {
+		return nil, errors.New("public key not configured")
+	}
+
+	tok, err := jwt.ParseSigned(token, []jose.SignatureAlgorithm{jose.RS256})
+	if err != nil {
+		return nil, fmt.Errorf("parse JWT: %w", err)
+	}
+
+	var customClaims platform.Claims
+	var standardClaims jwt.Claims
+	if err := tok.Claims(publicKey, &customClaims, &standardClaims); err != nil {
+		return nil, fmt.Errorf("verify JWT claims: %w", err)
+	}
+
+	if err := standardClaims.Validate(jwt.Expected{
+		Issuer: "auth-service",
+		Time:   time.Now(),
+	}); err != nil {
+		return nil, fmt.Errorf("validate JWT: %w", err)
+	}
+
+	customClaims.Subject = standardClaims.Subject
+	return &customClaims, nil
 }
 
 func registerJWKSHandler(mux *http.ServeMux, publicKey *rsa.PublicKey, kid string) {
@@ -233,6 +260,7 @@ func startCaptureConsumer(ctx context.Context, brokers []string, svc *auth.Servi
 	}
 
 	go func() {
+		defer kafkaConsumer.Close()
 		if err := auth.RunConsumer(ctx, auth.ConsumerConfig{
 			Client: kafkaConsumer,
 			Repo:   svc,
