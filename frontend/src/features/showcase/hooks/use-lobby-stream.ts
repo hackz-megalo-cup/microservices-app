@@ -1,7 +1,7 @@
 import { createClient } from "@connectrpc/connect";
+import { useTransport } from "@connectrpc/connect-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RaidLobbyService } from "../../../gen/raid_lobby/v1/raid_lobby_pb";
-import { transport } from "../../../lib/transport";
 import type { Participant } from "../types";
 import { parseBattleStarted, parseParticipants } from "../utils/parse-lobby-payload";
 
@@ -20,6 +20,7 @@ interface UseLobbyStreamResult {
  * @returns ロビー状態とストリーム接続状態
  */
 export function useLobbyStream(lobbyId: string): UseLobbyStreamResult {
+  const transport = useTransport();
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -75,7 +76,7 @@ export function useLobbyStream(lobbyId: string): UseLobbyStreamResult {
     } finally {
       setIsConnected(false);
     }
-  }, [lobbyId]);
+  }, [lobbyId, transport]);
 
   useEffect(() => {
     subscribe();

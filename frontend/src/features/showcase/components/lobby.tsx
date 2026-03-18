@@ -1,11 +1,6 @@
-import { useMutation } from "@connectrpc/connect-query";
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
-import {
-  joinRaid,
-  startBattle,
-} from "../../../gen/raid_lobby/v1/raid_lobby-RaidLobbyService_connectquery";
-import { transport } from "../../../lib/transport";
+import { useLobbyActions } from "../hooks/use-lobby-actions";
 import { useLobbyStream } from "../hooks/use-lobby-stream";
 import "../styles/global.css";
 import { NavBar } from "./ui/nav-bar";
@@ -14,14 +9,30 @@ export function Lobby() {
   const { id: lobbyId } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [hasJoined, setHasJoined] = useState(false);
+  const joinAttemptedLobbyRef = useRef<string | null>(null);
+  const hasNavigatedRef = useRef(false);
+
+  const { joinMutation, startMutation } = useLobbyActions();
+
+  const navigateToBattleOnce = useCallback(
+    (sessionId: string) => {
+      if (hasNavigatedRef.current) {
+        return;
+      }
+
+      hasNavigatedRef.current = true;
+      navigate(`/battle/${sessionId}`);
+    },
+    [navigate],
+  );
 
   // --- 1. JoinRaid (Unary) ---
-  const joinMutation = useMutation(joinRaid, { transport });
-
   useEffect(() => {
-    if (!lobbyId || hasJoined) {
+    if (!lobbyId || hasJoined || joinAttemptedLobbyRef.current === lobbyId) {
       return;
     }
+
+    joinAttemptedLobbyRef.current = lobbyId;
 
     joinMutation
       .mutateAsync({ lobbyId })
@@ -30,9 +41,10 @@ export function Lobby() {
         console.log("[JoinRaid] 成功");
       })
       .catch((err) => {
+        joinAttemptedLobbyRef.current = null;
         console.error("[JoinRaid] 失敗:", err);
       });
-  }, [lobbyId, hasJoined]);
+  }, [lobbyId, hasJoined, joinMutation]);
 
   // --- 2. StreamLobby (Server Streaming) ---
   const {
@@ -45,20 +57,23 @@ export function Lobby() {
   // --- 3. battle_started 受信時の自動遷移 ---
   useEffect(() => {
     if (battleSessionId) {
-      navigate(`/battle/${battleSessionId}`);
+      navigateToBattleOnce(battleSessionId);
     }
-  }, [battleSessionId, navigate]);
+  }, [battleSessionId, navigateToBattleOnce]);
 
   // --- 4. StartBattle (Unary) ---
-  const startMutation = useMutation(startBattle, { transport });
-
   const handleStartBattle = async () => {
     if (!lobbyId) {
       return;
     }
+
     try {
       const res = await startMutation.mutateAsync({ lobbyId });
-      navigate(`/battle/${res.battleSessionId}`);
+
+      // Stream disconnected時は mutation レスポンスを遷移フォールバックとして利用する
+      if (!isConnected) {
+        navigateToBattleOnce(res.battleSessionId);
+      }
     } catch (err) {
       console.error("[StartBattle] 失敗:", err);
     }
