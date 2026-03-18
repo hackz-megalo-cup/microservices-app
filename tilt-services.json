@@ -32,10 +32,6 @@
     }
   },
   "custom_services": {
-    "custom-lang-service": {
-      "port": 3000,
-      "k8s_resource": "custom-lang-service"
-    },
     "auth-service": {
       "port": 8090,
       "k8s_resource": "auth-service"

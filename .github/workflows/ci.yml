@@ -104,7 +104,6 @@ jobs:
           go_services=(auth gateway item masterdata projector raid-lobby capture)
           release_images=(
             .#auth-image
-            .#custom-lang-service-image
             .#frontend-image
             .#gateway-image
             .#item-image
@@ -177,7 +176,6 @@ jobs:
 
           if [[ "$NIX_CHANGED" == "true" || "$NODE_CHANGED" == "true" ]]; then
             add_pr_image .#auth-image
-            add_pr_image .#custom-lang-service-image
           fi
           if [[ "$NIX_CHANGED" == "true" || "$FRONTEND_CHANGED" == "true" ]]; then
             add_pr_image .#frontend-image
@@ -186,7 +184,6 @@ jobs:
           image_attrs=()
           pr_image_order=(
             .#auth-image
-            .#custom-lang-service-image
             .#frontend-image
             .#gateway-image
             .#item-image
@@ -342,7 +339,7 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           services=(
-            auth-service custom-lang-service
+            auth-service
             gateway
             frontend
             item masterdata projector raid-lobby

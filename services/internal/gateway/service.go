@@ -1,63 +1,32 @@
 package gateway
 
 import (
-	"bytes"
 	"context"
-	"encoding/json"
-	"errors"
 	"fmt"
-	"io"
 	"log/slog"
-	"net"
 	"net/http"
-	"strings"
-	"time"
 
 	"github.com/google/uuid"
 
 	"connectrpc.com/connect"
 
 	"github.com/jackc/pgx/v5/pgxpool"
-	"github.com/sony/gobreaker/v2"
 
 	gatewayv1 "github.com/hackz-megalo-cup/microservices-app/services/gen/go/gateway/v1"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
 )
 
 type Service struct {
-	httpClient         *http.Client
-	baseURL            string
-	timeout            time.Duration
-	breaker            *gobreaker.CircuitBreaker[invokeResult]
-	customLangBulkhead *platform.Bulkhead
-	pool               *pgxpool.Pool
-	outbox             *platform.OutboxStore
-	eventStore         *platform.EventStore
+	pool       *pgxpool.Pool
+	outbox     *platform.OutboxStore
+	eventStore *platform.EventStore
 }
 
-type invokeResult struct {
-	message string
-}
-
-type statusError struct {
-	status int
-	body   string
-}
-
-func (e *statusError) Error() string {
-	return fmt.Sprintf("downstream status %d: %s", e.status, e.body)
-}
-
-func NewService(httpClient *http.Client, baseURL string, timeout time.Duration, pool *pgxpool.Pool, outbox *platform.OutboxStore, eventStore *platform.EventStore) *Service {
+func NewService(pool *pgxpool.Pool, outbox *platform.OutboxStore, eventStore *platform.EventStore) *Service {
 	return &Service{
-		httpClient:         httpClient,
-		baseURL:            strings.TrimRight(baseURL, "/"),
-		timeout:            timeout,
-		breaker:            platform.NewCircuitBreaker[invokeResult](platform.DefaultCBConfig("custom-lang-service")),
-		customLangBulkhead: platform.NewBulkhead(10),
-		pool:               pool,
-		outbox:             outbox,
-		eventStore:         eventStore,
+		pool:       pool,
+		outbox:     outbox,
+		eventStore: eventStore,
 	}
 }
 
@@ -67,28 +36,9 @@ func (s *Service) InvokeCustom(ctx context.Context, req *connect.Request[gateway
 		name = "World"
 	}
 
-	authHeader := req.Header().Get("Authorization")
-
-	var result invokeResult
-	err := s.customLangBulkhead.Execute(ctx, func() error {
-		return platform.RetryWithBackoff(ctx, func() error {
-			var cbErr error
-			result, cbErr = platform.CBExecute(s.breaker, func() (invokeResult, error) {
-				return s.callCustom(ctx, name, authHeader)
-			})
-			if cbErr != nil && !shouldRetry(cbErr) {
-				return platform.NewPermanentError(cbErr)
-			}
-			return cbErr
-		}, platform.WithMaxRetries(3))
-	})
-	if err != nil {
-		s.recordInvocation(ctx, name, err.Error(), false, "failed", platform.TopicInvocationFailed, "invocation.failed")
-		return nil, mapError(err)
-	}
-
-	s.recordInvocation(ctx, name, result.message, true, "completed", platform.TopicInvocationCreated, "invocation.created")
-	return connect.NewResponse(&gatewayv1.InvokeCustomResponse{Message: result.message}), nil
+	message := fmt.Sprintf("Hello, %s!", name)
+	s.recordInvocation(ctx, name, message, true, "completed", platform.TopicInvocationCreated, "invocation.created")
+	return connect.NewResponse(&gatewayv1.InvokeCustomResponse{Message: message}), nil
 }
 
 func (s *Service) recordInvocation(ctx context.Context, name, message string, success bool, status, topic, eventType string) {
@@ -153,89 +103,6 @@ func (s *Service) recordViaOutbox(ctx context.Context, name, message string, suc
 	if commitErr := tx.Commit(ctx); commitErr != nil {
 		slog.Error("failed to commit transaction", "error", commitErr)
 	}
-}
-
-func (s *Service) callCustom(ctx context.Context, name string, authHeader string) (invokeResult, error) {
-	payload, err := json.Marshal(map[string]string{"name": name})
-	if err != nil {
-		return invokeResult{}, err
-	}
-
-	rpcCtx, cancel := context.WithTimeout(ctx, s.timeout)
-	defer cancel()
-
-	httpReq, err := http.NewRequestWithContext(rpcCtx, http.MethodPost, s.baseURL+"/invoke", bytes.NewReader(payload))
-	if err != nil {
-		return invokeResult{}, err
-	}
-	httpReq.Header.Set("content-type", "application/json")
-	if authHeader != "" {
-		httpReq.Header.Set("Authorization", authHeader)
-	}
-
-	httpResp, err := s.httpClient.Do(httpReq)
-	if err != nil {
-		return invokeResult{}, err
-	}
-	defer httpResp.Body.Close()
-
-	body, err := io.ReadAll(httpResp.Body)
-	if err != nil {
-		return invokeResult{}, err
-	}
-
-	if httpResp.StatusCode >= 400 {
-		return invokeResult{}, &statusError{status: httpResp.StatusCode, body: string(body)}
-	}
-
-	var resp struct {
-		Message string `json:"message"`
-	}
-	if err := json.Unmarshal(body, &resp); err != nil {
-		return invokeResult{}, err
-	}
-	if resp.Message == "" {
-		resp.Message = "custom-lang-service returned an empty message"
-	}
-	return invokeResult{message: resp.Message}, nil
-}
-
-func shouldRetry(err error) bool {
-	var se *statusError
-	if errors.As(err, &se) {
-		switch se.status {
-		case http.StatusTooManyRequests, http.StatusBadGateway, http.StatusServiceUnavailable, http.StatusGatewayTimeout:
-			return true
-		default:
-			return false
-		}
-	}
-	if errors.Is(err, context.DeadlineExceeded) {
-		return false
-	}
-	var netErr net.Error
-	if errors.As(err, &netErr) {
-		return netErr.Timeout()
-	}
-	return false
-}
-
-func mapError(err error) error {
-	if errors.Is(err, gobreaker.ErrOpenState) {
-		return connect.NewError(connect.CodeUnavailable, err)
-	}
-	if errors.Is(err, context.DeadlineExceeded) {
-		return connect.NewError(connect.CodeDeadlineExceeded, err)
-	}
-	var netErr net.Error
-	if errors.As(err, &netErr) && netErr.Timeout() {
-		return connect.NewError(connect.CodeDeadlineExceeded, err)
-	}
-	var se *statusError
-	if errors.As(err, &se) {
-		return connect.NewError(MapHTTPStatusToConnectCode(se.status), err)
-	}
-	return connect.NewError(connect.CodeInternal, err)
 }
 
 func MapHTTPStatusToConnectCode(status int) connect.Code {
