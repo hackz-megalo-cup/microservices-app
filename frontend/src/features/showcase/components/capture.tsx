@@ -356,6 +356,15 @@ export function Capture() {
       return;
     }
 
+    // Skip endSession if the phase indicates it was already ended in doThrow.
+    const isSessionAlreadyEnded = phase === "success" || phase === "escaped" || phase === "failed";
+    if (isSessionAlreadyEnded) {
+      // Session was already ended by doThrow; just navigate back
+      void navigate(-1);
+      return;
+    }
+
+    // If user navigates away before throwing (rare), still try to close the session
     void sessionEndMutation
       .mutateAsync()
       .catch(() => {
@@ -366,7 +375,7 @@ export function Capture() {
           void navigate(-1);
         }
       });
-  }, [navigate, sessionId, sessionEndMutation]);
+  }, [navigate, sessionId, phase, sessionEndMutation]);
 
   // ── Loading / Error states ──
   const isLoading = isSessionLoading || isItemsLoading;

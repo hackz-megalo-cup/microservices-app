@@ -29,7 +29,8 @@ export function useCaptureSession(sessionId: string) {
 
   const sessionEndMutation = useMutation({
     mutationFn: async () => {
-      return client.endSession({ sessionId });
+      const headers = new Headers({ "idempotency-key": crypto.randomUUID() });
+      return client.endSession({ sessionId }, { headers });
     },
   });
 
