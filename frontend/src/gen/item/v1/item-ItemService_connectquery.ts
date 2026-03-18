@@ -13,3 +13,8 @@ export const grantItem = ItemService.method.grantItem;
  * @generated from rpc item.v1.ItemService.UseItem
  */
 export const useItem = ItemService.method.useItem;
+
+/**
+ * @generated from rpc item.v1.ItemService.GetInventory
+ */
+export const getInventory = ItemService.method.getInventory;

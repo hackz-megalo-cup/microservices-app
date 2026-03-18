@@ -6,6 +6,7 @@ import (
 	"log/slog"
 
 	"connectrpc.com/connect"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	pb "github.com/hackz-megalo-cup/microservices-app/services/gen/go/item/v1"
 	"github.com/hackz-megalo-cup/microservices-app/services/internal/platform"
@@ -14,12 +15,14 @@ import (
 type Service struct {
 	eventStore *platform.EventStore
 	outbox     *platform.OutboxStore
+	pool       *pgxpool.Pool
 }
 
-func NewService(eventStore *platform.EventStore, outbox *platform.OutboxStore) *Service {
+func NewService(eventStore *platform.EventStore, outbox *platform.OutboxStore, pool *pgxpool.Pool) *Service {
 	return &Service{
 		eventStore: eventStore,
 		outbox:     outbox,
+		pool:       pool,
 	}
 }
 
@@ -92,4 +95,37 @@ func (s *Service) UseItem(ctx context.Context, req *connect.Request[pb.UseItemRe
 	}
 
 	return connect.NewResponse(&pb.UseItemResponse{}), nil
+}
+
+// GetInventory — ユーザーの所持アイテム一覧を取得する
+func (s *Service) GetInventory(ctx context.Context, req *connect.Request[pb.GetInventoryRequest]) (*connect.Response[pb.GetInventoryResponse], error) {
+	userID := req.Msg.GetUserId()
+	if userID == "" {
+		return nil, connect.NewError(connect.CodeInvalidArgument, fmt.Errorf("user_id is required"))
+	}
+
+	// Read Model からユーザーの所持アイテムを取得
+	rows, err := s.pool.Query(ctx,
+		`SELECT item_id, quantity FROM user_item WHERE user_id = $1 AND quantity > 0`,
+		userID,
+	)
+	if err != nil {
+		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("failed to query inventory"))
+	}
+	defer rows.Close()
+
+	var items []*pb.InventoryItem
+	for rows.Next() {
+		var itemID string
+		var qty int32
+		if err := rows.Scan(&itemID, &qty); err != nil {
+			continue
+		}
+		items = append(items, &pb.InventoryItem{
+			ItemId:   itemID,
+			Quantity: qty,
+		})
+	}
+
+	return connect.NewResponse(&pb.GetInventoryResponse{Items: items}), nil
 }

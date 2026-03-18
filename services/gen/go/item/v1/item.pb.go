@@ -229,6 +229,146 @@ func (*UseItemResponse) Descriptor() ([]byte, []int) {
 	return file_item_v1_item_proto_rawDescGZIP(), []int{3}
 }
 
+type GetInventoryRequest struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	UserId        string                 `protobuf:"bytes,1,opt,name=user_id,json=userId,proto3" json:"user_id,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetInventoryRequest) Reset() {
+	*x = GetInventoryRequest{}
+	mi := &file_item_v1_item_proto_msgTypes[4]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetInventoryRequest) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetInventoryRequest) ProtoMessage() {}
+
+func (x *GetInventoryRequest) ProtoReflect() protoreflect.Message {
+	mi := &file_item_v1_item_proto_msgTypes[4]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetInventoryRequest.ProtoReflect.Descriptor instead.
+func (*GetInventoryRequest) Descriptor() ([]byte, []int) {
+	return file_item_v1_item_proto_rawDescGZIP(), []int{4}
+}
+
+func (x *GetInventoryRequest) GetUserId() string {
+	if x != nil {
+		return x.UserId
+	}
+	return ""
+}
+
+type GetInventoryResponse struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	Items         []*InventoryItem       `protobuf:"bytes,1,rep,name=items,proto3" json:"items,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *GetInventoryResponse) Reset() {
+	*x = GetInventoryResponse{}
+	mi := &file_item_v1_item_proto_msgTypes[5]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *GetInventoryResponse) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*GetInventoryResponse) ProtoMessage() {}
+
+func (x *GetInventoryResponse) ProtoReflect() protoreflect.Message {
+	mi := &file_item_v1_item_proto_msgTypes[5]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use GetInventoryResponse.ProtoReflect.Descriptor instead.
+func (*GetInventoryResponse) Descriptor() ([]byte, []int) {
+	return file_item_v1_item_proto_rawDescGZIP(), []int{5}
+}
+
+func (x *GetInventoryResponse) GetItems() []*InventoryItem {
+	if x != nil {
+		return x.Items
+	}
+	return nil
+}
+
+type InventoryItem struct {
+	state         protoimpl.MessageState `protogen:"open.v1"`
+	ItemId        string                 `protobuf:"bytes,1,opt,name=item_id,json=itemId,proto3" json:"item_id,omitempty"`
+	Quantity      int32                  `protobuf:"varint,2,opt,name=quantity,proto3" json:"quantity,omitempty"`
+	unknownFields protoimpl.UnknownFields
+	sizeCache     protoimpl.SizeCache
+}
+
+func (x *InventoryItem) Reset() {
+	*x = InventoryItem{}
+	mi := &file_item_v1_item_proto_msgTypes[6]
+	ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+	ms.StoreMessageInfo(mi)
+}
+
+func (x *InventoryItem) String() string {
+	return protoimpl.X.MessageStringOf(x)
+}
+
+func (*InventoryItem) ProtoMessage() {}
+
+func (x *InventoryItem) ProtoReflect() protoreflect.Message {
+	mi := &file_item_v1_item_proto_msgTypes[6]
+	if x != nil {
+		ms := protoimpl.X.MessageStateOf(protoimpl.Pointer(x))
+		if ms.LoadMessageInfo() == nil {
+			ms.StoreMessageInfo(mi)
+		}
+		return ms
+	}
+	return mi.MessageOf(x)
+}
+
+// Deprecated: Use InventoryItem.ProtoReflect.Descriptor instead.
+func (*InventoryItem) Descriptor() ([]byte, []int) {
+	return file_item_v1_item_proto_rawDescGZIP(), []int{6}
+}
+
+func (x *InventoryItem) GetItemId() string {
+	if x != nil {
+		return x.ItemId
+	}
+	return ""
+}
+
+func (x *InventoryItem) GetQuantity() int32 {
+	if x != nil {
+		return x.Quantity
+	}
+	return 0
+}
+
 var File_item_v1_item_proto protoreflect.FileDescriptor
 
 const file_item_v1_item_proto_rawDesc = "" +
@@ -245,10 +385,18 @@ const file_item_v1_item_proto_rawDesc = "" +
 	"\auser_id\x18\x01 \x01(\tR\x06userId\x12\x17\n" +
 	"\aitem_id\x18\x02 \x01(\tR\x06itemId\x12\x1a\n" +
 	"\bquantity\x18\x03 \x01(\x05R\bquantity\"\x11\n" +
-	"\x0fUseItemResponse2\x93\x01\n" +
+	"\x0fUseItemResponse\".\n" +
+	"\x13GetInventoryRequest\x12\x17\n" +
+	"\auser_id\x18\x01 \x01(\tR\x06userId\"D\n" +
+	"\x14GetInventoryResponse\x12,\n" +
+	"\x05items\x18\x01 \x03(\v2\x16.item.v1.InventoryItemR\x05items\"D\n" +
+	"\rInventoryItem\x12\x17\n" +
+	"\aitem_id\x18\x01 \x01(\tR\x06itemId\x12\x1a\n" +
+	"\bquantity\x18\x02 \x01(\x05R\bquantity2\xe2\x01\n" +
 	"\vItemService\x12D\n" +
 	"\tGrantItem\x12\x19.item.v1.GrantItemRequest\x1a\x1a.item.v1.GrantItemResponse\"\x00\x12>\n" +
-	"\aUseItem\x12\x17.item.v1.UseItemRequest\x1a\x18.item.v1.UseItemResponse\"\x00BNZLgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/item/v1;itemv1b\x06proto3"
+	"\aUseItem\x12\x17.item.v1.UseItemRequest\x1a\x18.item.v1.UseItemResponse\"\x00\x12M\n" +
+	"\fGetInventory\x12\x1c.item.v1.GetInventoryRequest\x1a\x1d.item.v1.GetInventoryResponse\"\x00BNZLgithub.com/hackz-megalo-cup/microservices-app/services/gen/go/item/v1;itemv1b\x06proto3"
 
 var (
 	file_item_v1_item_proto_rawDescOnce sync.Once
@@ -262,23 +410,29 @@ func file_item_v1_item_proto_rawDescGZIP() []byte {
 	return file_item_v1_item_proto_rawDescData
 }
 
-var file_item_v1_item_proto_msgTypes = make([]protoimpl.MessageInfo, 4)
+var file_item_v1_item_proto_msgTypes = make([]protoimpl.MessageInfo, 7)
 var file_item_v1_item_proto_goTypes = []any{
-	(*GrantItemRequest)(nil),  // 0: item.v1.GrantItemRequest
-	(*GrantItemResponse)(nil), // 1: item.v1.GrantItemResponse
-	(*UseItemRequest)(nil),    // 2: item.v1.UseItemRequest
-	(*UseItemResponse)(nil),   // 3: item.v1.UseItemResponse
+	(*GrantItemRequest)(nil),     // 0: item.v1.GrantItemRequest
+	(*GrantItemResponse)(nil),    // 1: item.v1.GrantItemResponse
+	(*UseItemRequest)(nil),       // 2: item.v1.UseItemRequest
+	(*UseItemResponse)(nil),      // 3: item.v1.UseItemResponse
+	(*GetInventoryRequest)(nil),  // 4: item.v1.GetInventoryRequest
+	(*GetInventoryResponse)(nil), // 5: item.v1.GetInventoryResponse
+	(*InventoryItem)(nil),        // 6: item.v1.InventoryItem
 }
 var file_item_v1_item_proto_depIdxs = []int32{
-	0, // 0: item.v1.ItemService.GrantItem:input_type -> item.v1.GrantItemRequest
-	2, // 1: item.v1.ItemService.UseItem:input_type -> item.v1.UseItemRequest
-	1, // 2: item.v1.ItemService.GrantItem:output_type -> item.v1.GrantItemResponse
-	3, // 3: item.v1.ItemService.UseItem:output_type -> item.v1.UseItemResponse
-	2, // [2:4] is the sub-list for method output_type
-	0, // [0:2] is the sub-list for method input_type
-	0, // [0:0] is the sub-list for extension type_name
-	0, // [0:0] is the sub-list for extension extendee
-	0, // [0:0] is the sub-list for field type_name
+	6, // 0: item.v1.GetInventoryResponse.items:type_name -> item.v1.InventoryItem
+	0, // 1: item.v1.ItemService.GrantItem:input_type -> item.v1.GrantItemRequest
+	2, // 2: item.v1.ItemService.UseItem:input_type -> item.v1.UseItemRequest
+	4, // 3: item.v1.ItemService.GetInventory:input_type -> item.v1.GetInventoryRequest
+	1, // 4: item.v1.ItemService.GrantItem:output_type -> item.v1.GrantItemResponse
+	3, // 5: item.v1.ItemService.UseItem:output_type -> item.v1.UseItemResponse
+	5, // 6: item.v1.ItemService.GetInventory:output_type -> item.v1.GetInventoryResponse
+	4, // [4:7] is the sub-list for method output_type
+	1, // [1:4] is the sub-list for method input_type
+	1, // [1:1] is the sub-list for extension type_name
+	1, // [1:1] is the sub-list for extension extendee
+	0, // [0:1] is the sub-list for field type_name
 }
 
 func init() { file_item_v1_item_proto_init() }
@@ -292,7 +446,7 @@ func file_item_v1_item_proto_init() {
 			GoPackagePath: reflect.TypeOf(x{}).PkgPath(),
 			RawDescriptor: unsafe.Slice(unsafe.StringData(file_item_v1_item_proto_rawDesc), len(file_item_v1_item_proto_rawDesc)),
 			NumEnums:      0,
-			NumMessages:   4,
+			NumMessages:   7,
 			NumExtensions: 0,
 			NumServices:   1,
 		},

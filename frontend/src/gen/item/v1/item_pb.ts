@@ -10,7 +10,7 @@ import type { Message } from "@bufbuild/protobuf";
  * Describes the file item/v1/item.proto.
  */
 export const file_item_v1_item: GenFile = /*@__PURE__*/
-  fileDesc("ChJpdGVtL3YxL2l0ZW0ucHJvdG8SB2l0ZW0udjEiVgoQR3JhbnRJdGVtUmVxdWVzdBIPCgd1c2VyX2lkGAEgASgJEg8KB2l0ZW1faWQYAiABKAkSEAoIcXVhbnRpdHkYAyABKAUSDgoGcmVhc29uGAQgASgJIh8KEUdyYW50SXRlbVJlc3BvbnNlEgoKAmlkGAEgASgJIkQKDlVzZUl0ZW1SZXF1ZXN0Eg8KB3VzZXJfaWQYASABKAkSDwoHaXRlbV9pZBgCIAEoCRIQCghxdWFudGl0eRgDIAEoBSIRCg9Vc2VJdGVtUmVzcG9uc2UykwEKC0l0ZW1TZXJ2aWNlEkQKCUdyYW50SXRlbRIZLml0ZW0udjEuR3JhbnRJdGVtUmVxdWVzdBoaLml0ZW0udjEuR3JhbnRJdGVtUmVzcG9uc2UiABI+CgdVc2VJdGVtEhcuaXRlbS52MS5Vc2VJdGVtUmVxdWVzdBoYLml0ZW0udjEuVXNlSXRlbVJlc3BvbnNlIgBCTlpMZ2l0aHViLmNvbS9oYWNrei1tZWdhbG8tY3VwL21pY3Jvc2VydmljZXMtYXBwL3NlcnZpY2VzL2dlbi9nby9pdGVtL3YxO2l0ZW12MWIGcHJvdG8z");
+  fileDesc("ChJpdGVtL3YxL2l0ZW0ucHJvdG8SB2l0ZW0udjEiVgoQR3JhbnRJdGVtUmVxdWVzdBIPCgd1c2VyX2lkGAEgASgJEg8KB2l0ZW1faWQYAiABKAkSEAoIcXVhbnRpdHkYAyABKAUSDgoGcmVhc29uGAQgASgJIh8KEUdyYW50SXRlbVJlc3BvbnNlEgoKAmlkGAEgASgJIkQKDlVzZUl0ZW1SZXF1ZXN0Eg8KB3VzZXJfaWQYASABKAkSDwoHaXRlbV9pZBgCIAEoCRIQCghxdWFudGl0eRgDIAEoBSIRCg9Vc2VJdGVtUmVzcG9uc2UiJgoTR2V0SW52ZW50b3J5UmVxdWVzdBIPCgd1c2VyX2lkGAEgASgJIj0KFEdldEludmVudG9yeVJlc3BvbnNlEiUKBWl0ZW1zGAEgAygLMhYuaXRlbS52MS5JbnZlbnRvcnlJdGVtIjIKDUludmVudG9yeUl0ZW0SDwoHaXRlbV9pZBgBIAEoCRIQCghxdWFudGl0eRgCIAEoBTLiAQoLSXRlbVNlcnZpY2USRAoJR3JhbnRJdGVtEhkuaXRlbS52MS5HcmFudEl0ZW1SZXF1ZXN0GhouaXRlbS52MS5HcmFudEl0ZW1SZXNwb25zZSIAEj4KB1VzZUl0ZW0SFy5pdGVtLnYxLlVzZUl0ZW1SZXF1ZXN0GhguaXRlbS52MS5Vc2VJdGVtUmVzcG9uc2UiABJNCgxHZXRJbnZlbnRvcnkSHC5pdGVtLnYxLkdldEludmVudG9yeVJlcXVlc3QaHS5pdGVtLnYxLkdldEludmVudG9yeVJlc3BvbnNlIgBCTlpMZ2l0aHViLmNvbS9oYWNrei1tZWdhbG8tY3VwL21pY3Jvc2VydmljZXMtYXBwL3NlcnZpY2VzL2dlbi9nby9pdGVtL3YxO2l0ZW12MWIGcHJvdG8z");
 
 /**
  * @generated from message item.v1.GrantItemRequest
@@ -102,6 +102,62 @@ export const UseItemResponseSchema: GenMessage<UseItemResponse> = /*@__PURE__*/
   messageDesc(file_item_v1_item, 3);
 
 /**
+ * @generated from message item.v1.GetInventoryRequest
+ */
+export type GetInventoryRequest = Message<"item.v1.GetInventoryRequest"> & {
+  /**
+   * @generated from field: string user_id = 1;
+   */
+  userId: string;
+};
+
+/**
+ * Describes the message item.v1.GetInventoryRequest.
+ * Use `create(GetInventoryRequestSchema)` to create a new message.
+ */
+export const GetInventoryRequestSchema: GenMessage<GetInventoryRequest> = /*@__PURE__*/
+  messageDesc(file_item_v1_item, 4);
+
+/**
+ * @generated from message item.v1.GetInventoryResponse
+ */
+export type GetInventoryResponse = Message<"item.v1.GetInventoryResponse"> & {
+  /**
+   * @generated from field: repeated item.v1.InventoryItem items = 1;
+   */
+  items: InventoryItem[];
+};
+
+/**
+ * Describes the message item.v1.GetInventoryResponse.
+ * Use `create(GetInventoryResponseSchema)` to create a new message.
+ */
+export const GetInventoryResponseSchema: GenMessage<GetInventoryResponse> = /*@__PURE__*/
+  messageDesc(file_item_v1_item, 5);
+
+/**
+ * @generated from message item.v1.InventoryItem
+ */
+export type InventoryItem = Message<"item.v1.InventoryItem"> & {
+  /**
+   * @generated from field: string item_id = 1;
+   */
+  itemId: string;
+
+  /**
+   * @generated from field: int32 quantity = 2;
+   */
+  quantity: number;
+};
+
+/**
+ * Describes the message item.v1.InventoryItem.
+ * Use `create(InventoryItemSchema)` to create a new message.
+ */
+export const InventoryItemSchema: GenMessage<InventoryItem> = /*@__PURE__*/
+  messageDesc(file_item_v1_item, 6);
+
+/**
  * @generated from service item.v1.ItemService
  */
 export const ItemService: GenService<{
@@ -120,6 +176,14 @@ export const ItemService: GenService<{
     methodKind: "unary";
     input: typeof UseItemRequestSchema;
     output: typeof UseItemResponseSchema;
+  },
+  /**
+   * @generated from rpc item.v1.ItemService.GetInventory
+   */
+  getInventory: {
+    methodKind: "unary";
+    input: typeof GetInventoryRequestSchema;
+    output: typeof GetInventoryResponseSchema;
   },
 }> = /*@__PURE__*/
   serviceDesc(file_item_v1_item, 0);
