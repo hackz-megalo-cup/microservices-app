@@ -1,37 +1,39 @@
+import { useQuery } from "@tanstack/react-query";
 import type { Raid } from "../types";
 import "../../../styles/global.css";
 import { RaidCard } from "./ui/raid-card";
-
 import { TabBar } from "./ui/tab-bar";
 
-const mockRaids: Raid[] = [
-  {
-    id: "raid-1",
-    name: "JavaScript",
-    type: "Dynamic / JIT Compiled",
-    players: "5/10",
-    timer: "12:34",
-    image: "/images/raid-javascript.png",
-  },
-  {
-    id: "raid-2",
-    name: "Rust",
-    type: "Static / Compiled",
-    players: "8/10",
-    timer: "05:12",
-    image: "/images/raid-rust.png",
-  },
-  {
-    id: "raid-3",
-    name: "Go",
-    type: "Static / Compiled",
-    players: "3/10",
-    timer: "23:45",
-    image: "/images/raid-go.png",
-  },
-];
+// TODO: proto実装後、以下に置き換え
+// import { useQuery } from "@connectrpc/connect-query";
+// import { listRaids } from "../../../gen/raid_lobby/v1/raid_lobby-RaidLobbyService_connectquery";
+
+async function fetchListRaids(): Promise<{ raids: Raid[] }> {
+  const response = await fetch(`${apiBaseUrl}/raid_lobby.v1.RaidLobbyService/ListRaids`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({}),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch raids: ${response.statusText}`);
+  }
+
+  return response.json() as Promise<{ raids: Raid[] }>;
+}
 
 export function Home() {
+  // TODO: proto実装後、以下に置き換え
+  // const { data, isLoading, error } = useQuery(listRaids, {});
+  const { data, isLoading, error } = useQuery({
+    queryKey: ["listRaids"],
+    queryFn: fetchListRaids,
+  });
+
+  const raids = data?.raids ?? [];
+
   return (
     <div className="showcase-screen">
       <header className="flex items-center justify-between px-6 py-3">
@@ -60,7 +62,9 @@ export function Home() {
 
       <section className="flex flex-col gap-3 px-6">
         <span className="text-xs font-bold tracking-widest text-text-secondary">ACTIVE RAIDS</span>
-        {mockRaids.map((raid) => (
+        {isLoading && <p className="text-sm text-text-secondary">Loading raids...</p>}
+        {error && <p className="text-sm text-red-500">Error: {error.message}</p>}
+        {raids.map((raid) => (
           <RaidCard
             key={raid.id}
             id={raid.id}

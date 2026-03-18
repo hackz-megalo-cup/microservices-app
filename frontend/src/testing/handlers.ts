@@ -57,6 +57,33 @@ const mockPokemon = [
   },
 ];
 
+const mockRaids = [
+  {
+    id: "raid-1",
+    name: "JavaScript",
+    type: "Dynamic / JIT Compiled",
+    players: "5/10",
+    timer: "12:34",
+    image: "/images/raid-javascript.png",
+  },
+  {
+    id: "raid-2",
+    name: "Rust",
+    type: "Static / Compiled",
+    players: "8/10",
+    timer: "05:12",
+    image: "/images/raid-rust.png",
+  },
+  {
+    id: "raid-3",
+    name: "Go",
+    type: "Static / Compiled",
+    players: "3/10",
+    timer: "23:45",
+    image: "/images/raid-go.png",
+  },
+];
+
 export const handlers = [
   http.post(`${baseUrl}/gateway.v1.GatewayService/InvokeCustom`, async ({ request }) => {
     const body = (await request.json()) as { name?: string };
@@ -109,6 +136,13 @@ export const handlers = [
 
     return HttpResponse.json({
       battleSessionId: `battle-${Math.random().toString(36).substring(7)}`,
+    });
+  }),
+
+  // ListRaids (Unary)
+  http.post(`${baseUrl}/raid_lobby.v1.RaidLobbyService/ListOpenRaids`, async () => {
+    return HttpResponse.json({
+      raids: mockRaids,
     });
   }),
 
