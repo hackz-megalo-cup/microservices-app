@@ -1,7 +1,8 @@
 import { useQuery } from "@connectrpc/connect-query";
 import { getUserProfile } from "../../../gen/auth/v1/auth-AuthService_connectquery";
+import type { UserProfileResult } from "../types";
 
-export function useUserProfile(userId: string) {
+export function useUserProfile(userId: string): UserProfileResult {
   const query = useQuery(getUserProfile, { userId }, { enabled: !!userId });
 
   const user = query.data?.user;
