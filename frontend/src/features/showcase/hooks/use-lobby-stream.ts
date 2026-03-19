@@ -1,5 +1,4 @@
 import { createClient } from "@connectrpc/connect";
-import { useTransport } from "@connectrpc/connect-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { RaidLobbyService } from "../../../gen/raid_lobby/v1/raid_lobby_pb";
 import type { Participant } from "../../../lib/parse-lobby-payload";
@@ -8,6 +7,7 @@ import {
   parseParticipantEvent,
   parseParticipants,
 } from "../../../lib/parse-lobby-payload";
+import { streamTransport } from "../../../lib/transport";
 
 interface UseLobbyStreamResult {
   participants: Participant[];
@@ -24,7 +24,6 @@ interface UseLobbyStreamResult {
  * @returns ロビー状態とストリーム接続状態
  */
 export function useLobbyStream(lobbyId: string): UseLobbyStreamResult {
-  const transport = useTransport();
   const [participants, setParticipants] = useState<Participant[]>([]);
   const [isConnected, setIsConnected] = useState(false);
   const [error, setError] = useState<Error | null>(null);
@@ -41,7 +40,7 @@ export function useLobbyStream(lobbyId: string): UseLobbyStreamResult {
     const abortController = new AbortController();
     abortRef.current = abortController;
 
-    const client = createClient(RaidLobbyService, transport);
+    const client = createClient(RaidLobbyService, streamTransport);
 
     try {
       setIsConnected(true);
@@ -51,7 +50,7 @@ export function useLobbyStream(lobbyId: string): UseLobbyStreamResult {
 
       for await (const event of client.streamLobby(
         { lobbyId },
-        { signal: abortController.signal, timeoutMs: undefined },
+        { signal: abortController.signal },
       )) {
         switch (event.eventType) {
           case "raid.participant_snapshot":
@@ -93,7 +92,7 @@ export function useLobbyStream(lobbyId: string): UseLobbyStreamResult {
     } finally {
       setIsConnected(false);
     }
-  }, [lobbyId, transport]);
+  }, [lobbyId]);
 
   useEffect(() => {
     subscribe();
