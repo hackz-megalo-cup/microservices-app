@@ -58,7 +58,7 @@ func (s *Service) GetCaptureSession(ctx context.Context, req *connect.Request[pb
 	var resp pb.GetCaptureSessionResponse
 	err := s.db.QueryRow(ctx,
 		`SELECT id, battle_session_id, user_id, pokemon_id, base_rate, current_rate, result
-		 FROM capture_session WHERE id = $1`, sessionID,
+		 FROM capture_session WHERE battle_session_id = $1`, sessionID,
 	).Scan(&resp.SessionId, &resp.BattleSessionId, &resp.UserId, &resp.PokemonId,
 		&resp.BaseRate, &resp.CurrentRate, &resp.Result)
 	if err != nil {
@@ -75,9 +75,9 @@ func (s *Service) GetCaptureSession(ctx context.Context, req *connect.Request[pb
 		if err != nil {
 			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("session not found: %s", sessionID))
 		}
-		// Use the real session ID for subsequent action queries
-		sessionID = resp.SessionId
 	}
+	// Use the real capture session ID for subsequent action queries
+	sessionID = resp.SessionId
 
 	rows, err := s.db.Query(ctx,
 		`SELECT id, action_type, COALESCE(item_id::text, ''), COALESCE(rate_change, 0), created_at
