@@ -9,7 +9,7 @@ import { useAuthContext } from "../../../lib/auth";
 import { useActivePokemon } from "../../showcase/hooks/use-active-pokemon";
 import { useGameConnection } from "../hooks/use-game-connection";
 import type { ServerMessage } from "../types";
-import { RaidBossModel, useRaidBossModel } from "./raid-boss-model";
+import { preloadRaidBossModel, RaidBossModel, useRaidBossModel } from "./raid-boss-model";
 import "./battle-page.css";
 
 interface FloatingDmg {
@@ -61,6 +61,11 @@ export function BattlePage() {
   }, [openRaidsQuery.data, pokemonQuery.data, id]);
 
   const model = useRaidBossModel(bossName);
+
+  // ボス名が確定したら該当モデルだけプリロード
+  useEffect(() => {
+    preloadRaidBossModel(bossName);
+  }, [bossName]);
 
   // アクティブポケモンのステータスを取得
   const { activePokemon } = useActivePokemon(userId);

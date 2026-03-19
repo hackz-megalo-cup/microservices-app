@@ -23,9 +23,10 @@ function pickModelForBoss(bossName?: string) {
   return MODELS[Math.floor(Math.random() * MODELS.length)];
 }
 
-// Preload both models
-for (const { path } of MODELS) {
-  useGLTF.preload(path);
+/** Preload a specific model's GLB — call when the boss name is known */
+export function preloadRaidBossModel(bossName?: string) {
+  const model = pickModelForBoss(bossName);
+  useGLTF.preload(model.path);
 }
 
 function Model({

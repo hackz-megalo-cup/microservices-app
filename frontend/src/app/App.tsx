@@ -1,3 +1,4 @@
+import { lazy, Suspense } from "react";
 import { BrowserRouter, Route, Routes } from "react-router";
 import {
   AdminDashboard,
@@ -14,8 +15,12 @@ import { ApiTestPage } from "../features/api-test/components/api-test-page";
 import { LoginPage } from "../features/auth/components/login-page";
 import { RequireAuth } from "../features/auth/components/require-auth";
 import { StarterSelect } from "../features/auth/components/starter-select";
-import { BattlePage } from "../features/battle/components/battle-page";
 import { RaidTestPage } from "../features/raid-test/components/raid-test-page";
+
+const BattlePage = lazy(() =>
+  import("../features/battle/components/battle-page").then((m) => ({ default: m.BattlePage })),
+);
+
 import { Capture } from "../features/showcase/components/capture";
 import { CaptureDemo } from "../features/showcase/components/capture-demo";
 import { Collection } from "../features/showcase/components/collection";
@@ -50,7 +55,15 @@ export function App() {
           path="/battle/:id"
           element={
             <RequireAuth>
-              <BattlePage />
+              <Suspense
+                fallback={
+                  <div className="flex items-center justify-center h-screen text-text-secondary">
+                    Loading...
+                  </div>
+                }
+              >
+                <BattlePage />
+              </Suspense>
             </RequireAuth>
           }
         />
