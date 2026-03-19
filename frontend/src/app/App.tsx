@@ -17,6 +17,7 @@ import { StarterSelect } from "../features/auth/components/starter-select";
 import { BattlePage } from "../features/battle/components/battle-page";
 import { RaidTestPage } from "../features/raid-test/components/raid-test-page";
 import { Capture } from "../features/showcase/components/capture";
+import { CaptureDemo } from "../features/showcase/components/capture-demo";
 import { Collection } from "../features/showcase/components/collection";
 import { Detail } from "../features/showcase/components/detail";
 import { Home } from "../features/showcase/components/home";
@@ -69,6 +70,7 @@ export function App() {
             </RequireAuth>
           }
         />
+        <Route path="/capture/demo" element={<CaptureDemo />} />
         <Route
           path="/capture/:id"
           element={
