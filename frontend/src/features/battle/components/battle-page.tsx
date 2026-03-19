@@ -1,14 +1,14 @@
 import { useQuery } from "@connectrpc/connect-query";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import { listPokemon } from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 import { listOpenRaids } from "../../../gen/raid_lobby/v1/raid_lobby-RaidLobbyService_connectquery";
 import "../../../styles/global.css";
 import { useAuthContext } from "../../../lib/auth";
 import { useActivePokemon } from "../../showcase/hooks/use-active-pokemon";
 import { useGameConnection } from "../hooks/use-game-connection";
-import type { ServerMessage } from "../types";
+import type { BattleRouteState, ServerMessage, VictoryRouteState } from "../types";
 import { preloadRaidBossModel, RaidBossModel, useRaidBossModel } from "./raid-boss-model";
 import "./battle-page.css";
 
@@ -28,9 +28,12 @@ interface Ripple {
 
 export function BattlePage() {
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
   const navigate = useNavigate();
   const { user } = useAuthContext();
   const userId = useMemo(() => user?.id ?? crypto.randomUUID(), [user?.id]);
+  const battleRouteState = (location.state as BattleRouteState | null) ?? null;
+  const storageKey = id ? `battle-boss:${id}` : null;
 
   // --- Battle state ---
   const [bossHp, setBossHp] = useState(0);
@@ -52,7 +55,7 @@ export function BattlePage() {
   // ボス情報を取得
   const openRaidsQuery = useQuery(listOpenRaids, { statusFilter: "" });
   const pokemonQuery = useQuery(listPokemon, {});
-  const bossName = useMemo(() => {
+  const queryBossName = useMemo(() => {
     const raid = openRaidsQuery.data?.raids.find((r) => r.id === id);
     if (!raid || !pokemonQuery.data) {
       return undefined;
@@ -61,12 +64,39 @@ export function BattlePage() {
     return boss?.name;
   }, [openRaidsQuery.data, pokemonQuery.data, id]);
 
-  const model = useRaidBossModel(bossName);
+  const storedBossState = useMemo(() => {
+    if (!storageKey || typeof window === "undefined") {
+      return null;
+    }
+    const raw = sessionStorage.getItem(storageKey);
+    if (!raw) {
+      return null;
+    }
+    try {
+      return JSON.parse(raw) as BattleRouteState;
+    } catch {
+      return null;
+    }
+  }, [storageKey]);
+
+  const resolvedBossName = battleRouteState?.bossName ?? storedBossState?.bossName ?? queryBossName;
+
+  const model = useRaidBossModel(resolvedBossName);
 
   // ボス名が確定したら該当モデルだけプリロード
   useEffect(() => {
-    preloadRaidBossModel(bossName);
-  }, [bossName]);
+    preloadRaidBossModel(resolvedBossName);
+  }, [resolvedBossName]);
+
+  useEffect(() => {
+    if (!storageKey || typeof window === "undefined") {
+      return;
+    }
+    if (!battleRouteState?.bossName && !battleRouteState?.bossPokemonId) {
+      return;
+    }
+    sessionStorage.setItem(storageKey, JSON.stringify(battleRouteState));
+  }, [battleRouteState, storageKey]);
 
   // アクティブポケモンのステータスを取得
   const { activePokemon } = useActivePokemon(userId);
@@ -147,22 +177,36 @@ export function BattlePage() {
           }
           squashTimer.current = setTimeout(() => setSquashing(false), 150);
           break;
-        case "finished":
+        case "finished": {
           setResult(msg.result);
+          const victoryState: VictoryRouteState = {
+            elapsed: msg.elapsed,
+            battleSessionId: battleSessionIdRef.current ?? undefined,
+            bossName: resolvedBossName,
+            bossPokemonId: battleRouteState?.bossPokemonId ?? storedBossState?.bossPokemonId,
+          };
           setTimeout(
             () =>
               navigate(`/victory/${id}`, {
-                state: { elapsed: msg.elapsed, battleSessionId: battleSessionIdRef.current },
+                state: victoryState,
               }),
             2000,
           );
           break;
+        }
         case "time_sync":
           setTimeoutSec(msg.remainingSec);
           break;
       }
     },
-    [id, navigate, spawnDmg],
+    [
+      battleRouteState?.bossPokemonId,
+      id,
+      navigate,
+      resolvedBossName,
+      spawnDmg,
+      storedBossState?.bossPokemonId,
+    ],
   );
 
   useEffect(() => {

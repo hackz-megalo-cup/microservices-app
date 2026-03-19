@@ -5,6 +5,7 @@ import { listPokemon } from "../../../gen/masterdata/v1/masterdata-MasterdataSer
 import { listOpenRaids } from "../../../gen/raid_lobby/v1/raid_lobby-RaidLobbyService_connectquery";
 import { getPokemonImageUrl } from "../../../lib/pokemon-image";
 import "../../../styles/global.css";
+import type { VictoryRouteState } from "../../battle/types";
 
 const rewards = [
   { value: "+350", label: "EXP" },
@@ -22,12 +23,9 @@ export function Victory() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const elapsed: number | undefined = (
-    location.state as { elapsed?: number; battleSessionId?: string } | null
-  )?.elapsed;
-  const battleSessionId: string | undefined = (
-    location.state as { elapsed?: number; battleSessionId?: string } | null
-  )?.battleSessionId;
+  const victoryState = (location.state as VictoryRouteState | null) ?? null;
+  const elapsed = victoryState?.elapsed;
+  const battleSessionId = victoryState?.battleSessionId;
 
   // ボス情報を動的に取得
   const openRaidsQuery = useQuery(listOpenRaids, { statusFilter: "" });
@@ -44,8 +42,11 @@ export function Victory() {
     return { name: boss.name, image: getPokemonImageUrl({ name: boss.name }) };
   }, [openRaidsQuery.data, pokemonQuery.data, id]);
 
-  const bossName = bossInfo?.name ?? "Boss";
-  const bossImage = bossInfo?.image ?? "/images/collection-python.png";
+  const bossName = victoryState?.bossName ?? bossInfo?.name ?? "Boss";
+  const bossImage =
+    (victoryState?.bossName ? getPokemonImageUrl({ name: victoryState.bossName }) : null) ??
+    bossInfo?.image ??
+    "/images/collection-python.png";
   const elapsedDisplay = elapsed !== undefined ? formatElapsed(elapsed) : "?:??";
 
   return (

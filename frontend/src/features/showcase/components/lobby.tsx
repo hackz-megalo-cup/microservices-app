@@ -5,6 +5,7 @@ import { listPokemon } from "../../../gen/masterdata/v1/masterdata-MasterdataSer
 import { listOpenRaids } from "../../../gen/raid_lobby/v1/raid_lobby-RaidLobbyService_connectquery";
 import { getPokemonImageUrl } from "../../../lib/pokemon-image";
 import "../../../styles/global.css";
+import type { BattleRouteState } from "../../battle/types";
 import { useLobbyActions } from "../hooks/use-lobby-actions";
 import { useLobbyStream } from "../hooks/use-lobby-stream";
 import { NavBar } from "./ui/nav-bar";
@@ -39,10 +40,19 @@ export function Lobby() {
         return;
       }
 
+      const routeState: BattleRouteState = {
+        bossName: bossInfo?.name,
+        bossPokemonId: currentRaid?.bossPokemonId,
+        lobbyId,
+      };
+      if (typeof window !== "undefined") {
+        sessionStorage.setItem(`battle-boss:${sessionId}`, JSON.stringify(routeState));
+      }
+
       hasNavigatedRef.current = true;
-      navigate(`/battle/${sessionId}`);
+      navigate(`/battle/${sessionId}`, { state: routeState });
     },
-    [navigate],
+    [bossInfo?.name, currentRaid?.bossPokemonId, lobbyId, navigate],
   );
 
   // --- 1. JoinRaid (Unary) ---
