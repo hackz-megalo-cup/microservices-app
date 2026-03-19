@@ -1,5 +1,5 @@
 import { useQuery } from "@connectrpc/connect-query";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import { listPokemon } from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 import { listOpenRaids } from "../../../gen/raid_lobby/v1/raid_lobby-RaidLobbyService_connectquery";
@@ -21,8 +21,12 @@ export function Lobby() {
   // ボス情報を動的に取得
   const openRaidsQuery = useQuery(listOpenRaids, { statusFilter: "" });
   const pokemonQuery = useQuery(listPokemon, {});
+  const raid = useMemo(
+    () => openRaidsQuery.data?.raids.find((entry) => entry.id === lobbyId),
+    [openRaidsQuery.data?.raids, lobbyId],
+  );
+  const maxParticipants = raid?.maxParticipants ?? 60;
   const bossInfo = (() => {
-    const raid = openRaidsQuery.data?.raids.find((r) => r.id === lobbyId);
     if (!raid || !pokemonQuery.data) {
       return null;
     }
@@ -140,7 +144,7 @@ export function Lobby() {
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold tracking-widest text-text-secondary">TRAINERS</span>
             <span className="text-xs font-bold tracking-widest text-text-secondary">
-              {participants.length}/6
+              {participants.length}/{maxParticipants}
             </span>
           </div>
 

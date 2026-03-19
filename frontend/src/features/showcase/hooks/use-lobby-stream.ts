@@ -51,7 +51,7 @@ export function useLobbyStream(lobbyId: string): UseLobbyStreamResult {
 
       for await (const event of client.streamLobby(
         { lobbyId },
-        { signal: abortController.signal, timeoutMs: undefined },
+        { signal: abortController.signal, timeoutMs: 0 },
       )) {
         switch (event.eventType) {
           case "raid.participant_snapshot":
