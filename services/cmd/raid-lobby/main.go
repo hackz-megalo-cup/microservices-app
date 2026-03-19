@@ -159,11 +159,12 @@ func run() error {
 	}
 
 	srv := &http.Server{
-		Addr:         ":" + port,
-		BaseContext:  func(net.Listener) context.Context { return ctx },
-		ReadTimeout:  5 * time.Second,
-		WriteTimeout: 0, // streaming のため無制限
-		Handler:      h2c.NewHandler(mux, &http2.Server{}),
+		Addr:              ":" + port,
+		BaseContext:       func(net.Listener) context.Context { return ctx },
+		ReadHeaderTimeout: 5 * time.Second,
+		ReadTimeout:       0, // streaming のため無制限
+		WriteTimeout:      0, // streaming のため無制限
+		Handler:           h2c.NewHandler(mux, &http2.Server{}),
 	}
 
 	srvErr := make(chan error, 1)

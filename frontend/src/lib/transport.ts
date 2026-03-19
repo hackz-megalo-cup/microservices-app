@@ -10,3 +10,9 @@ export const transport = createConnectTransport({
   useBinaryFormat: false,
   interceptors: [authInterceptor],
 });
+
+export const streamTransport = createConnectTransport({
+  baseUrl: apiBaseUrl,
+  useBinaryFormat: false,
+  interceptors: [authInterceptor],
+});
