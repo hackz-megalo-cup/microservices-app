@@ -46,7 +46,9 @@ export function Profile() {
           <span className="text-xs font-bold tracking-widest text-text-secondary">PROFILE</span>
         </header>
         <div className="flex items-center justify-center flex-1">
-          <p className="text-text-secondary">プロフィール取得に失敗しました</p>
+          <p className="text-text-secondary text-center text-sm px-4">
+            {error.message || "プロフィール取得に失敗しました"}
+          </p>
         </div>
         <TabBar active="PROFILE" />
       </div>

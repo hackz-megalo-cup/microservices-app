@@ -39,7 +39,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const data = await loginMutation.mutateAsync({ email, password });
 
       if (!data.user) {
-        throw new Error("invalid response: user is missing");
+        throw new Error("server response error: missing user data");
       }
 
       const authUser: AuthUser = {
