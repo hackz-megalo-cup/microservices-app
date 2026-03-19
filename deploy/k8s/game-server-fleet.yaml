@@ -29,9 +29,9 @@ spec:
               image: ghcr.io/hackz-megalo-cup/game-server:latest
               env:
                 - name: MASTERDATA_ADDR
-                  value: "masterdata.default.svc.cluster.local:8084"
+                  value: "masterdata-service.microservices.svc.cluster.local:8084"
                 - name: KAFKA_BROKERS
-                  value: "redpanda.redpanda.svc.cluster.local:9093"
+                  value: "redpanda.messaging.svc.cluster.local:9092"
               volumeMounts:
                 - name: mkcert-tls
                   mountPath: /etc/tls/mkcert
