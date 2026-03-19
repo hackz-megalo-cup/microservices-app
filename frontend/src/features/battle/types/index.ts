@@ -1,5 +1,18 @@
 export type ConnectionState = "disconnected" | "connecting" | "connected" | "error";
 
+export interface BattleRouteState {
+  bossName?: string;
+  bossPokemonId?: string;
+  lobbyId?: string;
+}
+
+export interface VictoryRouteState {
+  elapsed?: number;
+  battleSessionId?: string;
+  bossName?: string;
+  bossPokemonId?: string;
+}
+
 // --- Server → Client messages ---
 
 export interface JoinedMessage {
