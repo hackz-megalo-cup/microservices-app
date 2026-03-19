@@ -8,10 +8,19 @@ type Step = "initial" | "guest-name" | "login" | "register";
 function getErrorMessage(err: unknown): string {
   if (err instanceof Error) {
     const msg = err.message.toLowerCase();
-    if (msg.includes("already exists") || msg.includes("duplicate") || msg.includes("already registered")) {
+    if (
+      msg.includes("already exists") ||
+      msg.includes("duplicate") ||
+      msg.includes("already registered")
+    ) {
       return "このメールアドレスは既に登録済みです";
     }
-    if (msg.includes("invalid") || msg.includes("incorrect") || msg.includes("wrong") || msg.includes("unauthenticated")) {
+    if (
+      msg.includes("invalid") ||
+      msg.includes("incorrect") ||
+      msg.includes("wrong") ||
+      msg.includes("unauthenticated")
+    ) {
       return "メールアドレスまたはパスワードが間違っています";
     }
     if (msg.includes("network") || msg.includes("fetch") || msg.includes("connect")) {
@@ -23,19 +32,29 @@ function getErrorMessage(err: unknown): string {
 }
 
 function validateEmail(email: string): string {
-  if (!email.trim()) return "メールアドレスを入力してください";
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return "正しいメールアドレスを入力してください";
+  if (!email.trim()) {
+    return "メールアドレスを入力してください";
+  }
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    return "正しいメールアドレスを入力してください";
+  }
   return "";
 }
 
 function validatePassword(password: string): string {
-  if (!password) return "パスワードを入力してください";
-  if (password.length < 8) return "パスワードは8文字以上で入力してください";
+  if (!password) {
+    return "パスワードを入力してください";
+  }
+  if (password.length < 8) {
+    return "パスワードは8文字以上で入力してください";
+  }
   return "";
 }
 
 function validateName(name: string): string {
-  if (!name.trim()) return "名前を入力してください";
+  if (!name.trim()) {
+    return "名前を入力してください";
+  }
   return "";
 }
 
@@ -60,7 +79,10 @@ export function LoginPage() {
 
   const handleGuestSubmit = async () => {
     const nameErr = validateName(guestName);
-    if (nameErr) { setError(nameErr); return; }
+    if (nameErr) {
+      setError(nameErr);
+      return;
+    }
     setError("");
     setIsSubmitting(true);
     try {
@@ -75,9 +97,15 @@ export function LoginPage() {
 
   const handleLoginSubmit = async () => {
     const emailErr = validateEmail(loginEmail);
-    if (emailErr) { setError(emailErr); return; }
+    if (emailErr) {
+      setError(emailErr);
+      return;
+    }
     const passErr = validatePassword(loginPassword);
-    if (passErr) { setError(passErr); return; }
+    if (passErr) {
+      setError(passErr);
+      return;
+    }
     setError("");
     setIsSubmitting(true);
     try {
@@ -92,11 +120,20 @@ export function LoginPage() {
 
   const handleRegisterSubmit = async () => {
     const emailErr = validateEmail(registerEmail);
-    if (emailErr) { setError(emailErr); return; }
+    if (emailErr) {
+      setError(emailErr);
+      return;
+    }
     const passErr = validatePassword(registerPassword);
-    if (passErr) { setError(passErr); return; }
+    if (passErr) {
+      setError(passErr);
+      return;
+    }
     const nameErr = validateName(registerName);
-    if (nameErr) { setError(nameErr); return; }
+    if (nameErr) {
+      setError(nameErr);
+      return;
+    }
     setError("");
     setIsSubmitting(true);
     try {
@@ -156,7 +193,11 @@ export function LoginPage() {
             placeholder="トレーナー名を入力"
             maxLength={20}
             className="w-full h-14 bg-bg-card text-text-primary text-center text-lg rounded-2xl px-4 border-none outline-none placeholder:text-text-secondary"
-            onKeyDown={(e) => { if (e.key === "Enter") { void handleGuestSubmit(); } }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                void handleGuestSubmit();
+              }
+            }}
           />
           {error && <p className="text-red-400 text-sm m-0">{error}</p>}
           <button
@@ -192,7 +233,11 @@ export function LoginPage() {
             onChange={(e) => setLoginPassword(e.target.value)}
             placeholder="パスワード"
             className="w-full h-14 bg-bg-card text-text-primary text-lg rounded-2xl px-4 border-none outline-none placeholder:text-text-secondary"
-            onKeyDown={(e) => { if (e.key === "Enter") { void handleLoginSubmit(); } }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                void handleLoginSubmit();
+              }
+            }}
           />
           {error && <p className="text-red-400 text-sm m-0">{error}</p>}
           <button
@@ -242,7 +287,11 @@ export function LoginPage() {
             placeholder="トレーナー名"
             maxLength={20}
             className="w-full h-14 bg-bg-card text-text-primary text-lg rounded-2xl px-4 border-none outline-none placeholder:text-text-secondary"
-            onKeyDown={(e) => { if (e.key === "Enter") { void handleRegisterSubmit(); } }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter") {
+                void handleRegisterSubmit();
+              }
+            }}
           />
           {error && <p className="text-red-400 text-sm m-0">{error}</p>}
           <button
