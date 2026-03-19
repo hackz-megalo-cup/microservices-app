@@ -38,7 +38,7 @@ spec:
               value: http://otel-collector.observability:4317
             - name: OTEL_SERVICE_NAME
               value: projector-service
-          image: ghcr.io/hackz-megalo-cup/projector:8cc8f316040d07b9d8ef1fbda906f4a7862e6c1b
+          image: ghcr.io/hackz-megalo-cup/projector:8c6ae18705d6b31de08defd65f9735cf0855a5e7
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
