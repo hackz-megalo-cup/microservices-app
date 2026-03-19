@@ -4,6 +4,7 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
 import "../../../styles/global.css";
 import "./capture.css";
+import { CapturePokemonModel } from "./capture-pokemon-model";
 import { NavBar } from "./ui/nav-bar";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -412,11 +413,7 @@ export function CaptureDemo() {
               />
             )}
 
-            <img
-              src="/images/capture-python.png"
-              alt={POKEMON_NAME}
-              className={`capture-pokemon-img ${pokemonClass}`}
-            />
+            <CapturePokemonModel pokemonName="python" className={pokemonClass} />
           </div>
 
           <div className="capture-stats-bar">

@@ -47,6 +47,7 @@
   height: 190px;
   border-radius: 50%;
   border: 3px solid rgba(255, 255, 255, 0.45);
+  z-index: 3;
 }
 
 /* Inner colored ring (shrinks) */
@@ -58,6 +59,7 @@
   border: 3px solid #22c55e;
   transition: transform 0.04s linear;
   transform-origin: center;
+  z-index: 4;
 }
 
 /* === POKEMON IMAGE === */
@@ -69,6 +71,14 @@
   position: absolute;
   z-index: 2;
   filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.35));
+}
+
+/* === POKEMON 3D MODEL WRAPPER === */
+.capture-pokemon-model-wrapper {
+  width: 150px;
+  height: 150px;
+  position: absolute;
+  z-index: 1;
 }
 
 @keyframes pokemon-idle-bob {

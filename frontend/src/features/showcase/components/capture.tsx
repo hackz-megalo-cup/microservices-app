@@ -9,6 +9,7 @@ import "../../../styles/global.css";
 import "./capture.css";
 import { useCaptureItems } from "../hooks/use-capture-items";
 import { useCaptureSession } from "../hooks/use-capture-session";
+import { CapturePokemonModel } from "./capture-pokemon-model";
 import { NavBar } from "./ui/nav-bar";
 
 // ── Types ────────────────────────────────────────────────────────────────────
@@ -480,11 +481,7 @@ export function Capture() {
             )}
 
             {/* Pokémon */}
-            <img
-              src={pokemonInfo.image}
-              alt={pokemonInfo.name}
-              className={`capture-pokemon-img ${pokemonClass}`}
-            />
+            <CapturePokemonModel pokemonName={pokemonInfo.name} className={pokemonClass} />
           </div>
 
           {/* Stats */}
