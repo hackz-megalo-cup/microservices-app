@@ -7,8 +7,13 @@ import (
 
 // ClientMessage is the incoming message from a client.
 type ClientMessage struct {
-	T      string `json:"t"`
-	UserID string `json:"userId,omitempty"`
+	T                 string `json:"t"`
+	UserID            string `json:"userId,omitempty"`
+	PokemonAttack     int32  `json:"pokemonAttack,omitempty"`
+	PokemonSpeed      int32  `json:"pokemonSpeed,omitempty"`
+	PokemonType       string `json:"pokemonType,omitempty"`
+	SpecialMoveName   string `json:"specialMoveName,omitempty"`
+	SpecialMoveDamage int32  `json:"specialMoveDamage,omitempty"`
 }
 
 // ServerMessage types sent to clients.
