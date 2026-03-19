@@ -21,12 +21,12 @@ export function Lobby() {
   // ボス情報を動的に取得
   const openRaidsQuery = useQuery(listOpenRaids, { statusFilter: "" });
   const pokemonQuery = useQuery(listPokemon, {});
+  const currentRaid = openRaidsQuery.data?.raids.find((r) => r.id === lobbyId);
   const bossInfo = (() => {
-    const raid = openRaidsQuery.data?.raids.find((r) => r.id === lobbyId);
-    if (!raid || !pokemonQuery.data) {
+    if (!currentRaid || !pokemonQuery.data) {
       return null;
     }
-    const boss = pokemonQuery.data.pokemon.find((p) => p.id === raid.bossPokemonId);
+    const boss = pokemonQuery.data.pokemon.find((p) => p.id === currentRaid.bossPokemonId);
     if (!boss) {
       return null;
     }
@@ -140,7 +140,7 @@ export function Lobby() {
           <div className="flex items-center justify-between">
             <span className="text-xs font-bold tracking-widest text-text-secondary">TRAINERS</span>
             <span className="text-xs font-bold tracking-widest text-text-secondary">
-              {participants.length}/6
+              {participants.length}/{currentRaid?.maxParticipants ?? 60}
             </span>
           </div>
 
