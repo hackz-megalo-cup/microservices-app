@@ -67,7 +67,9 @@ export function Profile() {
         <div className="flex items-center justify-center w-[100px] h-[100px] rounded-full bg-bg-card border border-bg-hover text-5xl">
           👤
         </div>
-        <h1 className="text-2xl font-bold text-text-primary m-0">{profile?.name ?? user?.name ?? "ゲスト"}</h1>
+        <h1 className="text-2xl font-bold text-text-primary m-0">
+          {profile?.name ?? user?.name ?? "ゲスト"}
+        </h1>
       </section>
 
       <section className="flex flex-col gap-4 p-4">
@@ -98,7 +100,10 @@ export function Profile() {
         <div className="bg-bg-card rounded-2xl p-4">
           <h2 className="text-lg font-bold text-text-primary mb-3">設定</h2>
           <div className="flex flex-col gap-2">
-            <button className="w-full h-12 bg-bg-hover rounded-lg text-text-primary font-bold cursor-pointer hover:opacity-80">
+            <button
+              type="button"
+              className="w-full h-12 bg-bg-hover rounded-lg text-text-primary font-bold cursor-pointer hover:opacity-80"
+            >
               パスワード変更
             </button>
           </div>
