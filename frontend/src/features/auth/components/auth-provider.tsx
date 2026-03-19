@@ -56,6 +56,36 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     [registerMutation, loginMutation],
   );
 
+  const login = useCallback(
+    async (email: string, password: string) => {
+      const data = await loginMutation.mutateAsync({ email, password });
+
+      if (!data.user) {
+        throw new Error("invalid response: user is missing");
+      }
+
+      const authUser: AuthUser = {
+        id: data.user.id,
+        email: data.user.email,
+        name: data.user.name,
+        role: data.user.role,
+      };
+
+      localStorage.setItem(TOKEN_KEY, data.token);
+      localStorage.setItem(USER_KEY, JSON.stringify(authUser));
+      setUser(authUser);
+    },
+    [loginMutation],
+  );
+
+  const register = useCallback(
+    async (email: string, password: string, name: string) => {
+      await registerMutation.mutateAsync({ email, password, name });
+      await login(email, password);
+    },
+    [registerMutation, login],
+  );
+
   const logout = useCallback(() => {
     localStorage.removeItem(TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
@@ -66,6 +96,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     user,
     isAuthenticated: !!user,
     isLoading,
+    login,
+    register,
     loginAsGuest,
     logout,
   };
