@@ -69,9 +69,18 @@ function toWebSocketUrl(url: string): string {
 // ---------------------------------------------------------------------------
 // Hook options & return type
 // ---------------------------------------------------------------------------
+export interface PokemonStats {
+  pokemonAttack: number;
+  pokemonSpeed: number;
+  pokemonType: string;
+  specialMoveName: string;
+  specialMoveDamage: number;
+}
+
 export interface UseGameConnectionOptions {
   userId: string;
   lobbyId?: string;
+  pokemonStats?: PokemonStats;
   onMessage: (msg: ServerMessage) => void;
   autoConnect?: boolean;
 }
@@ -91,6 +100,7 @@ import { resolveApiUrl } from "../../../lib/runtime-config";
 export function useGameConnection({
   userId,
   lobbyId,
+  pokemonStats,
   onMessage,
   autoConnect = true,
 }: UseGameConnectionOptions): UseGameConnectionReturn {
@@ -106,6 +116,9 @@ export function useGameConnection({
 
   const userIdRef = useRef(userId);
   userIdRef.current = userId;
+
+  const pokemonStatsRef = useRef(pokemonStats);
+  pokemonStatsRef.current = pokemonStats;
 
   // --- Parse incoming JSON ---
   const handleRaw = useCallback((raw: string) => {
@@ -218,7 +231,11 @@ export function useGameConnection({
       transport.closed.then(() => setStatus("disconnected")).catch(() => setStatus("disconnected"));
 
       // Auto-join
-      const joinPayload = JSON.stringify({ t: "join", userId: userIdRef.current });
+      const joinPayload = JSON.stringify({
+        t: "join",
+        userId: userIdRef.current,
+        ...pokemonStatsRef.current,
+      });
       const stream = await transport.createBidirectionalStream();
       const writer = stream.writable.getWriter();
       await writer.write(new TextEncoder().encode(joinPayload));
@@ -278,7 +295,7 @@ export function useGameConnection({
       setStatus("connected");
 
       // Auto-join
-      ws.send(JSON.stringify({ t: "join", userId: userIdRef.current }));
+      ws.send(JSON.stringify({ t: "join", userId: userIdRef.current, ...pokemonStatsRef.current }));
     },
     [closeAll, handleRaw],
   );

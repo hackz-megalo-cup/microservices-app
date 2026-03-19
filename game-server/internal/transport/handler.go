@@ -27,7 +27,7 @@ func (h *Handler) HandleMessage(userID uuid.UUID, raw []byte) {
 
 	switch msg.T {
 	case "join":
-		h.handleJoin(userID)
+		h.handleJoin(userID, msg)
 	case "tap":
 		h.handleTap(userID)
 	case "special":
@@ -37,19 +37,40 @@ func (h *Handler) HandleMessage(userID uuid.UUID, raw []byte) {
 	}
 }
 
-func (h *Handler) handleJoin(userID uuid.UUID) {
+func (h *Handler) handleJoin(userID uuid.UUID, msg ClientMessage) {
 	if h.session == nil {
 		log.Printf("join from %s but no session", userID)
 		return
 	}
 
+	attack := msg.PokemonAttack
+	if attack <= 0 {
+		attack = 100
+	}
+	speed := msg.PokemonSpeed
+	if speed <= 0 {
+		speed = 50
+	}
+	pokemonType := msg.PokemonType
+	if pokemonType == "" {
+		pokemonType = "normal"
+	}
+	specialMoveName := msg.SpecialMoveName
+	if specialMoveName == "" {
+		specialMoveName = "Tackle"
+	}
+	specialMoveDamage := msg.SpecialMoveDamage
+	if specialMoveDamage <= 0 {
+		specialMoveDamage = 500
+	}
+
 	h.session.AddParticipant(userID, &battle.Participant{
 		UserID:             userID,
-		PokemonAttack:      100,
-		PokemonSpeed:       50,
-		PokemonType:        "normal",
-		SpecialMoveName:    "Debug Blast",
-		SpecialMoveDamage:  500,
+		PokemonAttack:      attack,
+		PokemonSpeed:       speed,
+		PokemonType:        pokemonType,
+		SpecialMoveName:    specialMoveName,
+		SpecialMoveDamage:  specialMoveDamage,
 		RequiredForSpecial: 10,
 	})
 
@@ -121,7 +142,7 @@ func (h *Handler) handleSpecial(userID uuid.UUID) {
 	special := SpecialUsedMessage{
 		T:        "special_used",
 		UserID:   userID.String(),
-		MoveName: "Debug Blast",
+		MoveName: h.session.GetParticipantMoveName(userID),
 		Dmg:      dmg,
 		BossHP:   currentHP,
 	}

@@ -9,6 +9,7 @@ const POKEMON_IMAGES: Record<string, string> = {
   php: "/images/collection-php.jpg",
   swift: "/images/collection-swift.jpg",
   rust: "/images/raid-rust.png",
+  whitespace: "/images/siro.png",
 };
 
 export function getPokemonImageUrl(pokemon: { name: string }): string {

@@ -1,7 +1,10 @@
+import { useQuery } from "@connectrpc/connect-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
 import type { Item } from "../../../gen/masterdata/v1/masterdata_pb";
+import { listPokemon } from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 import { useAuthContext } from "../../../lib/auth";
+import { getPokemonImageUrl } from "../../../lib/pokemon-image";
 import "../../../styles/global.css";
 import "./capture.css";
 import { useCaptureItems } from "../hooks/use-capture-items";
@@ -23,7 +26,6 @@ type Particle = {
 
 // ── Constants ────────────────────────────────────────────────────────────────
 
-const POKEMON_NAME = "Python";
 const DEFAULT_CATCH_RATE = 0.3;
 const CIRCLE_CYCLE_MS = 2500;
 const PARTICLE_COLORS = ["#06b6d4", "#22c55e", "#f59e0b", "#ec4899", "#a855f7", "#f97316"];
@@ -136,6 +138,20 @@ export function Capture() {
     isPending: isMutationPending,
     refetch: refetchItems,
   } = useCaptureItems(userId);
+
+  // ポケモン名・画像を動的に解決
+  const pokemonQuery = useQuery(listPokemon, {});
+  const pokemonInfo = (() => {
+    const pokemonId = session?.pokemonId;
+    if (!pokemonId || !pokemonQuery.data) {
+      return { name: "???", image: "/images/collection-python.png" };
+    }
+    const found = pokemonQuery.data.pokemon.find((p) => p.id === pokemonId);
+    if (!found) {
+      return { name: "???", image: "/images/collection-python.png" };
+    }
+    return { name: found.name, image: getPokemonImageUrl({ name: found.name }) };
+  })();
 
   // Track displayed catch rate (updated optimistically after UseItem)
   const [displayRate, setDisplayRate] = useState<number | null>(null);
@@ -465,15 +481,15 @@ export function Capture() {
 
             {/* Pokémon */}
             <img
-              src="/images/capture-python.png"
-              alt={POKEMON_NAME}
+              src={pokemonInfo.image}
+              alt={pokemonInfo.name}
               className={`capture-pokemon-img ${pokemonClass}`}
             />
           </div>
 
           {/* Stats */}
           <div className="capture-stats-bar">
-            <span className="capture-pokemon-name">{POKEMON_NAME}</span>
+            <span className="capture-pokemon-name">{pokemonInfo.name}</span>
             <span className="capture-catch-rate" style={{ color: ringColor }}>
               {catchPercent}%
             </span>
@@ -554,7 +570,7 @@ export function Capture() {
           <div className="capture-result capture-result-success">
             <div className="capture-result-emoji">🎉</div>
             <div className="capture-result-title">Gotcha!</div>
-            <div className="capture-result-subtitle">{POKEMON_NAME} was caught!</div>
+            <div className="capture-result-subtitle">{pokemonInfo.name} was caught!</div>
             <div className="capture-result-rewards">
               <span>+500 EXP</span>
               <span>+3 Candy</span>
@@ -587,7 +603,7 @@ export function Capture() {
           <div className="capture-result">
             <div className="capture-result-emoji">💨</div>
             <div className="capture-result-title">Oh no!</div>
-            <div className="capture-result-subtitle">{POKEMON_NAME} fled away!</div>
+            <div className="capture-result-subtitle">{pokemonInfo.name} fled away!</div>
             <button type="button" className="capture-result-btn" onClick={goBack}>
               Go Back
             </button>

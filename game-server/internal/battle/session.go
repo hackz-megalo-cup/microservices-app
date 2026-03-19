@@ -163,6 +163,15 @@ func (s *Session) Done() <-chan struct{} {
 	return s.doneCh
 }
 
+func (s *Session) GetParticipantMoveName(userID uuid.UUID) string {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	if p, ok := s.Participants[userID]; ok && p.SpecialMoveName != "" {
+		return p.SpecialMoveName
+	}
+	return "Special Attack"
+}
+
 func (s *Session) RemainingTime() time.Duration {
 	s.mu.RLock()
 	defer s.mu.RUnlock()
