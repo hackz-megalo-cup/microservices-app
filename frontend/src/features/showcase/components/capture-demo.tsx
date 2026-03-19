@@ -64,37 +64,63 @@ const INITIAL_MOCK_ITEMS: MockItem[] = [
 
 function getMockThrowResult(): "success" | "fail" | "escaped" {
   const r = Math.random();
-  if (r < 0.5) return "success";
-  if (r < 0.8) return "fail";
+  if (r < 0.5) {
+    return "success";
+  }
+  if (r < 0.8) {
+    return "fail";
+  }
   return "escaped";
 }
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
 function getCatchBonus(bonus: ThrowBonus): number {
-  if (bonus === "excellent") return 1.85;
-  if (bonus === "great") return 1.5;
-  if (bonus === "nice") return 1.15;
+  if (bonus === "excellent") {
+    return 1.85;
+  }
+  if (bonus === "great") {
+    return 1.5;
+  }
+  if (bonus === "nice") {
+    return 1.15;
+  }
   return 1.0;
 }
 
 function getThrowBonus(scale: number): ThrowBonus {
-  if (scale < 0.35) return "excellent";
-  if (scale < 0.6) return "great";
-  if (scale < 0.8) return "nice";
+  if (scale < 0.35) {
+    return "excellent";
+  }
+  if (scale < 0.6) {
+    return "great";
+  }
+  if (scale < 0.8) {
+    return "nice";
+  }
   return "normal";
 }
 
 function getRingColor(rate: number): string {
-  if (rate > 0.5) return "#22c55e";
-  if (rate > 0.3) return "#f59e0b";
+  if (rate > 0.5) {
+    return "#22c55e";
+  }
+  if (rate > 0.3) {
+    return "#f59e0b";
+  }
   return "#ef4444";
 }
 
 function makeBonusLabel(bonus: ThrowBonus): string {
-  if (bonus === "excellent") return "EXCELLENT!";
-  if (bonus === "great") return "GREAT!";
-  if (bonus === "nice") return "NICE!";
+  if (bonus === "excellent") {
+    return "EXCELLENT!";
+  }
+  if (bonus === "great") {
+    return "GREAT!";
+  }
+  if (bonus === "nice") {
+    return "NICE!";
+  }
   return "";
 }
 
@@ -165,12 +191,16 @@ export function CaptureDemo() {
 
   // ── Circle shrink animation ──
   useEffect(() => {
-    if (phase !== "idle") return;
+    if (phase !== "idle") {
+      return;
+    }
 
     circleStartRef.current = Date.now();
 
     const tick = () => {
-      if (phaseRef.current !== "idle") return;
+      if (phaseRef.current !== "idle") {
+        return;
+      }
       const elapsed = (Date.now() - circleStartRef.current) % CIRCLE_CYCLE_MS;
       const t = elapsed / CIRCLE_CYCLE_MS;
       setCircleScale(1.0 - t * 0.82);
@@ -194,10 +224,11 @@ export function CaptureDemo() {
   // ── Mock throw logic ──
   const doThrow = useCallback(
     (itemId?: string) => {
-      if (phaseRef.current !== "idle") return;
+      if (phaseRef.current !== "idle") {
+        return;
+      }
       const requestId = ++throwRequestIdRef.current;
-      const isStaleRequest = () =>
-        !isMountedRef.current || requestId !== throwRequestIdRef.current;
+      const isStaleRequest = () => !isMountedRef.current || requestId !== throwRequestIdRef.current;
 
       const bonus = getThrowBonus(circleScale);
       setThrowBonus(bonus);
@@ -234,8 +265,12 @@ export function CaptureDemo() {
       });
 
       void Promise.all([apiPromise, animPromise]).then(([result]) => {
-        if (isStaleRequest()) return;
-        if (phaseRef.current !== "throwing") return;
+        if (isStaleRequest()) {
+          return;
+        }
+        if (phaseRef.current !== "throwing") {
+          return;
+        }
 
         const wobbles = Math.floor(Math.random() * 3) + 1;
         setWobbleCount(wobbles);
@@ -243,7 +278,9 @@ export function CaptureDemo() {
 
         const wobbleDuration = WOBBLE_DURATIONS[wobbles];
         const tid2 = window.setTimeout(() => {
-          if (isStaleRequest()) return;
+          if (isStaleRequest()) {
+            return;
+          }
           if (result === "success") {
             setParticles(makeParticles());
             setPhase("success");
@@ -253,7 +290,9 @@ export function CaptureDemo() {
           } else {
             setPhase("burst");
             const tid3 = window.setTimeout(() => {
-              if (isStaleRequest()) return;
+              if (isStaleRequest()) {
+                return;
+              }
               setPokemonClass("capture-pokemon-breakfree");
               setPhase("failed");
             }, BURST_DURATION_MS);
@@ -268,19 +307,25 @@ export function CaptureDemo() {
 
   // ── Pointer handlers ──
   const handlePointerDown = (e: React.PointerEvent<Element>) => {
-    if (phase !== "idle") return;
+    if (phase !== "idle") {
+      return;
+    }
     dragStart.current = { x: e.clientX, y: e.clientY, time: Date.now() };
     setIsDragging(true);
     e.currentTarget.setPointerCapture(e.pointerId);
   };
 
   const handlePointerMove = (e: React.PointerEvent<Element>) => {
-    if (!isDragging) return;
+    if (!isDragging) {
+      return;
+    }
     setBallDragOffset({ x: e.clientX - dragStart.current.x, y: e.clientY - dragStart.current.y });
   };
 
   const handlePointerUp = (e: React.PointerEvent<Element>) => {
-    if (!isDragging) return;
+    if (!isDragging) {
+      return;
+    }
     setIsDragging(false);
     setBallDragOffset({ x: 0, y: 0 });
 
