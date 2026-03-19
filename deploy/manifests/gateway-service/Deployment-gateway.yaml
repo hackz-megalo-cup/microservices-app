@@ -33,7 +33,7 @@ spec:
               value: gateway-service
             - name: PORT
               value: "8082"
-          image: ghcr.io/hackz-megalo-cup/gateway:7385dca5fa02fe2222479c45364ea3346c4193a1
+          image: ghcr.io/hackz-megalo-cup/gateway:a19275ee35d6511ac875b34ef7a5c4cf79f932a5
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
