@@ -16,7 +16,7 @@ spec:
         app.kubernetes.io/version: 0.1.0
     spec:
       containers:
-        - image: ghcr.io/hackz-megalo-cup/frontend:d3b6f13e7c3c1534b7bb16be2470a35595527d24
+        - image: ghcr.io/hackz-megalo-cup/frontend:7385dca5fa02fe2222479c45364ea3346c4193a1
           imagePullPolicy: Always
           livenessProbe:
             httpGet:

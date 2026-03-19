@@ -33,7 +33,7 @@ spec:
               value: capture-service
             - name: PORT
               value: "8088"
-          image: ghcr.io/hackz-megalo-cup/capture:d3b6f13e7c3c1534b7bb16be2470a35595527d24
+          image: ghcr.io/hackz-megalo-cup/capture:7385dca5fa02fe2222479c45364ea3346c4193a1
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
