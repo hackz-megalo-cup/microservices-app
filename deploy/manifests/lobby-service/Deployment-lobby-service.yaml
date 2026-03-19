@@ -53,7 +53,7 @@ spec:
                 secretKeyRef:
                   key: RAID_LOBBY_URL
                   name: lobby-secrets
-          image: ghcr.io/hackz-megalo-cup/lobby:4971ac51381e3e97332efce0a38d1ccc2127a3ff
+          image: ghcr.io/hackz-megalo-cup/lobby:bc820f97cc48f3c306b1c04b96e793f6062442da
           imagePullPolicy: Always
           livenessProbe:
             httpGet:
