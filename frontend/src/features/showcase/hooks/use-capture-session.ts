@@ -12,25 +12,28 @@ export function useCaptureSession(sessionId: string) {
 
   const sessionQuery = useQuery(getCaptureSession, { sessionId });
 
+  // Use the real capture UUID from the backend response (not the battleSessionId from the URL)
+  const captureSessionId = sessionQuery.data?.sessionId ?? sessionId;
+
   // All mutations must be declared at top level
   const itemMutation = useMutation({
     mutationFn: async ({ itemId }: { itemId: string }) => {
       const headers = new Headers({ "idempotency-key": crypto.randomUUID() });
-      return invokeCaptureUseItem({ sessionId, itemId }, { headers });
+      return invokeCaptureUseItem({ sessionId: captureSessionId, itemId }, { headers });
     },
   });
 
   const ballMutation = useMutation({
     mutationFn: async () => {
       const headers = new Headers({ "idempotency-key": crypto.randomUUID() });
-      return client.throwBall({ sessionId }, { headers });
+      return client.throwBall({ sessionId: captureSessionId }, { headers });
     },
   });
 
   const sessionEndMutation = useMutation({
     mutationFn: async () => {
       const headers = new Headers({ "idempotency-key": crypto.randomUUID() });
-      return client.endSession({ sessionId }, { headers });
+      return client.endSession({ sessionId: captureSessionId }, { headers });
     },
   });
 
