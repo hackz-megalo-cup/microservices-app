@@ -55,15 +55,16 @@ func (s *Service) GetCaptureSession(ctx context.Context, req *connect.Request[pb
 		return nil, connect.NewError(connect.CodeInternal, fmt.Errorf("database not available"))
 	}
 
+	userID := req.Header().Get("X-User-Id")
+
 	var resp pb.GetCaptureSessionResponse
 	err := s.db.QueryRow(ctx,
 		`SELECT id, battle_session_id, user_id, pokemon_id, base_rate, current_rate, result
-		 FROM capture_session WHERE battle_session_id = $1`, sessionID,
+		 FROM capture_session WHERE battle_session_id = $1 AND user_id = $2`, sessionID, userID,
 	).Scan(&resp.SessionId, &resp.BattleSessionId, &resp.UserId, &resp.PokemonId,
 		&resp.BaseRate, &resp.CurrentRate, &resp.Result)
 	if err != nil {
-		// Fallback: sessionID might be a lobbyId — find the latest pending session for this user
-		userID := req.Header().Get("X-User-Id")
+		// Fallback: find the latest pending session for this user
 		if userID != "" {
 			err = s.db.QueryRow(ctx,
 				`SELECT id, battle_session_id, user_id, pokemon_id, base_rate, current_rate, result
