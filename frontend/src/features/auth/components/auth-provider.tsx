@@ -1,7 +1,8 @@
-import { useMutation } from "@connectrpc/connect-query";
+import { createClient } from "@connectrpc/connect";
+import { useTransport } from "@connectrpc/connect-query";
 import type { ReactNode } from "react";
-import { useCallback, useEffect, useState } from "react";
-import { loginUser, registerUser } from "../../../gen/auth/v1/auth-AuthService_connectquery";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import { AuthService } from "../../../gen/auth/v1/auth_pb";
 import type { AuthContextValue, AuthUser } from "../types";
 import { AuthContext } from "./auth-context-internal";
 
@@ -9,6 +10,8 @@ const TOKEN_KEY = "demo_jwt";
 const USER_KEY = "auth_user";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
+  const transport = useTransport();
+  const client = useMemo(() => createClient(AuthService, transport), [transport]);
   const [user, setUser] = useState<AuthUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -26,17 +29,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setIsLoading(false);
   }, []);
 
-  const registerMutation = useMutation(registerUser);
-  const loginMutation = useMutation(loginUser);
-
   const loginAsGuest = useCallback(
     async (name: string) => {
       const guestId = crypto.randomUUID().slice(0, 8);
       const email = `guest_${guestId}@guest.local`;
       const password = crypto.randomUUID();
 
-      await registerMutation.mutateAsync({ email, password, name });
-      const data = await loginMutation.mutateAsync({ email, password });
+      await client.registerUser(
+        { email, password, name },
+        { headers: new Headers({ "idempotency-key": crypto.randomUUID() }) },
+      );
+      const data = await client.loginUser(
+        { email, password },
+        { headers: new Headers({ "idempotency-key": crypto.randomUUID() }) },
+      );
 
       if (!data.user) {
         throw new Error("invalid response: user is missing");
@@ -53,12 +59,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(USER_KEY, JSON.stringify(authUser));
       setUser(authUser);
     },
-    [registerMutation, loginMutation],
+    [client],
   );
 
   const login = useCallback(
     async (email: string, password: string) => {
-      const data = await loginMutation.mutateAsync({ email, password });
+      const data = await client.loginUser(
+        { email, password },
+        { headers: new Headers({ "idempotency-key": crypto.randomUUID() }) },
+      );
 
       if (!data.user) {
         throw new Error("invalid response: user is missing");
@@ -75,15 +84,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.setItem(USER_KEY, JSON.stringify(authUser));
       setUser(authUser);
     },
-    [loginMutation],
+    [client],
   );
 
   const register = useCallback(
     async (email: string, password: string, name: string) => {
-      await registerMutation.mutateAsync({ email, password, name });
+      await client.registerUser(
+        { email, password, name },
+        { headers: new Headers({ "idempotency-key": crypto.randomUUID() }) },
+      );
       await login(email, password);
     },
-    [registerMutation, login],
+    [client, login],
   );
 
   const logout = useCallback(() => {
