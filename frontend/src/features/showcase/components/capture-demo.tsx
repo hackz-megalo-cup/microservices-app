@@ -2,6 +2,7 @@
 // /capture/demo にアクセスしたときに表示される。認証・セッション不要。
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router";
+import { RaidBossModel, useRaidBossModel } from "../../battle/components/raid-boss-model";
 import "../../../styles/global.css";
 import "./capture.css";
 import { NavBar } from "./ui/nav-bar";
@@ -146,6 +147,9 @@ function makeParticles(): Particle[] {
 export function CaptureDemo() {
   const navigate = useNavigate();
 
+  // 3Dモデルを取得（レイドバトルと同じ構造）
+  const model = useRaidBossModel(POKEMON_NAME);
+
   // Mock items state (quantity decrements on use)
   const [mockItems, setMockItems] = useState<MockItem[]>(INITIAL_MOCK_ITEMS);
   const [isMutationPending, setIsMutationPending] = useState(false);
@@ -162,6 +166,11 @@ export function CaptureDemo() {
   const [wobbleCount, setWobbleCount] = useState(0);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [pokemonClass, setPokemonClass] = useState("capture-pokemon-idle");
+
+  // Item effect state
+  const [itemEffect, setItemEffect] = useState(false);
+  const [itemEffectText, setItemEffectText] = useState<string | null>(null);
+  const itemEffectTimer = useRef<number>(0);
 
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
@@ -347,6 +356,16 @@ export function CaptureDemo() {
   const handleSelectItem = (itemId: string, bonus: number) => {
     setSelectedItemForThrow({ itemId, bonus });
     setShowItemModal(false);
+
+    // Trigger item use effect
+    const item = mockItems.find((i) => i.id === itemId);
+    setItemEffect(true);
+    setItemEffectText(item ? `${item.name} +${Math.round(bonus * 100)}%` : null);
+    clearTimeout(itemEffectTimer.current);
+    itemEffectTimer.current = window.setTimeout(() => {
+      setItemEffect(false);
+      setItemEffectText(null);
+    }, 1000);
   };
 
   const goBack = useCallback(() => {
@@ -412,11 +431,13 @@ export function CaptureDemo() {
               />
             )}
 
-            <img
-              src="/images/capture-python.png"
-              alt={POKEMON_NAME}
-              className={`capture-pokemon-img ${pokemonClass}`}
-            />
+            {/* Pokémon 3D Model */}
+            <div
+              className={`capture-pokemon-3d ${pokemonClass} ${itemEffect ? "capture-item-effect" : ""}`}
+            >
+              <RaidBossModel squashing={false} model={model} />
+              {itemEffectText && <span className="capture-item-text">{itemEffectText}</span>}
+            </div>
           </div>
 
           <div className="capture-stats-bar">

@@ -4,7 +4,7 @@ metadata:
   name: raid-battle-fleet
   namespace: default
 spec:
-  replicas: 2
+  replicas: 4
   scheduling: Packed
   template:
     metadata:
