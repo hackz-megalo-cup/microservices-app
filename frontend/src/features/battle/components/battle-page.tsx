@@ -1,8 +1,12 @@
+import { useQuery } from "@connectrpc/connect-query";
 import type { MouseEvent as ReactMouseEvent } from "react";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { listPokemon } from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
+import { listOpenRaids } from "../../../gen/raid_lobby/v1/raid_lobby-RaidLobbyService_connectquery";
 import "../../../styles/global.css";
 import { useAuthContext } from "../../../lib/auth";
+import { useActivePokemon } from "../../showcase/hooks/use-active-pokemon";
 import { useGameConnection } from "../hooks/use-game-connection";
 import type { ServerMessage } from "../types";
 import { RaidBossModel, useRaidBossModel } from "./raid-boss-model";
@@ -43,7 +47,40 @@ export function BattlePage() {
   const dmgSeq = useRef(0);
   const rippleSeq = useRef(0);
   const requiredForSpecial = 10;
-  const model = useRaidBossModel();
+
+  // ボス情報を取得
+  const openRaidsQuery = useQuery(listOpenRaids, { statusFilter: "" });
+  const pokemonQuery = useQuery(listPokemon, {});
+  const bossName = useMemo(() => {
+    const raid = openRaidsQuery.data?.raids.find((r) => r.id === id);
+    if (!raid || !pokemonQuery.data) {
+      return undefined;
+    }
+    const boss = pokemonQuery.data.pokemon.find((p) => p.id === raid.bossPokemonId);
+    return boss?.name;
+  }, [openRaidsQuery.data, pokemonQuery.data, id]);
+
+  const model = useRaidBossModel(bossName);
+
+  // アクティブポケモンのステータスを取得
+  const { activePokemon } = useActivePokemon(userId);
+  const pokemonStats = useMemo(() => {
+    if (!activePokemon) {
+      return undefined;
+    }
+    const attack = activePokemon.stats.find((s) => s.label === "ATK")?.value ?? 100;
+    const speed = activePokemon.stats.find((s) => s.label === "SPD")?.value ?? 50;
+    const type = activePokemon.types[0] ?? "normal";
+    const specialMoveName = activePokemon.moves[0]?.name ?? "Tackle";
+    const specialMoveDamage = activePokemon.moves[0]?.power ?? 500;
+    return {
+      pokemonAttack: attack,
+      pokemonSpeed: speed,
+      pokemonType: type,
+      specialMoveName,
+      specialMoveDamage,
+    };
+  }, [activePokemon]);
 
   const spawnDmg = useCallback((value: number, isSpecial: boolean) => {
     const x = 10 + Math.random() * 60;
@@ -105,7 +142,7 @@ export function BattlePage() {
           break;
         case "finished":
           setResult(msg.result);
-          setTimeout(() => navigate(`/victory/${id}`), 2000);
+          setTimeout(() => navigate(`/victory/${id}`, { state: { elapsed: msg.elapsed } }), 2000);
           break;
         case "time_sync":
           setTimeoutSec(msg.remainingSec);
@@ -128,6 +165,7 @@ export function BattlePage() {
   const { status, sendTap, sendSpecial } = useGameConnection({
     userId,
     lobbyId: id,
+    pokemonStats,
     onMessage,
   });
 

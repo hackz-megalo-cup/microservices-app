@@ -8,7 +8,18 @@ const MODELS = [
   { path: "/swift.glb", rotationY: Math.PI / 4 + Math.PI + 0.6, bg: "/sora.png", scale: 3.0 },
 ] as const;
 
-function pickRandomModel() {
+const MODEL_BY_NAME: Record<string, (typeof MODELS)[number]> = {
+  python: MODELS[0],
+  swift: MODELS[1],
+};
+
+function pickModelForBoss(bossName?: string) {
+  if (bossName) {
+    const matched = MODEL_BY_NAME[bossName.toLowerCase()];
+    if (matched) {
+      return matched;
+    }
+  }
   return MODELS[Math.floor(Math.random() * MODELS.length)];
 }
 
@@ -63,8 +74,8 @@ function Model({
   );
 }
 
-export function useRaidBossModel() {
-  return useMemo(() => pickRandomModel(), []);
+export function useRaidBossModel(bossName?: string) {
+  return useMemo(() => pickModelForBoss(bossName), [bossName]);
 }
 
 export function RaidBossModel({
