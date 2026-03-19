@@ -386,7 +386,7 @@ export function Capture() {
 
   const goBack = useCallback(() => {
     if (!sessionId) {
-      void navigate(-1);
+      void navigate("/");
       return;
     }
 
@@ -394,7 +394,7 @@ export function Capture() {
     const isSessionAlreadyEnded = phase === "success" || phase === "escaped" || phase === "failed";
     if (isSessionAlreadyEnded) {
       // Session was already ended by doThrow; just navigate back
-      void navigate(-1);
+      void navigate("/");
       return;
     }
 
@@ -406,7 +406,7 @@ export function Capture() {
       })
       .finally(() => {
         if (isMountedRef.current) {
-          void navigate(-1);
+          void navigate("/");
         }
       });
   }, [navigate, sessionId, phase, sessionEndMutation]);
@@ -595,11 +595,7 @@ export function Capture() {
               <span>+3 Candy</span>
               <span>+50 Stardust</span>
             </div>
-            <button
-              type="button"
-              className="capture-result-btn"
-              onClick={() => void navigate("/collection")}
-            >
+            <button type="button" className="capture-result-btn" onClick={() => void navigate("/")}>
               View Collection
             </button>
           </div>
