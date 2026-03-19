@@ -33,8 +33,8 @@
 
 .capture-rings-wrapper {
   position: relative;
-  width: 200px;
-  height: 200px;
+  width: 280px;
+  height: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -43,8 +43,8 @@
 /* Outer white ring (fixed) */
 .capture-ring-outer {
   position: absolute;
-  width: 190px;
-  height: 190px;
+  width: 270px;
+  height: 270px;
   border-radius: 50%;
   border: 3px solid rgba(255, 255, 255, 0.45);
 }
@@ -52,23 +52,20 @@
 /* Inner colored ring (shrinks) */
 .capture-ring-inner {
   position: absolute;
-  width: 190px;
-  height: 190px;
+  width: 270px;
+  height: 270px;
   border-radius: 50%;
   border: 3px solid #22c55e;
   transition: transform 0.04s linear;
   transform-origin: center;
 }
 
-/* === POKEMON IMAGE === */
-.capture-pokemon-img {
-  width: 150px;
-  height: 150px;
-  object-fit: contain;
-  border-radius: 50%;
+/* === POKEMON 3D MODEL === */
+.capture-pokemon-3d {
+  width: 280px;
+  height: 280px;
   position: absolute;
   z-index: 2;
-  filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.35));
 }
 
 @keyframes pokemon-idle-bob {
@@ -89,12 +86,10 @@
   0% {
     transform: scale(1);
     opacity: 1;
-    filter: drop-shadow(0 0 20px rgba(6, 182, 212, 0.35));
   }
   25% {
     transform: scale(1.15);
     opacity: 1;
-    filter: brightness(2) drop-shadow(0 0 30px #fff);
   }
   60% {
     transform: scale(0.25);
@@ -182,6 +177,66 @@
   }
 }
 
+/* === ITEM USE EFFECT === */
+@keyframes item-use-glow {
+  0% {
+    box-shadow: 0 0 0 0 rgba(251, 191, 36, 0);
+    filter: brightness(1);
+  }
+  30% {
+    box-shadow: 0 0 40px 20px rgba(251, 191, 36, 0.5);
+    filter: brightness(1.4);
+  }
+  60% {
+    box-shadow: 0 0 60px 30px rgba(34, 197, 94, 0.4);
+    filter: brightness(1.2);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+    filter: brightness(1);
+  }
+}
+
+.capture-item-effect {
+  animation: item-use-glow 0.8s ease-out forwards;
+  border-radius: 50%;
+}
+
+/* Item use floating text */
+@keyframes item-text-float {
+  0% {
+    transform: translateY(0) scale(0.5);
+    opacity: 0;
+  }
+  20% {
+    transform: translateY(-10px) scale(1.1);
+    opacity: 1;
+  }
+  70% {
+    transform: translateY(-40px) scale(1);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(-60px) scale(0.8);
+    opacity: 0;
+  }
+}
+
+.capture-item-text {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 1rem;
+  font-weight: 900;
+  color: #fbbf24;
+  text-shadow: 0 0 12px rgba(251, 191, 36, 0.8);
+  white-space: nowrap;
+  animation: item-text-float 1s ease-out forwards;
+  z-index: 10;
+  pointer-events: none;
+}
+
 /* === STATS BAR === */
 .capture-stats-bar {
   display: flex;
@@ -229,7 +284,7 @@
 /* === BALL CONTAINER === */
 .capture-ball-container {
   position: absolute;
-  bottom: 80px;
+  bottom: 140px;
   left: 50%;
   transform: translateX(-50%);
   display: flex;
@@ -261,14 +316,14 @@
     transform: translateY(0) translateX(0) scale(1) rotate(0deg);
   }
   35% {
-    transform: translateY(-150px) translateX(var(--ball-dx, 0px)) scale(0.85) rotate(180deg);
+    transform: translateY(-90px) translateX(var(--ball-dx, 0px)) scale(0.85) rotate(180deg);
   }
   70% {
-    transform: translateY(-270px) translateX(calc(var(--ball-dx, 0px) * 0.5)) scale(0.6)
+    transform: translateY(-200px) translateX(calc(var(--ball-dx, 0px) * 0.5)) scale(0.6)
       rotate(420deg);
   }
   100% {
-    transform: translateY(-230px) translateX(0) scale(0.45) rotate(540deg);
+    transform: translateY(-165px) translateX(0) scale(0.45) rotate(540deg);
   }
 }
 
@@ -280,97 +335,97 @@
 /* Wobble animations (1, 2, 3 times) */
 @keyframes ball-wobble-1 {
   0% {
-    transform: translateY(-225px) scale(0.45) rotate(0deg);
+    transform: translateY(-160px) scale(0.45) rotate(0deg);
   }
   15% {
-    transform: translateY(-225px) scale(0.45) rotate(22deg);
+    transform: translateY(-160px) scale(0.45) rotate(22deg);
   }
   30% {
-    transform: translateY(-225px) scale(0.45) rotate(-16deg);
+    transform: translateY(-160px) scale(0.45) rotate(-16deg);
   }
   45% {
-    transform: translateY(-225px) scale(0.45) rotate(10deg);
+    transform: translateY(-160px) scale(0.45) rotate(10deg);
   }
   60% {
-    transform: translateY(-225px) scale(0.45) rotate(-6deg);
+    transform: translateY(-160px) scale(0.45) rotate(-6deg);
   }
   75% {
-    transform: translateY(-225px) scale(0.45) rotate(3deg);
+    transform: translateY(-160px) scale(0.45) rotate(3deg);
   }
   100% {
-    transform: translateY(-225px) scale(0.45) rotate(0deg);
+    transform: translateY(-160px) scale(0.45) rotate(0deg);
   }
 }
 
 @keyframes ball-wobble-2 {
   0% {
-    transform: translateY(-225px) scale(0.45) rotate(0deg);
+    transform: translateY(-160px) scale(0.45) rotate(0deg);
   }
   10% {
-    transform: translateY(-225px) scale(0.45) rotate(24deg);
+    transform: translateY(-160px) scale(0.45) rotate(24deg);
   }
   20% {
-    transform: translateY(-225px) scale(0.45) rotate(-20deg);
+    transform: translateY(-160px) scale(0.45) rotate(-20deg);
   }
   30% {
-    transform: translateY(-225px) scale(0.45) rotate(18deg);
+    transform: translateY(-160px) scale(0.45) rotate(18deg);
   }
   40% {
-    transform: translateY(-225px) scale(0.45) rotate(-15deg);
+    transform: translateY(-160px) scale(0.45) rotate(-15deg);
   }
   50% {
-    transform: translateY(-225px) scale(0.45) rotate(18deg);
+    transform: translateY(-160px) scale(0.45) rotate(18deg);
   }
   60% {
-    transform: translateY(-225px) scale(0.45) rotate(-15deg);
+    transform: translateY(-160px) scale(0.45) rotate(-15deg);
   }
   75% {
-    transform: translateY(-225px) scale(0.45) rotate(6deg);
+    transform: translateY(-160px) scale(0.45) rotate(6deg);
   }
   90% {
-    transform: translateY(-225px) scale(0.45) rotate(-3deg);
+    transform: translateY(-160px) scale(0.45) rotate(-3deg);
   }
   100% {
-    transform: translateY(-225px) scale(0.45) rotate(0deg);
+    transform: translateY(-160px) scale(0.45) rotate(0deg);
   }
 }
 
 @keyframes ball-wobble-3 {
   0% {
-    transform: translateY(-225px) scale(0.45) rotate(0deg);
+    transform: translateY(-160px) scale(0.45) rotate(0deg);
   }
   8% {
-    transform: translateY(-225px) scale(0.45) rotate(25deg);
+    transform: translateY(-160px) scale(0.45) rotate(25deg);
   }
   16% {
-    transform: translateY(-225px) scale(0.45) rotate(-22deg);
+    transform: translateY(-160px) scale(0.45) rotate(-22deg);
   }
   24% {
-    transform: translateY(-225px) scale(0.45) rotate(20deg);
+    transform: translateY(-160px) scale(0.45) rotate(20deg);
   }
   32% {
-    transform: translateY(-225px) scale(0.45) rotate(-20deg);
+    transform: translateY(-160px) scale(0.45) rotate(-20deg);
   }
   40% {
-    transform: translateY(-225px) scale(0.45) rotate(20deg);
+    transform: translateY(-160px) scale(0.45) rotate(20deg);
   }
   48% {
-    transform: translateY(-225px) scale(0.45) rotate(-18deg);
+    transform: translateY(-160px) scale(0.45) rotate(-18deg);
   }
   56% {
-    transform: translateY(-225px) scale(0.45) rotate(15deg);
+    transform: translateY(-160px) scale(0.45) rotate(15deg);
   }
   64% {
-    transform: translateY(-225px) scale(0.45) rotate(-12deg);
+    transform: translateY(-160px) scale(0.45) rotate(-12deg);
   }
   76% {
-    transform: translateY(-225px) scale(0.45) rotate(7deg);
+    transform: translateY(-160px) scale(0.45) rotate(7deg);
   }
   88% {
-    transform: translateY(-225px) scale(0.45) rotate(-4deg);
+    transform: translateY(-160px) scale(0.45) rotate(-4deg);
   }
   100% {
-    transform: translateY(-225px) scale(0.45) rotate(0deg);
+    transform: translateY(-160px) scale(0.45) rotate(0deg);
   }
 }
 
@@ -392,20 +447,20 @@
 /* Ball burst open (failed) */
 @keyframes ball-burst {
   0% {
-    transform: translateY(-225px) scale(0.45) rotate(0deg);
+    transform: translateY(-160px) scale(0.45) rotate(0deg);
     opacity: 1;
   }
   30% {
-    transform: translateY(-225px) scale(0.7) rotate(-30deg);
+    transform: translateY(-160px) scale(0.7) rotate(-30deg);
     opacity: 1;
   }
   60% {
-    transform: translateY(-225px) scale(1.1) rotate(10deg);
+    transform: translateY(-160px) scale(1.1) rotate(10deg);
     opacity: 0.7;
     filter: brightness(2);
   }
   100% {
-    transform: translateY(-225px) scale(0.1) rotate(0deg);
+    transform: translateY(-160px) scale(0.1) rotate(0deg);
     opacity: 0;
   }
 }

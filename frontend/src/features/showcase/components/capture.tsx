@@ -4,7 +4,7 @@ import { useNavigate, useParams } from "react-router";
 import type { Item } from "../../../gen/masterdata/v1/masterdata_pb";
 import { listPokemon } from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
 import { useAuthContext } from "../../../lib/auth";
-import { getPokemonImageUrl } from "../../../lib/pokemon-image";
+import { RaidBossModel, useRaidBossModel } from "../../battle/components/raid-boss-model";
 import "../../../styles/global.css";
 import "./capture.css";
 import { useCaptureItems } from "../hooks/use-capture-items";
@@ -139,19 +139,22 @@ export function Capture() {
     refetch: refetchItems,
   } = useCaptureItems(userId);
 
-  // ポケモン名・画像を動的に解決
+  // ポケモン名を動的に解決
   const pokemonQuery = useQuery(listPokemon, {});
   const pokemonInfo = (() => {
     const pokemonId = session?.pokemonId;
     if (!pokemonId || !pokemonQuery.data) {
-      return { name: "???", image: "/images/collection-python.png" };
+      return { name: "???" };
     }
     const found = pokemonQuery.data.pokemon.find((p) => p.id === pokemonId);
     if (!found) {
-      return { name: "???", image: "/images/collection-python.png" };
+      return { name: "???" };
     }
-    return { name: found.name, image: getPokemonImageUrl({ name: found.name }) };
+    return { name: found.name };
   })();
+
+  // 3Dモデルを取得（レイドバトルと同じ構造）
+  const model = useRaidBossModel(pokemonInfo.name);
 
   // Track displayed catch rate (updated optimistically after UseItem)
   const [displayRate, setDisplayRate] = useState<number | null>(null);
@@ -165,6 +168,11 @@ export function Capture() {
   const [wobbleCount, setWobbleCount] = useState(0);
   const [particles, setParticles] = useState<Particle[]>([]);
   const [pokemonClass, setPokemonClass] = useState("capture-pokemon-idle");
+
+  // Item effect state
+  const [itemEffect, setItemEffect] = useState(false);
+  const [itemEffectText, setItemEffectText] = useState<string | null>(null);
+  const itemEffectTimer = useRef<number>(0);
 
   // Drag state
   const [isDragging, setIsDragging] = useState(false);
@@ -364,6 +372,16 @@ export function Capture() {
   const handleSelectItem = (itemId: string, bonus: number) => {
     setSelectedItemForThrow({ itemId, bonus });
     setShowItemModal(false);
+
+    // Trigger item use effect
+    const item = availableItems.find((i) => i.id === itemId);
+    setItemEffect(true);
+    setItemEffectText(item ? `${item.name} +${Math.round(bonus * 100)}%` : null);
+    clearTimeout(itemEffectTimer.current);
+    itemEffectTimer.current = window.setTimeout(() => {
+      setItemEffect(false);
+      setItemEffectText(null);
+    }, 1000);
   };
 
   const goBack = useCallback(() => {
@@ -479,12 +497,13 @@ export function Capture() {
               />
             )}
 
-            {/* Pokémon */}
-            <img
-              src={pokemonInfo.image}
-              alt={pokemonInfo.name}
-              className={`capture-pokemon-img ${pokemonClass}`}
-            />
+            {/* Pokémon 3D Model */}
+            <div
+              className={`capture-pokemon-3d ${pokemonClass} ${itemEffect ? "capture-item-effect" : ""}`}
+            >
+              <RaidBossModel squashing={false} model={model} />
+              {itemEffectText && <span className="capture-item-text">{itemEffectText}</span>}
+            </div>
           </div>
 
           {/* Stats */}
