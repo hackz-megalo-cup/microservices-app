@@ -1,8 +1,12 @@
+import { useQuery } from "@connectrpc/connect-query";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate, useParams } from "react-router";
+import { listPokemon } from "../../../gen/masterdata/v1/masterdata-MasterdataService_connectquery";
+import { listOpenRaids } from "../../../gen/raid_lobby/v1/raid_lobby-RaidLobbyService_connectquery";
+import { getPokemonImageUrl } from "../../../lib/pokemon-image";
+import "../../../styles/global.css";
 import { useLobbyActions } from "../hooks/use-lobby-actions";
 import { useLobbyStream } from "../hooks/use-lobby-stream";
-import "../../../styles/global.css";
 import { NavBar } from "./ui/nav-bar";
 
 export function Lobby() {
@@ -13,6 +17,21 @@ export function Lobby() {
   const hasNavigatedRef = useRef(false);
 
   const { joinMutation, startMutation } = useLobbyActions();
+
+  // ボス情報を動的に取得
+  const openRaidsQuery = useQuery(listOpenRaids, { statusFilter: "" });
+  const pokemonQuery = useQuery(listPokemon, {});
+  const bossInfo = (() => {
+    const raid = openRaidsQuery.data?.raids.find((r) => r.id === lobbyId);
+    if (!raid || !pokemonQuery.data) {
+      return null;
+    }
+    const boss = pokemonQuery.data.pokemon.find((p) => p.id === raid.bossPokemonId);
+    if (!boss) {
+      return null;
+    }
+    return { name: boss.name, type: boss.type, image: getPokemonImageUrl({ name: boss.name }) };
+  })();
 
   const navigateToBattleOnce = useCallback(
     (sessionId: string) => {
@@ -99,13 +118,17 @@ export function Lobby() {
       <div className="flex flex-col gap-3 px-4 pb-4 flex-1">
         <section className="flex flex-col items-center gap-3 py-2">
           <img
-            src="/images/collection-python.png"
-            alt="Python"
+            src={bossInfo?.image ?? "/images/collection-python.png"}
+            alt={bossInfo?.name ?? "Boss"}
             className="w-[160px] h-[160px] rounded-full object-cover"
           />
           <div className="flex items-center gap-2">
-            <span className="text-xl font-bold text-text-primary">Python</span>
-            <span className="text-xs text-accent bg-bg-card px-3 py-1 rounded-lg">Dynamic</span>
+            <span className="text-xl font-bold text-text-primary">{bossInfo?.name ?? "..."}</span>
+            {bossInfo?.type && (
+              <span className="text-xs text-accent bg-bg-card px-3 py-1 rounded-lg">
+                {bossInfo.type}
+              </span>
+            )}
           </div>
         </section>
 

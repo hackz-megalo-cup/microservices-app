@@ -62,7 +62,21 @@ func (s *Service) GetCaptureSession(ctx context.Context, req *connect.Request[pb
 	).Scan(&resp.SessionId, &resp.BattleSessionId, &resp.UserId, &resp.PokemonId,
 		&resp.BaseRate, &resp.CurrentRate, &resp.Result)
 	if err != nil {
-		return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("session not found: %s", sessionID))
+		// Fallback: sessionID might be a lobbyId — find the latest pending session for this user
+		userID := req.Header().Get("X-User-Id")
+		if userID != "" {
+			err = s.db.QueryRow(ctx,
+				`SELECT id, battle_session_id, user_id, pokemon_id, base_rate, current_rate, result
+				 FROM capture_session WHERE user_id = $1 AND result = 'pending'
+				 ORDER BY created_at DESC LIMIT 1`, userID,
+			).Scan(&resp.SessionId, &resp.BattleSessionId, &resp.UserId, &resp.PokemonId,
+				&resp.BaseRate, &resp.CurrentRate, &resp.Result)
+		}
+		if err != nil {
+			return nil, connect.NewError(connect.CodeNotFound, fmt.Errorf("session not found: %s", sessionID))
+		}
+		// Use the real session ID for subsequent action queries
+		sessionID = resp.SessionId
 	}
 
 	rows, err := s.db.Query(ctx,
