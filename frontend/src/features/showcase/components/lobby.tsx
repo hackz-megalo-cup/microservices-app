@@ -16,7 +16,7 @@ export function Lobby() {
   const joinAttemptedLobbyRef = useRef<string | null>(null);
   const hasNavigatedRef = useRef(false);
 
-  const { joinMutation, startMutation } = useLobbyActions();
+  const { joinMutation } = useLobbyActions();
 
   // ボス情報を動的に取得
   const openRaidsQuery = useQuery(listOpenRaids, { statusFilter: "" });
@@ -78,22 +78,7 @@ export function Lobby() {
     }
   }, [battleSessionId, navigateToBattleOnce]);
 
-  // --- 4. StartBattle (Unary) ---
-  const handleStartBattle = async () => {
-    if (!lobbyId) {
-      return;
-    }
-
-    try {
-      const res = await startMutation.mutateAsync({ lobbyId });
-      // navigateToBattleOnce は ref ガードで重複遷移を防ぐため、常に呼び出して安全
-      navigateToBattleOnce(res.battleSessionId);
-    } catch (_err) {
-      // エラーは既に mutation の error state で扱われている
-    }
-  };
-
-  // --- 5. ローディング・エラー表示 ---
+  // --- 4. ローディング・エラー表示 ---
   if (joinMutation.isPending) {
     return (
       <div className="showcase-screen flex items-center justify-center">
@@ -195,15 +180,6 @@ export function Lobby() {
         )}
 
         <div className="flex-1" />
-
-        <button
-          type="button"
-          onClick={handleStartBattle}
-          disabled={startMutation.isPending || participants.length === 0}
-          className="w-full h-14 bg-accent rounded-3xl text-base font-bold text-bg-primary cursor-pointer hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
-        >
-          {startMutation.isPending ? "バトル開始中..." : "ENTER RAID"}
-        </button>
       </div>
     </div>
   );
