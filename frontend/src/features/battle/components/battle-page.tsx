@@ -42,6 +42,7 @@ export function BattlePage() {
   const [ripples, setRipples] = useState<Ripple[]>([]);
   const [participants, setParticipants] = useState<string[]>([]);
   const [squashing, setSquashing] = useState(false);
+  const battleSessionIdRef = useRef<string | null>(null);
   const hitCount = useRef(0);
   const squashTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const dmgSeq = useRef(0);
@@ -117,6 +118,7 @@ export function BattlePage() {
         case "joined":
           setBossHp(msg.bossHp);
           setBossMaxHp(msg.bossMaxHp);
+          battleSessionIdRef.current = msg.sessionId;
           if (msg.timeoutSec !== undefined) {
             setTimeoutSec(msg.timeoutSec);
           }
@@ -147,7 +149,13 @@ export function BattlePage() {
           break;
         case "finished":
           setResult(msg.result);
-          setTimeout(() => navigate(`/victory/${id}`, { state: { elapsed: msg.elapsed } }), 2000);
+          setTimeout(
+            () =>
+              navigate(`/victory/${id}`, {
+                state: { elapsed: msg.elapsed, battleSessionId: battleSessionIdRef.current },
+              }),
+            2000,
+          );
           break;
         case "time_sync":
           setTimeoutSec(msg.remainingSec);

@@ -22,7 +22,12 @@ export function Victory() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
-  const elapsed: number | undefined = (location.state as { elapsed?: number } | null)?.elapsed;
+  const elapsed: number | undefined = (
+    location.state as { elapsed?: number; battleSessionId?: string } | null
+  )?.elapsed;
+  const battleSessionId: string | undefined = (
+    location.state as { elapsed?: number; battleSessionId?: string } | null
+  )?.battleSessionId;
 
   // ボス情報を動的に取得
   const openRaidsQuery = useQuery(listOpenRaids, { statusFilter: "" });
@@ -74,7 +79,7 @@ export function Victory() {
       <button
         type="button"
         className="w-full h-14 bg-accent rounded-3xl text-base font-bold text-bg-primary cursor-pointer border-none hover:opacity-90"
-        onClick={() => void navigate(`/capture/${id}`)}
+        onClick={() => void navigate(`/capture/${battleSessionId ?? id}`)}
       >
         CAPTURE
       </button>
